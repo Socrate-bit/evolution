@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161678341679",
+    "project_id": "evolution-v1",
+    "storage_bucket": "evolution-v1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161678341679:android:e1eb7cbd39ea0d5bf038da",
+        "android_client_info": {
+          "package_name": "com.example.tracker_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOEMUfDEwLMjJxuaGSAEr1zhmiizu14q8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
