@@ -70,9 +70,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Disable icon tree shaking
-  material:
-    tree-shake-icons: false
+# Disable icon tree shaking by setting it globally
+flutter_icons:
+  tree-shake-icons: false
+
 
 
   # To add assets to your application, add an assets section, like this:
