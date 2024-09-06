@@ -70,9 +70,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# Disable icon tree shaking by setting it globally
-flutter_icons:
-  tree-shake-icons: false
+
 
 
 
