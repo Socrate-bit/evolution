@@ -25,10 +25,10 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
-    () async {await FirebaseAuth.instance.signOut();}
+    FirebaseAuth.instance.signOut()
     // return ColorsScreen();
     return MaterialApp(
       theme: ThemeData().copyWith(
