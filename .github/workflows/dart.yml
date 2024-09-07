@@ -16,6 +16,7 @@ jobs:
           architecture: x64
       - run: flutter pub get
       - run: flutter pub upgrade --major-versions
+      - run: dart run flutter_iconpicker:generate_packs --packs allMaterial
       
 
       - run: pod repo update
