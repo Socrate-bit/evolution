@@ -25,19 +25,18 @@ class AuthNotifier extends StateNotifier<UserData?> {
 
   Future<void> addUserData(UserData userdata) async {
     state = userdata;
-    File? copiedImage = null;
 
     final documentPath = await syspath.getApplicationDocumentsDirectory();
 
-    final filename = path.basename(userdata.profilPicture!.path);
-    copiedImage = await userdata.profilPicture!.copy('${documentPath.path}/$filename'); 
+    final filename = path.basename(userdata.profilPicture.path);
+    final copiedImage = await userdata.profilPicture.copy('${documentPath.path}/$filename'); 
     final db = await getDatabase();
 
     await db.insert('user_data', {
       'id': userdata.userId,
       'inscriptionDate': userdata.inscriptionDate.toIso8601String(),
       'name': userdata.name,
-      'profilPicture': copiedImage?.path
+      'profilPicture': copiedImage.path
     });
   }
 
