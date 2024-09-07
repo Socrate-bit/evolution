@@ -29,17 +29,15 @@ class AuthNotifier extends StateNotifier<UserData?> {
 
     final documentPath = await syspath.getApplicationDocumentsDirectory();
 
-    // final filename = path.basename(userdata.profilPicture!.path);
-    // copiedImage =
-    //     await userdata.profilPicture!.copy('${documentPath.path}/$filename');
-
+    final filename = path.basename(userdata.profilPicture!.path);
+    copiedImage = await userdata.profilPicture!.copy('${documentPath.path}/$filename'); 
     final db = await getDatabase();
 
     await db.insert('user_data', {
       'id': userdata.userId,
       'inscriptionDate': userdata.inscriptionDate.toIso8601String(),
       'name': userdata.name,
-      // 'profilPicture': copiedImage?.path
+      'profilPicture': copiedImage?.path
     });
   }
 
@@ -56,7 +54,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
         userId: row['id'] as String,
         inscriptionDate: DateTime.parse(row['inscriptionDate'] as String),
         name: row['name'] as String,
-        // profilPicture: File(row['profilPicture'] as String),
+        profilPicture: File(row['profilPicture'] as String),
       );
     }).toList()[0];
     state = userData;
