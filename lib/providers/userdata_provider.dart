@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/user.dart';
 import 'package:path_provider/path_provider.dart' as syspath;
@@ -45,10 +46,12 @@ class AuthNotifier extends StateNotifier<UserData?> {
     final data = await db.query('user_data');
 
     if (data.isEmpty) {
+      FirebaseAuth.instance.signOut();
       return;
     }
 
-    final userData = data.map((row) {
+    try 
+    { final userData = data.map((row) {
       return UserData(
         userId: row['id'] as String,
         inscriptionDate: DateTime.parse(row['inscriptionDate'] as String),
@@ -57,7 +60,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
       );
     }).toList()[0];
     state = userData;
-  }
+  } catch (error) {FirebaseAuth.instance.signOut();} }
 }
 
 final userDataProvider = StateNotifierProvider<AuthNotifier, UserData?>(
