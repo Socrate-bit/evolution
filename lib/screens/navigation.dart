@@ -104,7 +104,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     tag: userData!.userId!,
                     child: CircleAvatar(
                       radius: 18,
-                      // backgroundImage: FileImage(userData.profilPicture),
+                      backgroundImage: FileImage(userData.profilPicture),
                     ),
                   ),
                 ),
