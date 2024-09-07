@@ -15,7 +15,7 @@ jobs:
           channel: 'stable'
           architecture: x64
       - run: flutter pub get
-      - run: flutter pub upgrade
+      - run: flutter pub upgrade --major-versions
       
 
       - run: pod repo update
