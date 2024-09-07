@@ -30,7 +30,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool isLoading = true;
 
   void loadData() async {
-    // await ref.read(userDataProvider.notifier).loadData();
+    await ref.read(userDataProvider.notifier).loadData();
     await ref.read(habitProvider.notifier).loadData();
     await ref.read(trackedDayProvider.notifier).loadData();
     setState(() {
@@ -70,7 +70,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final Color selectedIcon = Theme.of(context).colorScheme.secondary;
-    // final userData = ref.watch(userDataProvider);
+    final userData = ref.watch(userDataProvider);
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())
@@ -93,25 +93,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   color: Colors.white,
                   fontSize: 20),
               centerTitle: true,
-              // actions: [
-                // InkWell(
-                  // borderRadius: BorderRadius.circular(18),
-                  // onTap: () {
-                    // Navigator.of(context).push(MaterialPageRoute(
-                        // builder: (ctx) => const ProfilScreen()));
-                  // },
-                  // child: Hero(
-                    // tag: userData!.userId!,
-                    // child: CircleAvatar(
-                      // radius: 18,
-                      // backgroundImage: FileImage(userData.profilPicture),
-                    // ),
-                  // ),
-                // ),
-                // const SizedBox(
-                  // width: 8,
-                // )
-              //],
+              actions: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (ctx) => const ProfilScreen()));
+                  },
+                  child: Hero(
+                    tag: userData!.userId!,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundImage: FileImage(userData.profilPicture),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 8,
+                )
+              ],
             ),
             body: _selectedPage,
             bottomNavigationBar: BottomAppBar(
