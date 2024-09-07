@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_iconpicker/Models/configuration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
@@ -143,20 +144,24 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                             .copyWith(color: Colors.white),
                       ),
                       IconButton(
+                        icon: Icon(_enteredIcon),
                           iconSize: 40,
                           onPressed: () async {
-                            IconData? icon = await showIconPicker(context,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceBright
-                                    .withOpacity(1));
+                            IconPickerIcon? iconPicker = await showIconPicker(
+                                context,
+                                configuration: SinglePickerConfiguration(
+                                    iconPackModes: [IconPack.allMaterial],
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceBright
+                                        .withOpacity(1)));
 
-                            if (icon == null) return;
+                            if (iconPicker == null) return;
+                            IconData icon = iconPicker.data;
                             setState(() {
                               _enteredIcon = icon;
                             });
-                          },
-                          icon: Icon(_enteredIcon))
+                          }),
                     ],
                   ),
                   const SizedBox(width: 16),

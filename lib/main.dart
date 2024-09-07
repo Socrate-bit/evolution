@@ -35,7 +35,8 @@ class MyApp extends StatelessWidget {
           iconTheme: const IconThemeData().copyWith(color: Colors.grey),
           inputDecorationTheme:
               const InputDecorationTheme().copyWith(fillColor: Colors.grey)),
-      home: StreamBuilder(
+      home: 
+      StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (ctx, snapshot) {
             if (snapshot.hasData) {

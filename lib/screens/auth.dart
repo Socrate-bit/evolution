@@ -41,8 +41,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _submit() async {
-    if (!_formKey.currentState!.validate() ||
-        !_isLogin && _pickedProfilPicture == null) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
@@ -61,7 +60,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               UserData(
                   inscriptionDate: DateTime.now(),
                   name: _enteredUserName!,
-                  profilPicture: _pickedProfilPicture!),
+                  // profilPicture: _pickedProfilPicture!
+                  ),
             );
       } else {
         await _authentificater.signInWithEmailAndPassword(

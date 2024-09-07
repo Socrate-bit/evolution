@@ -50,7 +50,7 @@ class ProfilScreen extends ConsumerWidget {
               tag: userData!.userId!,
               child: CircleAvatar(
                 radius: 64,
-                backgroundImage: FileImage(userData.profilPicture),
+                // backgroundImage: FileImage(userData.profilPicture),
               ),
             ),
             const SizedBox(
