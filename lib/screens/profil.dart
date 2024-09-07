@@ -56,8 +56,8 @@ class ProfilScreen extends ConsumerWidget {
             const SizedBox(
               height: 16,
             ),
-            Text(
-              userData.name,
+            Text('ssalu',
+              // userData.name,
               style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
