@@ -60,7 +60,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               UserData(
                   inscriptionDate: DateTime.now(),
                   name: _enteredUserName!,
-                  // profilPicture: _pickedProfilPicture!
+                  profilPicture: _pickedProfilPicture!
                   ),
             );
       } else {
