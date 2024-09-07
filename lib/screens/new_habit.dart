@@ -5,7 +5,7 @@ import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/circle_day.dart';
 import 'package:tracker_v1/models/habit.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
   const NewHabitScreen({super.key});
@@ -81,7 +81,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     }
 
     Habit newHabit = Habit(
-        userId: '123456789',
+        userId: FirebaseAuth.instance.currentUser!.uid,
         icon: _enteredIcon,
         name: _enteredName!,
         description: _entereDescription,
