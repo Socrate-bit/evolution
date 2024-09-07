@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    () async {await FirebaseAuth.instance.signOut();}
     // return ColorsScreen();
     return MaterialApp(
       theme: ThemeData().copyWith(
