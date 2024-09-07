@@ -12,7 +12,7 @@ class ProfilScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    UserData? userData = ref.watch(userDataProvider);
+    // UserData? userData = ref.watch(userDataProvider);
 
     void logOut() async {
       try {
@@ -46,13 +46,13 @@ class ProfilScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
         child: Column(
           children: [
-            Hero(
-              tag: userData!.userId!,
-              child: CircleAvatar(
-                radius: 64,
-                backgroundImage: FileImage(userData.profilPicture),
-              ),
-            ),
+            // Hero(
+              // tag: userData!.userId!,
+              // child: CircleAvatar(
+                // radius: 64,
+                // backgroundImage: FileImage(userData.profilPicture),
+              //),
+            //),
             const SizedBox(
               height: 16,
             ),
