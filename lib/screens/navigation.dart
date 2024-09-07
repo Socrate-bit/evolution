@@ -5,7 +5,6 @@ import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/screens/daily_habits.dart';
 import 'package:tracker_v1/screens/habit_list.dart';
-import 'package:tracker_v1/screens/profil.dart';
 import 'package:tracker_v1/screens/weekly.dart';
 import 'package:tracker_v1/screens/new_habit.dart';
 
@@ -70,7 +69,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final Color selectedIcon = Theme.of(context).colorScheme.secondary;
-    final userData = ref.watch(userDataProvider);
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())
@@ -93,25 +91,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   color: Colors.white,
                   fontSize: 20),
               centerTitle: true,
-              actions: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) => const ProfilScreen()));
-                  },
-                  child: Hero(
-                    tag: userData!.userId!,
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundImage: FileImage(userData.profilPicture),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 8,
-                )
-              ],
+            
             ),
             body: _selectedPage,
             bottomNavigationBar: BottomAppBar(
