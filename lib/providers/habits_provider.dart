@@ -5,6 +5,7 @@ import 'package:tracker_v1/models/tracked_day.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:sqflite/sqlite_api.dart';
 import 'dart:convert';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
   HabitNotifier() : super([]);

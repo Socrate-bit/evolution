@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/appearance.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/screens/habit.dart';
-import 'package:tracker_v1/widgets/habit_item.dart';
+import 'package:tracker_v1/screens/habits/habit_screen.dart';
+import 'package:tracker_v1/widgets/daily/habit_item.dart';
 
 class MyWidget extends ConsumerWidget {
   MyWidget({super.key});
@@ -21,7 +21,7 @@ class MyWidget extends ConsumerWidget {
       body: ListView.builder(
           itemCount: habitsList.length,
           itemBuilder: (ctx, item) => GestureDetector(
-                onTap: () {print('hello');
+                onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (ctx) => HabitScreen(habitsList[item]),

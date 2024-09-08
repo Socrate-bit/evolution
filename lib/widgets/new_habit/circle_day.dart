@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_v1/models/habit.dart';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 class CircleToggleDay extends StatefulWidget {
   const CircleToggleDay(this.enteredWeekdays, this.weekday, {super.key});
@@ -39,7 +39,7 @@ class _CircleToggleDayState extends State<CircleToggleDay> {
                 ? Theme.of(context).colorScheme.primary
                 : Theme.of(context).colorScheme.surfaceBright),
         child: Text(
-          weekDayToSign[widget.weekday]!,
+          DaysUtility.weekDayToSign[widget.weekday]!,
           style:
               const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),

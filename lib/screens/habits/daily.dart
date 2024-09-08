@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/appearance.dart';
 import 'package:tracker_v1/models/habit.dart';
 import 'package:tracker_v1/models/tracked_day.dart';
-import 'package:tracker_v1/screens/daily_recap.dart';
-import 'package:tracker_v1/screens/habit_recap.dart';
-import 'package:tracker_v1/widgets/habit_item.dart';
+import 'package:tracker_v1/screens/recaps/daily_recap.dart';
+import 'package:tracker_v1/screens/recaps/habit_recap.dart';
+import 'package:tracker_v1/widgets/daily/habit_item.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
+
 
 class DailyScreen extends ConsumerStatefulWidget {
   const DailyScreen({super.key});
@@ -75,7 +77,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   Widget build(BuildContext context) {
     final habitsList = ref.watch(habitProvider).where((item) {
       List<int?> weekDaysNumberList = item.weekdays
-          .map((day) => weekDayToNumber[day])
+          .map((day) => DaysUtility.weekDayToNumber[day])
           .toList(); //! Caching OR Database?
       return weekDaysNumberList.contains(DateTime.now().weekday);
     }).toList();

@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
-import 'package:tracker_v1/screens/daily_habits.dart';
-import 'package:tracker_v1/screens/habit_list.dart';
-import 'package:tracker_v1/screens/profil.dart';
-import 'package:tracker_v1/screens/weekly.dart';
-import 'package:tracker_v1/screens/new_habit.dart';
+import 'package:tracker_v1/screens/habits/daily.dart';
+import 'package:tracker_v1/screens/habits/habit_list.dart';
+import 'package:tracker_v1/screens/others/profil.dart';
+import 'package:tracker_v1/screens/habits/weekly.dart';
+import 'package:tracker_v1/screens/habits/new_habit.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -63,8 +63,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void deleteData() async {
     await ref.read(habitProvider.notifier).deleteDatabase('tracked_day.db');
     await ref.read(habitProvider.notifier).deleteDatabase('habits.db');
-    setState() {}
-    ;
+    setState() {};
   }
 
   @override
@@ -88,10 +87,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
               ),
               title: Text(_pageTitle),
-              titleTextStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 20),
+              titleTextStyle: Theme.of(context).textTheme.titleLarge,
               centerTitle: true,
               actions: [
                 InkWell(
@@ -151,7 +147,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               shape: const CircleBorder(),
               onPressed: _showNewHabit,
               child: const Icon(
-                Icons.add,
+                Icons.add_rounded,
                 size: 40,
                 color: Colors.white,
               ),

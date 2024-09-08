@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:161678341679:android:e1eb7cbd39ea0d5bf038da",
         "android_client_info": {
-          "package_name": "com.android.application"
+          "package_name": "com.example.tracker_v1"
         }
       },
       "oauth_client": [],

@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/tracked_day.dart';
 import 'package:tracker_v1/models/habit.dart';
 import 'package:tracker_v1/models/daily_recap.dart';
-import 'package:tracker_v1/screens/habit_recap.dart';
+import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
-import 'package:tracker_v1/screens/daily_recap.dart';
+import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:collection/collection.dart';
 
 class DayContainer extends ConsumerStatefulWidget {

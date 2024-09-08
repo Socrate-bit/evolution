@@ -4,7 +4,8 @@ import 'package:tracker_v1/models/habit.dart';
 import 'package:tracker_v1/models/tracked_day.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:tracker_v1/widgets/day_container.dart';
+import 'package:tracker_v1/widgets/weekly/day_container.dart';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 class WeeklyScreen extends ConsumerStatefulWidget {
   const WeeklyScreen({super.key});
@@ -37,7 +38,9 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
     // Check if the habit is tracked during each day, and exchange the days that has been tracked with their TrackedDay object
     Map trackedDays = habit.trackedDays;
     List isTrackedFilter = range.map((index) {
-      return habit.startDate.compareTo(dayOfTheWeek[index]) > 0
+      return habit.startDate.compareTo(dayOfTheWeek[index]) > 0 ||
+              (habit.endDate != null &&
+                  habit.endDate!.compareTo(dayOfTheWeek[index]) <= 0)
           ? false
           : habit.weekdays.contains(WeekDay.values[index]);
     }).toList();
@@ -94,13 +97,13 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
   Widget build(BuildContext context) {
     final List<DateTime> dayOfTheWeek = getDayOfTheWeek;
     List<Habit> habitList = ref.watch(habitProvider).where((habit) {
-      bool startBeforeEndOfWeek = habit.startDate.isBefore(dayOfTheWeek.last);
-      bool endAfterStartOfWeek =
-          habit.endDate == null || habit.endDate!.isAfter(dayOfTheWeek.first);
+      bool startBeforeEndOfWeek = habit.startDate.isBefore(dayOfTheWeek.last) ||
+          habit.startDate.isAtSameMomentAs(dayOfTheWeek.last);
+      bool endAfterStartOfWeek = habit.endDate == null ||
+          habit.endDate!.isAfter(dayOfTheWeek.first) ||
+          habit.endDate!.isAtSameMomentAs(dayOfTheWeek.first);
       return startBeforeEndOfWeek && endAfterStartOfWeek;
     }).toList();
-
-
 
     final List range = List.generate(7, (index) => index);
 
@@ -153,7 +156,8 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
                             children: [
                               Container(
                                 child: Text(
-                                  weekDayToSign[WeekDay.values[item]]!,
+                                  DaysUtility
+                                      .weekDayToSign[WeekDay.values[item]]!,
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold),

@@ -25,17 +25,17 @@ class RecapDay {
   }) : id = id ?? idGenerator.v4();
 
   String id;
-  int sleepQuality;
-  int wellBeing;
-  int energy;
-  int driveMotivation;
-  int stress;
-  int focusMentalClarity;
-  int intelligenceMentalPower;
-  int frustrations;
-  int satisfaction;
-  int selfEsteemProudness;
-  int lookingForwardToWakeUpTomorrow;
+  double sleepQuality;
+  double wellBeing;
+  double energy;
+  double driveMotivation;
+  double stress;
+  double focusMentalClarity;
+  double intelligenceMentalPower;
+  double frustrations;
+  double satisfaction;
+  double selfEsteemProudness;
+  double lookingForwardToWakeUpTomorrow;
   DateTime date;
   String? recap;
   String? improvements;

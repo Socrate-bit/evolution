@@ -1,31 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 const idGenerator = Uuid();
-
-enum WeekDay { monday, tuesday, wednesday, thursday, friday, saturday, sunday }
-
 enum ValidationType { binary, evaluation, recapDay }
-
-const Map<WeekDay, int> weekDayToNumber = {
-  WeekDay.monday: 1,
-  WeekDay.tuesday: 2,
-  WeekDay.wednesday: 3,
-  WeekDay.thursday: 4,
-  WeekDay.friday: 5,
-  WeekDay.saturday: 6,
-  WeekDay.sunday: 7,
-};
-
-const Map<WeekDay, String> weekDayToSign = {
-  WeekDay.monday: "M",
-  WeekDay.tuesday: "T",
-  WeekDay.wednesday: "W",
-  WeekDay.thursday: "Th",
-  WeekDay.friday: "F",
-  WeekDay.saturday: "S",
-  WeekDay.sunday: "Su",
-};
 
 class Habit {
   Habit(

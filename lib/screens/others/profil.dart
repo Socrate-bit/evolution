@@ -4,6 +4,8 @@ import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/models/user.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tracker_v1/widgets/global/elevated_button.dart';
+import 'package:tracker_v1/widgets/global/outlined_button.dart';
 
 final _imagePicker = ImagePicker();
 
@@ -66,39 +68,17 @@ class ProfilScreen extends ConsumerWidget {
             const SizedBox(
               height: 32,
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: logOut,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary),
-                child: Text(
-                  'Log-out',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
+            CustomElevatedButton(
+              submit: logOut,
+              text: 'Log-out',
             ),
             const SizedBox(
               height: 8,
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: OutlinedButton(
-                onPressed: deleteAccount,
-                style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent),
-                    foregroundColor: Theme.of(context).colorScheme.primary),
-                child: Text('Delete account',
-                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.redAccent.withOpacity(0.5))),
-              ),
-            ),
+            CustomOutlinedButton(
+              submit: deleteAccount,
+              text: 'Delete account',
+            )
           ],
         ),
       ),
