@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/models/datas/user.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +33,10 @@ class ProfilScreen extends ConsumerWidget {
     void deleteAccount() async {
       try {
         await FirebaseAuth.instance.currentUser!.delete();
+        await ref.read(habitProvider.notifier).deleteDatabase('daily_recap.db');
+        await ref.read(habitProvider.notifier).deleteDatabase('habits.db');
+        await ref.read(habitProvider.notifier).deleteDatabase('tracked_day.db');
+        await ref.read(habitProvider.notifier).deleteDatabase('user_data.db');
         Navigator.of(context).pop();
       } catch (error) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -40,6 +45,7 @@ class ProfilScreen extends ConsumerWidget {
       }
       ;
     }
+
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,

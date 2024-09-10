@@ -12,7 +12,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
   Future<Database> getDatabase() async {
     final dbPath = await sql.getDatabasesPath();
     final db = await sql.openDatabase(
-      '$dbPath/user_data',
+      '$dbPath/user_data.db',
       version: 1,
       onCreate: (db, version) {
         return db.execute(
@@ -44,7 +44,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
 
   Future<void> loadData() async {
     final db = await getDatabase();
-    final data = await db.query('user_data');
+    final data = await db.query('user_data.db');
 
     if (data.isEmpty) {
       return;
