@@ -46,10 +46,31 @@ dependencies:
   path_provider: ^2.1.4
   sqflite: ^2.3.3+1
   path: ^1.9.0
+  flutter_native_splash: ^2.4.1
+  icons_launcher: ^2.1.7
+
+flutter_native_splash:
+ color: "#141414"
+ image: "assets/icon/splash_ios.png"
+ android_12:
+  color: "#141414"
+  icon_background_color: "#141414"
+  image: "assets/icon/splash_android12.png"
+  
+icons_launcher:
+  image_path: "assets/icon/icon.png"
+  platforms:
+    android:
+      enable: true
+      adaptive_foreground_image: 'assets/icon/adaptative_icon.png'
+      adaptive_background_color: '#141414'
+    ios:
+      enable: true
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
