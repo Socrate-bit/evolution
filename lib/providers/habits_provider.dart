@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/habit.dart';
-import 'package:tracker_v1/models/tracked_day.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:sqflite/sqlite_api.dart';
 import 'dart:convert';
@@ -17,7 +17,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       version: 1,
       onCreate: (db, version) {
         return db.execute('''
-          CREATE TABLE Habits (
+          CREATE TABLE habits (
             id TEXT PRIMARY KEY,
             userId TEXT NOT NULL,
             icon TEXT NOT NULL,
@@ -29,7 +29,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
             startDate TEXT NOT NULL,
             endDate TEXT,
             additionalMetrics TEXT,
-            trackedDays TEXT
+            trackedDays TEXT,
+            orderIndex INTEGER NOT NULL,
+            frequencyChanges TEXT,
+            synced INTEGER
           )
         ''');
       },
@@ -37,12 +40,43 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     return db;
   }
 
+  void stateOrderChange(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
+    List<Habit> newState = List.from(state);
+    Habit removedItem = newState.removeAt(oldIndex);
+    newState.insert(newIndex, removedItem);
+    state = newState;
+  }
+
+  Future<void> databaseOrderChange() async {
+    final db = await getDatabase();
+    Batch batch = db.batch();
+
+    List<Habit> newState = List.from(state);
+    newState.asMap().forEach((int index, Habit habit) {
+      habit.orderIndex = index;
+      batch.update(
+        'habits',
+        {'orderIndex': index}, // Set the new orderIndex
+        where: 'id = ?', // Update the row where the id matches
+        whereArgs: [habit.id],
+      );
+    });
+
+    state = newState;
+    // Commit the batch to execute all updates
+    await batch.commit();
+  }
+
   Future<void> addHabit(Habit newHabit) async {
     state = [...state, newHabit];
 
     final db = await getDatabase();
     await db.insert(
-      'Habits',
+      'habits',
       {
         'id': newHabit.id,
         'userId': newHabit.userId,
@@ -50,8 +84,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         'name': newHabit.name,
         'description': newHabit.description,
         'frequency': newHabit.frequency,
-        'weekdays': jsonEncode(
-            newHabit.weekdays.map((day) => day.toString()).toList()),
+        'weekdays':
+            jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
         'validationType': newHabit.validationType.toString(),
         'startDate': newHabit.startDate.toIso8601String(),
         'endDate': newHabit.endDate?.toIso8601String(),
@@ -60,6 +94,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
             : null,
         'trackedDays': jsonEncode(newHabit.trackedDays
             .map((date, id) => MapEntry(date.toIso8601String(), id))),
+        'orderIndex': newHabit.orderIndex,
+        'frequencyChanges': jsonEncode(newHabit.frequencyChanges
+            .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+        'synced': newHabit.synced ? 1 : 0,
       },
       conflictAlgorithm: sql.ConflictAlgorithm.replace,
     );
@@ -70,41 +108,48 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
     final db = await getDatabase();
     await db.delete(
-      'Habits',
+      'habits',
       where: 'id = ?',
       whereArgs: [targetHabit.id],
     );
   }
 
-  Future<void> updateHabit(Habit targetHabit) async {
-    state = [
-      ...state.where((habit) => habit.id != targetHabit.id),
-      targetHabit
-    ];
+  Future<void> updateHabit(Habit targetHabit, Habit newHabit) async {
+    int index = state.indexOf(targetHabit);
+    List<Habit> newState =
+        state.where((habit) => habit.id != targetHabit.id).toList();
+    newState.insert(index, newHabit);
+    state = newState;
 
     // Update in SQLite database
     final db = await getDatabase();
     await db.update(
-      'Habits',
+      'habits',
       {
-        'userId': targetHabit.userId,
-        'icon': targetHabit.icon.codePoint.toString(),
-        'name': targetHabit.name,
-        'description': targetHabit.description,
-        'frequency': targetHabit.frequency,
-        'weekdays': jsonEncode(
-            targetHabit.weekdays.map((day) => day.toString()).toList()),
-        'validationType': targetHabit.validationType.toString(),
-        'startDate': targetHabit.startDate.toIso8601String(),
-        'endDate': targetHabit.endDate?.toIso8601String(),
-        'additionalMetrics': targetHabit.additionalMetrics != null
-            ? jsonEncode(targetHabit.additionalMetrics)
+        'id': newHabit.id,
+        'userId': newHabit.userId,
+        'icon': newHabit.icon.codePoint.toString(),
+        'name': newHabit.name,
+        'description': newHabit.description,
+        'frequency': newHabit.frequency,
+        'weekdays':
+            jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+        'validationType': newHabit.validationType.toString(),
+        'startDate': newHabit.startDate.toIso8601String(),
+        'endDate': newHabit.endDate?.toIso8601String(),
+        'additionalMetrics': newHabit.additionalMetrics != null
+            ? jsonEncode(newHabit.additionalMetrics)
             : null,
-        'trackedDays': jsonEncode(targetHabit.trackedDays
+        'trackedDays': jsonEncode(newHabit.trackedDays
             .map((date, id) => MapEntry(date.toIso8601String(), id))),
+        'orderIndex': newHabit.orderIndex,
+        'frequencyChanges': jsonEncode(newHabit.frequencyChanges
+            .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+        'synced': 0,
       },
+      conflictAlgorithm: sql.ConflictAlgorithm.replace,
       where: 'id = ?',
-      whereArgs: [targetHabit.id],
+      whereArgs: [newHabit.id],
     );
   }
 
@@ -126,7 +171,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     final db = await getDatabase();
     Habit habit = state.firstWhere((habit) => habit.id == trackedDay.habitId);
     await db.update(
-      'Habits',
+      'habits',
       {
         'trackedDays': jsonEncode(habit.trackedDays
             .map((date, id) => MapEntry(date.toIso8601String(), id))),
@@ -149,7 +194,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     final db = await getDatabase();
     Habit habit = state.firstWhere((habit) => habit.id == trackedDay.habitId);
     await db.update(
-      'Habits',
+      'habits',
       {
         'trackedDays': jsonEncode(habit.trackedDays
             .map((date, id) => MapEntry(date.toIso8601String(), id))),
@@ -165,11 +210,12 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
     // Delete the database
     await sql.deleteDatabase(path);
-    }
+  }
 
   Future<void> loadData() async {
+    // deleteDatabase('daily_recap.db');
     final db = await getDatabase();
-    final data = await db.query('Habits');
+    final data = await db.query('habits', orderBy: 'orderIndex ASC');
 
     if (data.isEmpty) {
       return;
@@ -185,8 +231,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         description: row['description'] as String?,
         frequency: row['frequency'] as int,
         weekdays: (jsonDecode(row['weekdays'] as String) as List)
-            .map(
-                (day) => WeekDay.values.firstWhere((e) => e.toString() == day))
+            .map((day) => WeekDay.values.firstWhere((e) => e.toString() == day))
             .toList(),
         validationType: ValidationType.values
             .firstWhere((e) => e.toString() == row['validationType']),
@@ -202,6 +247,14 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
                 .map((key, value) =>
                     MapEntry(DateTime.parse(key), value as String))
             : {},
+        orderIndex: row['orderIndex'] as int,
+        frequencyChanges: row['frequencyChanges'] != null
+            ? (jsonDecode(row['frequencyChanges'] as String)
+                    as Map<String, dynamic>)
+                .map(
+                    (key, value) => MapEntry(DateTime.parse(key), value as int))
+            : {},
+        synced: row['synced'] == 1,
       );
     }).toList();
 

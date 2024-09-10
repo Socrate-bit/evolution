@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_v1/models/appearance.dart';
+import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
@@ -16,6 +16,7 @@ class TrackedDay {
     this.recap,
     this.improvements,
     this.additionalMetrics,
+    this.synced = false,
   }) : id = id ?? idGenerator.v4();
 
   String id;
@@ -26,17 +27,21 @@ class TrackedDay {
   String? recap;
   String? improvements;
   Map<String, dynamic>? additionalMetrics;
+  bool synced;
 
   double? totalRating() {
     if (notation == null) return null;
-    return (notation!.showUp! * 1 / 2) +
-        (notation!.investment * 1 / 2) +
-        (notation!.method * 1 / 2) +
-        (notation!.result * 1 / 2) +
+    return (notation!.showUp! * 2 / 5) +
+        (notation!.investment * 2 / 5) +
+        (notation!.method * 2 / 5) +
+        (notation!.result * 2 / 5) +
+        (notation!.goal == 0 ? 0 : notation!.goal * 2) +
         (notation!.extra);
   }
 
-  StatusAppearance getStatusAppearance(context) {
+  StatusAppearance getStatusAppearance(colorScheme) {
+    double? rating = totalRating();
+
     switch (done) {
       case Validated.notYet:
         return StatusAppearance(
@@ -45,10 +50,9 @@ class TrackedDay {
             lineThroughCond: false);
 
       case Validated.yes:
-        if (totalRating() == null) {
+        if (rating == null) {
           return StatusAppearance(
-            backgroundColor:
-                Theme.of(context).colorScheme.secondary,
+            backgroundColor: colorScheme.secondary,
             elementsColor: Colors.white.withOpacity(0.45),
             lineThroughCond: true,
             icon: Icon(Icons.check,
@@ -56,17 +60,17 @@ class TrackedDay {
           );
         } else {
           Color? statusColor;
-          if (totalRating()! < 2.5) {
+
+          if (rating < 2.5) {
             statusColor = Colors.redAccent.withOpacity(0.6);
-          } else if (totalRating()! < 5) {
-            statusColor =
-                Theme.of(context).colorScheme.primary;
-          } else if (totalRating()! < 7.5) {
-            statusColor =
-                Theme.of(context).colorScheme.tertiary;
-          } else if (totalRating()! >= 7.5) {
-            statusColor =
-                Theme.of(context).colorScheme.secondary;
+          } else if (rating < 5) {
+            statusColor = colorScheme.primary;
+          } else if (rating < 7.5) {
+            statusColor = colorScheme.tertiary;
+          } else if (rating < 10) {
+            statusColor = colorScheme.secondary;
+          } else if (rating >= 10) {
+            statusColor = Colors.deepPurple;
           }
           return StatusAppearance(
             backgroundColor: statusColor!,
@@ -76,17 +80,6 @@ class TrackedDay {
                 size: 30, color: Colors.white.withOpacity(0.45)),
           );
         }
-
-      // case Validated.no:
-      //   return StatusAppearance(
-      //       backgroundColor: Colors.black,
-      //       elementsColor: Colors.redAccent.withOpacity(0.5),
-      //       lineThroughCond: true,
-      //       icon: Icon(
-      //         Icons.close,
-      //         size: 30,
-      //         color: Colors.redAccent.withOpacity(0.5),
-      //       ));
 
       default:
         return StatusAppearance(
@@ -102,6 +95,7 @@ class Rating {
     required this.investment,
     required this.method,
     required this.result,
+    required this.goal,
     this.extra = 0,
   });
 
@@ -109,5 +103,6 @@ class Rating {
   double investment;
   double method;
   double result;
+  double goal;
   double extra;
 }

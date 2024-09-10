@@ -9,11 +9,13 @@ import 'package:tracker_v1/widgets/new_habit/text_form_field.dart';
 import 'package:tracker_v1/widgets/new_habit/icon_picker.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
-import 'package:tracker_v1/models/habit.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
-  const NewHabitScreen({super.key});
+  const NewHabitScreen({this.habit, super.key});
+
+  final Habit? habit;
 
   @override
   ConsumerState<NewHabitScreen> createState() => _MainScreenState();
@@ -25,15 +27,33 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   IconData _enteredIcon = Icons.self_improvement;
   String? _enteredName;
   String? _enteredDescription;
-  int? _enteredFrequency;
-  final List<WeekDay> _enteredWeekdays = [];
+  int _enteredFrequency = 7;
+  List<WeekDay> _enteredWeekdays = [];
   ValidationType _enteredValidationType = ValidationType.binary;
-  DateTime today = DateTime.now();
+  DateTime now = DateTime.now();
   DateTime? _enteredStartDate;
   DateTime? _enteredEndDate;
-  final List<String> _enteredAdditionalMetrics = [];
+  List<String> _enteredAdditionalMetrics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.habit != null) {
+      _enteredIcon = widget.habit!.icon;
+      _enteredName = widget.habit!.name;
+      _enteredDescription = widget.habit!.description;
+      _enteredFrequency = widget.habit!.frequency;
+      _enteredWeekdays = List.from(widget.habit!.weekdays);
+      _enteredValidationType = widget.habit!.validationType;
+      _enteredStartDate = widget.habit!.startDate;
+      _enteredEndDate = widget.habit!.endDate;
+      _enteredAdditionalMetrics = List.from(widget.habit!.additionalMetrics!);
+    }
+  }
 
   void submit() {
+    DateTime today = DateTime(now.year, now.month, now.day);
+
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -42,34 +62,49 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
     if (_enteredWeekdays.isEmpty) {
       _enteredWeekdays.addAll([...WeekDay.values]);
-      _enteredFrequency = 7;
     } else {
       _enteredFrequency = _enteredWeekdays.length;
     }
 
     Habit newHabit = Habit(
         userId: FirebaseAuth.instance.currentUser!.uid,
+        id: widget.habit?.id,
         icon: _enteredIcon,
         name: _enteredName!,
         description: _enteredDescription,
-        frequency: _enteredFrequency!,
+        frequency: _enteredFrequency,
         weekdays: _enteredWeekdays,
         validationType: _enteredName == 'Daily recap'
             ? ValidationType.recapDay
             : _enteredValidationType,
-        startDate:
-            _enteredStartDate ?? DateTime(today.year, today.month, today.day),
+        startDate: _enteredStartDate ?? today,
         endDate: _enteredEndDate,
-        additionalMetrics: _enteredAdditionalMetrics);
+        trackedDays: widget.habit != null
+            ? Map.from(widget.habit!.trackedDays)
+            : <DateTime, String>{},
+        additionalMetrics: _enteredAdditionalMetrics,
+        orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
+        frequencyChanges: widget.habit != null
+            ? Map<DateTime, int>.from(widget.habit!.frequencyChanges)
+            : {today: _enteredFrequency});
+
+    if (widget.habit != null && widget.habit!.frequency != _enteredFrequency) {
+      newHabit.frequencyChanges.addAll({today: _enteredFrequency});
+    }
+
+    if (widget.habit != null) {
+      ref.read(habitProvider.notifier).updateHabit(widget.habit!, newHabit);
+    } else {
+      ref.read(habitProvider.notifier).addHabit(newHabit);
+    }
 
     Navigator.of(context).pop();
-    ref.read(habitProvider.notifier).addHabit(newHabit);
   }
 
   @override
   Widget build(BuildContext context) {
     return CustomModalBottomSheet(
-      title: 'New Habit',
+      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
       formKey: formKey,
       content: Column(
         children: [
@@ -95,6 +130,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                     passValue: (value) {
                       _enteredName = value;
                     },
+                    initialValue: _enteredName,
                   ),
                 ],
               ))
@@ -107,6 +143,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             passValue: (value) {
               _enteredDescription = value;
             },
+            initialValue: _enteredDescription,
           ),
           const SizedBox(height: 32),
           FrequencyPicker(
@@ -137,15 +174,20 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           const SizedBox(height: 32),
           AdditionalMetrics(_enteredAdditionalMetrics),
           const SizedBox(height: 16),
-          DatePickerWidget(passStartDate: (value) {
-            _enteredStartDate = value;
-          }, passEndDate: (value) {
-            _enteredEndDate = value;
-          }),
+          DatePickerWidget(
+            passStartDate: (value) {
+              _enteredStartDate = value;
+            },
+            passEndDate: (value) {
+              _enteredEndDate = value;
+            },
+            startDate: _enteredStartDate,
+            endDate: _enteredEndDate,
+          ),
           const SizedBox(height: 64),
           CustomElevatedButton(
             submit: submit,
-            text: 'Create',
+            text: widget.habit != null ? 'Edit' : 'Create',
           )
         ],
       ),

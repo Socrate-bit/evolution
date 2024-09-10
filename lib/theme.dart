@@ -11,8 +11,8 @@ final kcolorTheme = const ColorScheme.dark().copyWith(
 
 final kTextTheme = const TextTheme().copyWith(
   titleLarge: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-  titleMedium: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18), 
-  titleSmall: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 17),
+  titleMedium: const TextStyle(color: Colors.white, fontSize: 18), 
+  titleSmall: const TextStyle(color: Colors.grey, fontSize: 17),
   bodyLarge: const TextStyle(color: Colors.white),
   bodyMedium: const TextStyle(color: Colors.white),
   bodySmall: const TextStyle(color: Colors.white),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_v1/models/appearance.dart';
+import 'package:tracker_v1/models/utilities/appearance.dart';
 
 class HabitWidget extends StatelessWidget {
   const HabitWidget(

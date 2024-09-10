@@ -22,6 +22,7 @@ class RecapDay {
     this.gratefulness,
     this.proudness,
     this.additionalMetrics,
+    this.synced = false,
   }) : id = id ?? idGenerator.v4();
 
   String id;
@@ -42,4 +43,5 @@ class RecapDay {
   String? gratefulness;
   String? proudness;
   Map<String, dynamic>? additionalMetrics;
+  bool synced;
 }

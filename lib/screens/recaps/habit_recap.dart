@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/tracked_day.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
@@ -9,10 +10,10 @@ import 'package:tracker_v1/widgets/recaps/custom_slider.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class HabitRecapScreen extends ConsumerStatefulWidget {
-  const HabitRecapScreen(this.habitId, this.date,
+  const HabitRecapScreen(this.habit, this.date,
       {super.key, this.oldTrackedDay});
 
-  final String habitId;
+  final Habit habit;
   final DateTime date;
   final TrackedDay? oldTrackedDay;
 
@@ -28,8 +29,11 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
   double _resultRating = 0;
   double _methodRating = 0;
   bool _extra = false;
+  bool _goal = false;
   String? _enteredRecap;
   String? _enteredImprovement;
+  List<String>? _additionalMetrics;
+  Map<String, dynamic>? _additionalInputs;
 
   // Prepare slider data for dynamic generation
   final List<Map<String, String>> sliderData = [
@@ -44,12 +48,6 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
   @override
   void initState() {
     super.initState();
-    values = [
-      _showUpRating,
-      _investmentRating,
-      _methodRating,
-      _resultRating,
-    ];
 
     if (widget.oldTrackedDay != null) {
       _showUpRating = widget.oldTrackedDay!.notation!.showUp!;
@@ -57,8 +55,25 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       _resultRating = widget.oldTrackedDay!.notation!.result;
       _methodRating = widget.oldTrackedDay!.notation!.method;
       _extra = widget.oldTrackedDay!.notation!.extra == 1 ? true : false;
+      _goal = widget.oldTrackedDay!.notation!.goal == 1 ? true : false;
       _enteredRecap = widget.oldTrackedDay!.recap;
       _enteredImprovement = widget.oldTrackedDay!.improvements;
+      _additionalInputs = widget.oldTrackedDay!.additionalMetrics;
+
+    }
+
+    values = [
+      _showUpRating,
+      _investmentRating,
+      _methodRating,
+      _resultRating,
+    ];
+    _additionalMetrics = widget.habit.additionalMetrics;
+    if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty) {
+      _additionalInputs = _additionalInputs ?? {};
+      for (String item in _additionalMetrics!) {
+        _additionalInputs![item] = _additionalInputs?[item];
+      }
     }
   }
 
@@ -70,16 +85,18 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
     formKey.currentState!.save();
 
     TrackedDay newTrackedDay = TrackedDay(
-      habitId: widget.habitId,
+      habitId: widget.habit.id,
       date: widget.date,
       done: Validated.yes,
       notation: Rating(
-        showUp: _showUpRating,
-        investment: _investmentRating,
-        method: _methodRating,
-        result: _resultRating,
+        showUp: values[0],
+        investment: values[1],
+        method: values[2],
+        result: values[3],
+        goal: _goal ? 1 : 0,
         extra: _extra ? 1 : 0,
       ),
+      additionalMetrics: _additionalInputs,
       recap: _enteredRecap,
       improvements: _enteredImprovement,
     );
@@ -115,27 +132,54 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           );
         }),
 
-        // Extra checkbox field
-        Row(
-          children: [
-            Text('Extra',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall!),
-            const SizedBox(width: 16),
-            Checkbox(
-              value: _extra,
-              onChanged: (value) {
-                setState(() {
-                  _extra = value!;
-                });
-              },
-            ),
-          ],
+        ListTile(
+          title: Text('New Habit / Focus / Goal',
+              style: Theme.of(context).textTheme.titleSmall!),
+          trailing: Checkbox(
+            value: _goal,
+            onChanged: (value) {
+              setState(() {
+                _goal = value!;
+              });
+            },
+          ),
         ),
+        // Extra checkbox field
+        ListTile(
+          title: Text('Extra', style: Theme.of(context).textTheme.titleSmall!),
+          trailing: Checkbox(
+            value: _extra,
+            onChanged: (value) {
+              setState(() {
+                _extra = value!;
+              });
+            },
+          ),
+        ),
+        if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
+          ..._additionalMetrics!.map((item) {
+            return ListTile(
+              title: Text(item, style: Theme.of(context).textTheme.titleSmall!),
+              trailing: SizedBox(
+                  width: 64,
+                  child: TextFormField(
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      initialValue: _additionalInputs?[item],
+                      onSaved: (newValue) {
+                        _additionalInputs![item] = newValue;
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        counterText: '',
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceBright
+                            .withOpacity(0.75),
+                      ))),
+            );
+          }),
 
         const SizedBox(height: 32),
-
         // Recap and Improvements fields
         BigTextFormField(
           controlledValue: _enteredRecap ?? '',

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tracker_v1/models/user.dart';
+import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';

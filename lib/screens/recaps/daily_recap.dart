@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/daily_recap.dart';
-import 'package:tracker_v1/models/tracked_day.dart';
+import 'package:tracker_v1/models/datas/daily_recap.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
@@ -15,12 +15,12 @@ class DailyRecapScreen extends ConsumerStatefulWidget {
     this.date,
     this.habitId, {
     super.key,
-    this.oldTrackedDay,
+    this.oldDailyRecap,
   });
 
   final DateTime date;
   final String habitId;
-  final RecapDay? oldTrackedDay;
+  final RecapDay? oldDailyRecap;
 
   @override
   ConsumerState<DailyRecapScreen> createState() => _HabitRecapScreenState();
@@ -72,20 +72,22 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.oldTrackedDay != null) {
-      values[0] = widget.oldTrackedDay!.sleepQuality;
-      values[1] = widget.oldTrackedDay!.wellBeing;
-      values[2] = widget.oldTrackedDay!.energy;
-      values[3] = widget.oldTrackedDay!.driveMotivation;
-      values[4] = widget.oldTrackedDay!.stress;
-      values[5] = widget.oldTrackedDay!.focusMentalClarity;
-      values[6] = widget.oldTrackedDay!.intelligenceMentalPower;
-      values[7] = widget.oldTrackedDay!.frustrations;
-      values[8] = widget.oldTrackedDay!.satisfaction;
-      values[9] = widget.oldTrackedDay!.selfEsteemProudness;
-      values[10] = widget.oldTrackedDay!.lookingForwardToWakeUpTomorrow;
-      textFieldValues['Recap'] = widget.oldTrackedDay!.recap;
-      textFieldValues['Improvements'] = widget.oldTrackedDay!.improvements;
+    if (widget.oldDailyRecap != null) {
+      values[0] = widget.oldDailyRecap!.sleepQuality;
+      values[1] = widget.oldDailyRecap!.wellBeing;
+      values[2] = widget.oldDailyRecap!.energy;
+      values[3] = widget.oldDailyRecap!.driveMotivation;
+      values[4] = widget.oldDailyRecap!.stress;
+      values[5] = widget.oldDailyRecap!.focusMentalClarity;
+      values[6] = widget.oldDailyRecap!.intelligenceMentalPower;
+      values[7] = widget.oldDailyRecap!.frustrations;
+      values[8] = widget.oldDailyRecap!.satisfaction;
+      values[9] = widget.oldDailyRecap!.selfEsteemProudness;
+      values[10] = widget.oldDailyRecap!.lookingForwardToWakeUpTomorrow;
+      textFieldValues['Recap'] = widget.oldDailyRecap!.recap;
+      textFieldValues['Improvements'] = widget.oldDailyRecap!.improvements;
+      textFieldValues['What am I grateful for?'] = widget.oldDailyRecap!.gratefulness;
+      textFieldValues['What am I proud of?'] = widget.oldDailyRecap!.proudness;
     }
   }
 
@@ -97,6 +99,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     formKey.currentState!.save();
 
     RecapDay newRecapDay = RecapDay(
+      id: widget.oldDailyRecap?.id,
       sleepQuality: values[0],
       wellBeing: values[1],
       energy: values[2],
@@ -111,11 +114,13 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       date: widget.date,
       recap: textFieldValues['Recap'],
       improvements: textFieldValues['Improvements'],
+      gratefulness: textFieldValues['What am I grateful for?'],
+      proudness: textFieldValues['What am I proud of?'],
     );
 
     Navigator.of(context).pop();
 
-    if (widget.oldTrackedDay == null) {
+    if (widget.oldDailyRecap == null) {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
     } else {
       ref.read(recapDayProvider.notifier).updateRecapDay(newRecapDay);

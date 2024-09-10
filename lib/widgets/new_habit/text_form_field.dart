@@ -9,6 +9,7 @@ class BasicTextFormField extends StatelessWidget {
     this.optional = true,
     this.controller,
     required this.passValue,
+    this.initialValue,
   });
 
   final int maxLength;
@@ -17,10 +18,12 @@ class BasicTextFormField extends StatelessWidget {
   final bool optional;
   final void Function(String? enteredValue) passValue;
   final TextEditingController? controller;
+  final String? initialValue;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      initialValue: initialValue,
       controller: controller,
       validator: (value) {
         if (!optional && (value == null || value.trim().isEmpty)) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/appearance.dart';
-import 'package:tracker_v1/models/habit.dart';
-import 'package:tracker_v1/models/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/appearance.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
@@ -43,7 +43,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         isScrollControlled: true,
         context: context,
         builder: (ctx) => HabitRecapScreen(
-          habit.id,
+          habit,
           date,
         ),
       );
@@ -75,7 +75,8 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final habitsList = ref.watch(habitProvider).where((item) {
+    final habitsList = ref.watch(habitProvider);
+    final todayHabitsList = habitsList.where((item) {
       List<int?> weekDaysNumberList = item.weekdays
           .map((day) => DaysUtility.weekDayToNumber[day])
           .toList(); //! Caching OR Database?
@@ -88,15 +89,20 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     );
 
     if (habitsList.isNotEmpty) {
+      content = const Align(
+      child: Text('No habits today 💤'));
+    }
+
+    if (todayHabitsList.isNotEmpty) {
       content = ListView.builder(
         padding: const EdgeInsets.only(top: 4),
-        itemCount: habitsList.length,
+        itemCount: todayHabitsList.length,
         itemBuilder: (context, index) {
           TrackedDay? trackedDay =
-              trackedDays[habitsList[index].trackedDays[date]];
+              trackedDays[todayHabitsList[index].trackedDays[date]];
 
           StatusAppearance? appearance = trackedDay != null
-              ? trackedDay.getStatusAppearance(context)
+              ? trackedDay.getStatusAppearance(Theme.of(context).colorScheme)
               : StatusAppearance(
                   backgroundColor: const Color.fromARGB(255, 51, 51, 51),
                   elementsColor: Colors.white);
@@ -105,13 +111,13 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
             direction: DismissDirection.horizontal,
             confirmDismiss: (direction) async {
               if (direction == DismissDirection.startToEnd) {
-                _startToEndSwiping(habitsList[index]);
+                _startToEndSwiping(todayHabitsList[index]);
               } else if (direction == DismissDirection.endToStart) {
-                _endToStartSwiping(trackedDay, habitsList[index].id);
+                _endToStartSwiping(trackedDay, todayHabitsList[index].id);
               }
               return false;
             },
-            key: ObjectKey(habitsList[index]),
+            key: ObjectKey(todayHabitsList[index]),
             background: Container(
               color: Theme.of(context).colorScheme.secondary,
             ),
@@ -119,8 +125,8 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
               color: Colors.red,
             ),
             child: HabitWidget(
-              name: habitsList[index].name,
-              icon: habitsList[index].icon,
+              name: todayHabitsList[index].name,
+              icon: todayHabitsList[index].icon,
               appearance: appearance,
             ),
           );

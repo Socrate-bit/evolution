@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/daily_recap.dart';
+import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:sqflite/sqlite_api.dart';
 import 'dart:convert';
@@ -34,7 +34,8 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
             improvements TEXT,
             gratefulness TEXT,
             proudness TEXT,
-            additionalMetrics TEXT
+            additionalMetrics TEXT,
+            synced INTEGER
           )
         ''');
       },
@@ -61,7 +62,8 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
         'frustrations': newRecapDay.frustrations,
         'satisfaction': newRecapDay.satisfaction,
         'selfEsteemProudness': newRecapDay.selfEsteemProudness,
-        'lookingForwardToWakeUpTomorrow': newRecapDay.lookingForwardToWakeUpTomorrow,
+        'lookingForwardToWakeUpTomorrow':
+            newRecapDay.lookingForwardToWakeUpTomorrow,
         'recap': newRecapDay.recap,
         'improvements': newRecapDay.improvements,
         'gratefulness': newRecapDay.gratefulness,
@@ -69,6 +71,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
         'additionalMetrics': newRecapDay.additionalMetrics != null
             ? jsonEncode(newRecapDay.additionalMetrics)
             : null,
+        'synced': newRecapDay.synced ? 1 : 0,
       },
       conflictAlgorithm: sql.ConflictAlgorithm.replace,
     );
@@ -113,12 +116,14 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
         frustrations: row['frustrations'] as double? ?? 0,
         satisfaction: row['satisfaction'] as double? ?? 0,
         selfEsteemProudness: row['selfEsteemProudness'] as double? ?? 0,
-        lookingForwardToWakeUpTomorrow: row['lookingForwardToWakeUpTomorrow'] as double? ?? 0,
+        lookingForwardToWakeUpTomorrow:
+            row['lookingForwardToWakeUpTomorrow'] as double? ?? 0,
         recap: row['recap'] as String?,
         improvements: row['improvements'] as String?,
         additionalMetrics: row['additionalMetrics'] != null
             ? jsonDecode(row['additionalMetrics'] as String)
             : null,
+        synced: row['synced'] == 1,
       );
     }).toList();
 

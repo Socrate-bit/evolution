@@ -9,6 +9,7 @@ class UserData {
     required this.inscriptionDate,
     required this.name,
     required this.profilPicture,
+    this.synced = false,
   }) {
     this.userId = userId ?? idGenerator.v4();
   }
@@ -17,4 +18,5 @@ class UserData {
   DateTime inscriptionDate;
   String name;
   File profilPicture;
+  bool synced;
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/habit.dart';
-import 'package:tracker_v1/models/tracked_day.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:sqflite/sqflite.dart' as sql;
 import 'package:sqflite/sqlite_api.dart';
@@ -25,11 +25,13 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
             notation_showUp REAL,            
             notation_investment REAL,        
             notation_method REAL,            
-            notation_result REAL,            
+            notation_result REAL, 
+            notation_goal REAL,           
             notation_extra REAL,             
             recap TEXT,                     
             improvements TEXT,               
-            additionalMetrics TEXT           
+            additionalMetrics TEXT,
+            synced INTEGER          
           )
         ''');
       },
@@ -52,12 +54,14 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
         'notation_investment': newTrackedDay.notation?.investment,
         'notation_method': newTrackedDay.notation?.method,
         'notation_result': newTrackedDay.notation?.result,
+        'notation_goal': newTrackedDay.notation?.goal,
         'notation_extra': newTrackedDay.notation?.extra,
         'recap': newTrackedDay.recap,
         'improvements': newTrackedDay.improvements,
         'additionalMetrics': newTrackedDay.additionalMetrics != null
             ? jsonEncode(newTrackedDay.additionalMetrics)
             : null,
+        'synced': newTrackedDay.synced ? 1 : 0,
       },
       conflictAlgorithm: sql.ConflictAlgorithm.replace,
     );
@@ -109,6 +113,7 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
                 investment: row['notation_investment'] as double,
                 method: row['notation_method'] as double,
                 result: row['notation_result'] as double,
+                goal: row['notation_goal'] as double,
                 extra: row['notation_extra'] as double,
               ),
         recap: row['recap'] as String?,
@@ -116,6 +121,7 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
         additionalMetrics: row['additionalMetrics'] != null
             ? jsonDecode(row['additionalMetrics'] as String)
             : null,
+        synced: row['synced'] == 1,
       );
       loadedData[trackedDay.id] = trackedDay;
     }

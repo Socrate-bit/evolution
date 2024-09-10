@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/habit.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/screens/habits/new_habit.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
 
 class HabitScreen extends ConsumerWidget {
   const HabitScreen(this.habit, {super.key});
   final Habit habit;
+
+  void showNewHabit(Habit targetHabit, context) {
+    showModalBottomSheet(
+      useSafeArea: true,
+      isScrollControlled: true,
+      context: context,
+      builder: (ctx) => NewHabitScreen(
+        habit: targetHabit,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,6 +30,11 @@ class HabitScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Data deleted')));
     }
+
+    final currentHabit = ref.watch(habitProvider).firstWhere(
+      (h) => h.id == habit.id,
+      orElse: () => habit,
+    );
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -29,22 +46,28 @@ class HabitScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(habit.name, style: Theme.of(context).textTheme.titleLarge),
+              Text(currentHabit.name, style: Theme.of(context).textTheme.titleLarge),
               Text(
                   habit.description!.isEmpty
                       ? 'No description'
-                      : habit.description!,
+                      : currentHabit.description!,
                   style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(
                 height: 32,
               ),
-              SizedBox(
-                  width: double.infinity,
-                  height: 60,
-                  child: CustomElevatedButton(
-                    submit: resetData,
-                    text: 'Reset data',
-                  )),
+              CustomElevatedButton(
+                submit: () {
+                  showNewHabit(currentHabit, context);
+                },
+                text: 'Edit habit',
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              CustomElevatedButton(
+                submit: resetData,
+                text: 'Reset data',
+              ),
               const SizedBox(
                 height: 8,
               ),

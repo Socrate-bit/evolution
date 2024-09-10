@@ -3,7 +3,11 @@ import 'package:uuid/uuid.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 const idGenerator = Uuid();
+
 enum ValidationType { binary, evaluation, recapDay }
+
+DateTime now = DateTime.now();
+DateTime today = DateTime(now.year, now.month, now.day);
 
 class Habit {
   Habit(
@@ -18,9 +22,13 @@ class Habit {
       required this.startDate,
       this.endDate,
       this.additionalMetrics,
-      trackedDays})
+      required this.orderIndex,
+      this.synced = false,
+      trackedDays,
+      frequencyChanges})
       : id = id ?? idGenerator.v4(),
-        trackedDays = trackedDays ?? {};
+        trackedDays = trackedDays ?? {},
+        frequencyChanges = frequencyChanges ?? {today: frequency};
 
   String userId;
   String id;
@@ -34,6 +42,9 @@ class Habit {
   DateTime? endDate;
   List<String>? additionalMetrics;
   Map<DateTime, String> trackedDays;
+  int orderIndex;
+  Map<DateTime, int> frequencyChanges;
+  bool synced;
 
   Habit copy() {
     return Habit(
@@ -48,6 +59,7 @@ class Habit {
         startDate: startDate,
         endDate: endDate,
         additionalMetrics: additionalMetrics,
-        trackedDays: trackedDays);
+        trackedDays: trackedDays,
+        orderIndex: orderIndex);
   }
 }

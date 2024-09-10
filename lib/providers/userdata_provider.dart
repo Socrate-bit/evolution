@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/user.dart';
+import 'package:tracker_v1/models/datas/user.dart';
 import 'package:path_provider/path_provider.dart' as syspath;
 import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart' as sql;
@@ -16,7 +16,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
       version: 1,
       onCreate: (db, version) {
         return db.execute(
-            'CREATE TABLE user_data(id TEXT PRIMARY KEY, inscriptionDate TEXT, name TEXT, profilPicture TEXT)');
+            'CREATE TABLE user_data(id TEXT PRIMARY KEY, inscriptionDate TEXT, name TEXT, profilPicture TEXT, synced INTEGER)');
       },
     );
 
@@ -37,7 +37,8 @@ class AuthNotifier extends StateNotifier<UserData?> {
       'id': userdata.userId,
       'inscriptionDate': userdata.inscriptionDate.toIso8601String(),
       'name': userdata.name,
-      'profilPicture': copiedImage.path
+      'profilPicture': copiedImage.path,
+      'synced' : userdata.synced ? 1 : 0,
     });
   }
 
@@ -55,6 +56,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
         inscriptionDate: DateTime.parse(row['inscriptionDate'] as String),
         name: row['name'] as String,
         profilPicture: File(row['profilPicture'] as String),
+        synced: row['synced'] == 1,
       );
     }).toList()[0];
     state = userData;
