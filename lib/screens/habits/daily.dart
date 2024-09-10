@@ -8,8 +8,6 @@ import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
-import 'package:tracker_v1/models/utilities/days_utility.dart';
-
 
 class DailyScreen extends ConsumerStatefulWidget {
   const DailyScreen({super.key});
@@ -61,27 +59,13 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
   void _endToStartSwiping(trackedDay, habitId) {
     if (trackedDay == null) return;
-    //   TrackedDay trackedDay = TrackedDay(
-    //     habitId: habitId,
-    //     date: date,
-    //     done: Validated.no,
-    //   );
-
-    //   ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
-    // } else {
     ref.read(trackedDayProvider.notifier).deleteTrackedDay(trackedDay);
-    // }
   }
 
   @override
   Widget build(BuildContext context) {
     final habitsList = ref.watch(habitProvider);
-    final todayHabitsList = habitsList.where((item) {
-      List<int?> weekDaysNumberList = item.weekdays
-          .map((day) => DaysUtility.weekDayToNumber[day])
-          .toList(); //! Caching OR Database?
-      return weekDaysNumberList.contains(DateTime.now().weekday);
-    }).toList();
+    final todayHabitsList = ref.watch(habitProvider.notifier).getTodayHabit(date);
     final trackedDays = ref.watch(trackedDayProvider);
 
     Widget content = const Align(

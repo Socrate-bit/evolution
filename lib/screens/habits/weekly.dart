@@ -29,7 +29,6 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
   @override
   Widget build(BuildContext context) {
     final List<DateTime> offsetWeekDays = _getOffsetWeekDays;
-    print('Weekly');
     return Column(
       children: [
         Container(

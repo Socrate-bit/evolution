@@ -33,6 +33,7 @@ class _PictureAvatarState extends State<PictureAvatar> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      borderRadius: BorderRadius.circular(60),
       onTap: _takePicture,
       child: CircleAvatar(
         radius: 60,
@@ -42,7 +43,7 @@ class _PictureAvatarState extends State<PictureAvatar> {
         child: Icon(
           color: _pickedProfilPicture == null
               ? Theme.of(context).colorScheme.onSurface.withOpacity(0.8)
-              :  Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           Icons.photo_camera,
           size: 30,
         ),

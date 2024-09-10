@@ -21,14 +21,7 @@ class WeeklyTable extends ConsumerWidget {
       Habit habit, List<DateTime> offsetWeekDays) {
     final Map<DateTime, String> trackedDays = habit.trackedDays;
     List<bool> isTrackedFilter = range.map((index) {
-      final DateTime day = offsetWeekDays[index];
-      final bool isStarted = habit.startDate.isBefore(day) ||
-          habit.startDate.isAtSameMomentAs(day);
-      final bool isEnded = habit.endDate != null &&
-          (habit.endDate!.isAfter(day) || habit.endDate!.isAtSameMomentAs(day));
-      final bool isTracked =
-          habit.weekdays.contains(WeekDay.values[day.weekday - 1]);
-      return isStarted && !isEnded && isTracked;
+      return HabitNotifier.getHabitTrackingStatus(habit, offsetWeekDays[index]);
     }).toList();
 
     List<dynamic> result = range.map((index) {

@@ -260,6 +260,23 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
     state = loadedData;
   }
+
+  /// Get a list of the habit that are tracked at the target day 
+  List<Habit> getTodayHabit(date) {
+    return state.where((habit) => getHabitTrackingStatus(habit, date)).toList();
+  }
+
+  /// Helper function, check if the habit is tracked at the target day
+  static bool getHabitTrackingStatus(Habit habit, DateTime date) {
+      final bool isStarted = habit.startDate.isBefore(date) ||
+          habit.startDate.isAtSameMomentAs(date);
+      final bool isEnded = habit.endDate != null &&
+          (habit.endDate!.isBefore(date) || habit.endDate!.isAtSameMomentAs(date));
+      final bool isTracked =
+          habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
+      return isStarted && !isEnded && isTracked;
+  }
+
 }
 
 final habitProvider = StateNotifierProvider<HabitNotifier, List<Habit>>(

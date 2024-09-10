@@ -27,12 +27,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   String? _enteredPassWord;
 
   void _submit() async {
+    if (_pickedProfilPicture == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must pick a picture'),
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     _formKey.currentState!.save();
-    _isAuthentifying = true;
+
+    setState(() {
+      _isAuthentifying = true;
+    });
 
     try {
       if (!_isLogin) {
@@ -62,7 +76,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           .showSnackBar(SnackBar(content: Text(errorMessage)));
     }
 
-    _isAuthentifying = false;
+    setState(() {
+      _isAuthentifying = false;
+    });
   }
 
   @override
@@ -121,7 +137,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             ),
                             validator: (value) {
                               if (value == null ||
-                                  value.trim().length < 5 ||
+                                  value.trim().length < 2 ||
                                   value.trim().length > 50) {
                                 return 'Invalid username';
                               }
@@ -143,7 +159,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           ),
                           validator: (value) {
                             if (value == null ||
-                                value.trim().length < 10 ||
+                                value.trim().length < 2 ||
                                 value.trim().length > 50) {
                               return 'Invalid password';
                             }
@@ -169,11 +185,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           _isLogin = !_isLogin;
                         });
                       },
-                      child: Text(!_isLogin
-                          ? 'I have already an account'
-                          : 'Create an account', style: Theme.of(context)
-                .textTheme
-                .titleSmall!.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.normal)),
+                      child: Text(
+                          !_isLogin
+                              ? 'I have already an account'
+                              : 'Create an account',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.normal)),
                     ),
                   if (_isAuthentifying) const CircularProgressIndicator()
                 ],
