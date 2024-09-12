@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
@@ -30,9 +31,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool isLoading = true;
 
   void loadData() async {
+
     await ref.read(userDataProvider.notifier).loadData();
     await ref.read(habitProvider.notifier).loadData();
     await ref.read(trackedDayProvider.notifier).loadData();
+    await ref.read(recapDayProvider.notifier).loadData();
     setState(() {
       isLoading = false;
     });
@@ -58,12 +61,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         isScrollControlled: true,
         context: context,
         builder: (ctx) => const NewHabitScreen());
-  }
-
-  void deleteData() async {
-    await ref.read(habitProvider.notifier).deleteDatabase('tracked_day.db');
-    await ref.read(habitProvider.notifier).deleteDatabase('habits.db');
-    setState() {};
   }
 
   @override
@@ -100,7 +97,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     tag: userData!.userId!,
                     child: CircleAvatar(
                       radius: 18,
-                      backgroundImage: FileImage(userData.profilPicture),
+                      backgroundImage: NetworkImage(userData.profilPicture),
                     ),
                   ),
                 ),

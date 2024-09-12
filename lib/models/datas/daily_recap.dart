@@ -4,7 +4,8 @@ const idGenerator = Uuid();
 
 class RecapDay {
   RecapDay({
-    id,
+    recapId,
+    required this.userId,
     required this.sleepQuality,
     required this.wellBeing,
     required this.energy,
@@ -23,9 +24,10 @@ class RecapDay {
     this.proudness,
     this.additionalMetrics,
     this.synced = false,
-  }) : id = id ?? idGenerator.v4();
+  }) : recapId = recapId ?? idGenerator.v4();
 
-  String id;
+  String recapId;
+  String userId;
   double sleepQuality;
   double wellBeing;
   double energy;

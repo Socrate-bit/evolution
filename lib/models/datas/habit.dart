@@ -12,7 +12,7 @@ DateTime today = DateTime(now.year, now.month, now.day);
 class Habit {
   Habit(
       {required this.userId,
-      id,
+      habitId,
       required this.icon,
       required this.name,
       this.description,
@@ -26,12 +26,12 @@ class Habit {
       this.synced = false,
       trackedDays,
       frequencyChanges})
-      : id = id ?? idGenerator.v4(),
+      : habitId = habitId ?? idGenerator.v4(),
         trackedDays = trackedDays ?? {},
         frequencyChanges = frequencyChanges ?? {today: frequency};
 
   String userId;
-  String id;
+  String habitId;
   IconData icon;
   String name;
   String? description;
@@ -49,7 +49,7 @@ class Habit {
   Habit copy() {
     return Habit(
         userId: userId,
-        id: id,
+        habitId: habitId,
         icon: icon,
         name: name,
         description: description,

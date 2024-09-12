@@ -2,44 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:sqflite/sqflite.dart' as sql;
-import 'package:sqflite/sqlite_api.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
+import 'package:tracker_v1/providers/tracked_day.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
-  HabitNotifier() : super([]);
+  HabitNotifier(this.ref) : super([]);
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Ref ref;
 
-  Future<Database> getDatabase() async {
-    final dbPath = await sql.getDatabasesPath();
-    final db = await sql.openDatabase(
-      '$dbPath/habits.db',
-      version: 1,
-      onCreate: (db, version) {
-        return db.execute('''
-          CREATE TABLE habits (
-            id TEXT PRIMARY KEY,
-            userId TEXT NOT NULL,
-            icon TEXT NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT,
-            frequency INTEGER NOT NULL,
-            weekdays TEXT,
-            validationType TEXT NOT NULL,
-            startDate TEXT NOT NULL,
-            endDate TEXT,
-            additionalMetrics TEXT,
-            trackedDays TEXT,
-            orderIndex INTEGER NOT NULL,
-            frequencyChanges TEXT,
-            synced INTEGER
-          )
-        ''');
-      },
-    );
-    return db;
-  }
-
+  // Change the order of the habits in the state
   void stateOrderChange(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       newIndex -= 1;
@@ -51,139 +24,111 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     state = newState;
   }
 
+  // Update the order of habits in Firestore
   Future<void> databaseOrderChange() async {
-    final db = await getDatabase();
-    Batch batch = db.batch();
+    WriteBatch batch = _firestore.batch();
 
     List<Habit> newState = List.from(state);
     newState.asMap().forEach((int index, Habit habit) {
       habit.orderIndex = index;
       batch.update(
-        'habits',
-        {'orderIndex': index}, // Set the new orderIndex
-        where: 'id = ?', // Update the row where the id matches
-        whereArgs: [habit.id],
+        _firestore.collection('habits').doc(habit.habitId),
+        {'orderIndex': index},
       );
     });
 
     state = newState;
-    // Commit the batch to execute all updates
     await batch.commit();
   }
 
+  // Add a new Habit to the state and Firestore
   Future<void> addHabit(Habit newHabit) async {
     state = [...state, newHabit];
 
-    final db = await getDatabase();
-    await db.insert(
-      'habits',
-      {
-        'id': newHabit.id,
-        'userId': newHabit.userId,
-        'icon': newHabit.icon.codePoint.toString(),
-        'name': newHabit.name,
-        'description': newHabit.description,
-        'frequency': newHabit.frequency,
-        'weekdays':
-            jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
-        'validationType': newHabit.validationType.toString(),
-        'startDate': newHabit.startDate.toIso8601String(),
-        'endDate': newHabit.endDate?.toIso8601String(),
-        'additionalMetrics': newHabit.additionalMetrics != null
-            ? jsonEncode(newHabit.additionalMetrics)
-            : null,
-        'trackedDays': jsonEncode(newHabit.trackedDays
-            .map((date, id) => MapEntry(date.toIso8601String(), id))),
-        'orderIndex': newHabit.orderIndex,
-        'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-            .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-        'synced': newHabit.synced ? 1 : 0,
-      },
-      conflictAlgorithm: sql.ConflictAlgorithm.replace,
-    );
+    await _firestore.collection('habits').doc(newHabit.habitId).set({
+      'userId': newHabit.userId,
+      'icon': newHabit.icon.codePoint.toString(),
+      'name': newHabit.name,
+      'description': newHabit.description,
+      'frequency': newHabit.frequency,
+      'weekdays': jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+      'validationType': newHabit.validationType.toString(),
+      'startDate': newHabit.startDate.toIso8601String(),
+      'endDate': newHabit.endDate?.toIso8601String(),
+      'additionalMetrics': newHabit.additionalMetrics != null
+          ? jsonEncode(newHabit.additionalMetrics)
+          : null,
+      'trackedDays': jsonEncode(newHabit.trackedDays
+          .map((date, id) => MapEntry(date.toIso8601String(), id))),
+      'orderIndex': newHabit.orderIndex,
+      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
+          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+      'synced': newHabit.synced ? true : false,
+    });
   }
 
+  // Delete a Habit from state and Firestore
   Future<void> deleteHabit(Habit targetHabit) async {
-    state = state.where((habit) => habit.id != targetHabit.id).toList();
-
-    final db = await getDatabase();
-    await db.delete(
-      'habits',
-      where: 'id = ?',
-      whereArgs: [targetHabit.id],
-    );
+    state = state.where((habit) => habit.habitId != targetHabit.habitId).toList();
+    await _firestore.collection('habits').doc(targetHabit.habitId).delete();
   }
 
+  // Update a Habit by deleting and re-adding it
   Future<void> updateHabit(Habit targetHabit, Habit newHabit) async {
     int index = state.indexOf(targetHabit);
-    List<Habit> newState =
-        state.where((habit) => habit.id != targetHabit.id).toList();
+    List<Habit> newState = state.where((habit) => habit.habitId != targetHabit.habitId).toList();
     newState.insert(index, newHabit);
     state = newState;
 
-    // Update in SQLite database
-    final db = await getDatabase();
-    await db.update(
-      'habits',
-      {
-        'id': newHabit.id,
-        'userId': newHabit.userId,
-        'icon': newHabit.icon.codePoint.toString(),
-        'name': newHabit.name,
-        'description': newHabit.description,
-        'frequency': newHabit.frequency,
-        'weekdays':
-            jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
-        'validationType': newHabit.validationType.toString(),
-        'startDate': newHabit.startDate.toIso8601String(),
-        'endDate': newHabit.endDate?.toIso8601String(),
-        'additionalMetrics': newHabit.additionalMetrics != null
-            ? jsonEncode(newHabit.additionalMetrics)
-            : null,
-        'trackedDays': jsonEncode(newHabit.trackedDays
-            .map((date, id) => MapEntry(date.toIso8601String(), id))),
-        'orderIndex': newHabit.orderIndex,
-        'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-            .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-        'synced': 0,
-      },
-      conflictAlgorithm: sql.ConflictAlgorithm.replace,
-      where: 'id = ?',
-      whereArgs: [newHabit.id],
-    );
+    await _firestore.collection('habits').doc(newHabit.habitId).set({
+      'userId': newHabit.userId,
+      'icon': newHabit.icon.codePoint.toString(),
+      'name': newHabit.name,
+      'description': newHabit.description,
+      'frequency': newHabit.frequency,
+      'weekdays': jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+      'validationType': newHabit.validationType.toString(),
+      'startDate': newHabit.startDate.toIso8601String(),
+      'endDate': newHabit.endDate?.toIso8601String(),
+      'additionalMetrics': newHabit.additionalMetrics != null
+          ? jsonEncode(newHabit.additionalMetrics)
+          : null,
+      'trackedDays': jsonEncode(newHabit.trackedDays
+          .map((date, id) => MapEntry(date.toIso8601String(), id))),
+      'orderIndex': newHabit.orderIndex,
+      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
+          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+      'synced': false,
+    });
   }
 
+  // Add a TrackedDay to the habit
   Future<void> addTrackedDay(TrackedDay trackedDay) async {
     state = state.map((habit) {
-      if (habit.id == trackedDay.habitId) {
+      if (habit.habitId == trackedDay.habitId) {
         Habit newHabit = habit.copy();
         DateTime date = DateTime(
           trackedDay.date.year,
           trackedDay.date.month,
           trackedDay.date.day,
         );
-        newHabit.trackedDays[date] = trackedDay.id;
+        newHabit.trackedDays[date] = trackedDay.trackedDayId;
         return newHabit;
       }
       return habit;
     }).toList();
 
-    final db = await getDatabase();
-    Habit habit = state.firstWhere((habit) => habit.id == trackedDay.habitId);
-    await db.update(
-      'habits',
-      {
-        'trackedDays': jsonEncode(habit.trackedDays
-            .map((date, id) => MapEntry(date.toIso8601String(), id))),
-      },
-      where: 'id = ?',
-      whereArgs: [habit.id],
-    );
+    Habit habit = state.firstWhere((habit) => habit.habitId == trackedDay.habitId);
+    await _firestore.collection('habits').doc(habit.habitId).update({
+      'trackedDays': jsonEncode(habit.trackedDays
+          .map((date, id) => MapEntry(date.toIso8601String(), id))),
+    });
   }
 
+  // Delete a TrackedDay from the habit
   Future<void> deleteTrackedDay(TrackedDay trackedDay) async {
     state = state.map((habit) {
-      if (habit.id == trackedDay.habitId) {
+      if (habit.habitId == trackedDay.habitId) {
         Habit newHabit = habit.copy();
         newHabit.trackedDays.remove(trackedDay.date);
         return newHabit;
@@ -191,96 +136,75 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       return habit;
     }).toList();
 
-    final db = await getDatabase();
-    Habit habit = state.firstWhere((habit) => habit.id == trackedDay.habitId);
-    await db.update(
-      'habits',
-      {
-        'trackedDays': jsonEncode(habit.trackedDays
-            .map((date, id) => MapEntry(date.toIso8601String(), id))),
-      },
-      where: 'id = ?',
-      whereArgs: [habit.id],
-    );
+    Habit habit = state.firstWhere((habit) => habit.habitId == trackedDay.habitId);
+    await _firestore.collection('habits').doc(habit.habitId).update({
+      'trackedDays': jsonEncode(habit.trackedDays
+          .map((date, id) => MapEntry(date.toIso8601String(), id))),
+    });
   }
 
-  Future<void> deleteDatabase(String name) async {
-    var databasesPath = await sql.getDatabasesPath();
-    String path = '$databasesPath/$name';
-
-    // Delete the database
-    await sql.deleteDatabase(path);
-  }
-
+  // Load data from Firestore into the state
   Future<void> loadData() async {
-    // deleteDatabase('daily_recap.db');
-    final db = await getDatabase();
-    final data = await db.query('habits', orderBy: 'orderIndex ASC');
+    final snapshot = await _firestore.collection('habits').orderBy('orderIndex').get();
 
-    if (data.isEmpty) {
-      return;
-    }
+    if (snapshot.docs.isEmpty) return;
 
-    final List<Habit> loadedData = data.map((row) {
+    final List<Habit> loadedData = snapshot.docs.map((doc) {
+      final data = doc.data();
       return Habit(
-        id: row['id'] as String,
-        userId: row['userId'] as String,
-        icon: IconData(int.parse(row['icon'] as String),
-            fontFamily: 'MaterialIcons'),
-        name: row['name'] as String,
-        description: row['description'] as String?,
-        frequency: row['frequency'] as int,
-        weekdays: (jsonDecode(row['weekdays'] as String) as List)
+        habitId: doc.id,
+        userId: data['userId'] as String,
+        icon: IconData(int.parse(data['icon'] as String), fontFamily: 'MaterialIcons'),
+        name: data['name'] as String,
+        description: data['description'] as String?,
+        frequency: data['frequency'] as int,
+        weekdays: (jsonDecode(data['weekdays'] as String) as List)
             .map((day) => WeekDay.values.firstWhere((e) => e.toString() == day))
             .toList(),
         validationType: ValidationType.values
-            .firstWhere((e) => e.toString() == row['validationType']),
-        startDate: DateTime.parse(row['startDate'] as String),
-        endDate: row['endDate'] != null
-            ? DateTime.parse(row['endDate'] as String)
+            .firstWhere((e) => e.toString() == data['validationType']),
+        startDate: DateTime.parse(data['startDate'] as String),
+        endDate: data['endDate'] != null
+            ? DateTime.parse(data['endDate'] as String)
             : null,
-        additionalMetrics: row['additionalMetrics'] != null
-            ? List<String>.from(jsonDecode(row['additionalMetrics'] as String))
+        additionalMetrics: data['additionalMetrics'] != null
+            ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
             : null,
-        trackedDays: row['trackedDays'] != null
-            ? (jsonDecode(row['trackedDays'] as String) as Map<String, dynamic>)
-                .map((key, value) =>
-                    MapEntry(DateTime.parse(key), value as String))
+        trackedDays: data['trackedDays'] != null
+            ? (jsonDecode(data['trackedDays'] as String) as Map<String, dynamic>)
+                .map((key, value) => MapEntry(DateTime.parse(key), value as String))
             : {},
-        orderIndex: row['orderIndex'] as int,
-        frequencyChanges: row['frequencyChanges'] != null
-            ? (jsonDecode(row['frequencyChanges'] as String)
-                    as Map<String, dynamic>)
-                .map(
-                    (key, value) => MapEntry(DateTime.parse(key), value as int))
+        orderIndex: data['orderIndex'] as int,
+        frequencyChanges: data['frequencyChanges'] != null
+            ? (jsonDecode(data['frequencyChanges'] as String) as Map<String, dynamic>)
+                .map((key, value) => MapEntry(DateTime.parse(key), value as int))
             : {},
-        synced: row['synced'] == 1,
+        synced: data['synced'] == true,
       );
     }).toList();
 
     state = loadedData;
   }
 
-  /// Get a list of the habit that are tracked at the target day 
-  List<Habit> getTodayHabit(date) {
+  // Get a list of the habits that are tracked on the target day
+  List<Habit> getTodayHabit(DateTime date) {
     return state.where((habit) => getHabitTrackingStatus(habit, date)).toList();
   }
 
-  /// Helper function, check if the habit is tracked at the target day
+  // Helper function to check if the habit is tracked on the target day
   static bool getHabitTrackingStatus(Habit habit, DateTime date) {
-      final bool isStarted = habit.startDate.isBefore(date) ||
-          habit.startDate.isAtSameMomentAs(date);
-      final bool isEnded = habit.endDate != null &&
-          (habit.endDate!.isBefore(date) || habit.endDate!.isAtSameMomentAs(date));
-      final bool isTracked =
-          habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
-      return isStarted && !isEnded && isTracked;
+    final bool isStarted = habit.startDate.isBefore(date) ||
+        habit.startDate.isAtSameMomentAs(date);
+    final bool isEnded = habit.endDate != null &&
+        (habit.endDate!.isBefore(date) || habit.endDate!.isAtSameMomentAs(date));
+    final bool isTracked =
+        habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
+    return isStarted && !isEnded && isTracked;
   }
-
 }
 
 final habitProvider = StateNotifierProvider<HabitNotifier, List<Habit>>(
   (ref) {
-    return HabitNotifier();
+    return HabitNotifier(ref);
   },
 );

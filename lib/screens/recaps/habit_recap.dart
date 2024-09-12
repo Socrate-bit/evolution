@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
@@ -85,7 +86,8 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
     formKey.currentState!.save();
 
     TrackedDay newTrackedDay = TrackedDay(
-      habitId: widget.habit.id,
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      habitId: widget.habit.habitId,
       date: widget.date,
       done: Validated.yes,
       notation: Rating(

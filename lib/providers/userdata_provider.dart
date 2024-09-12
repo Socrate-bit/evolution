@@ -1,64 +1,42 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/user.dart';
-import 'package:path_provider/path_provider.dart' as syspath;
-import 'package:path/path.dart' as path;
-import 'package:sqflite/sqflite.dart' as sql;
-import 'package:sqflite/sqlite_api.dart';
-import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthNotifier extends StateNotifier<UserData?> {
   AuthNotifier() : super(null);
 
-  Future<Database> getDatabase() async {
-    final dbPath = await sql.getDatabasesPath();
-    final db = await sql.openDatabase(
-      '$dbPath/user_data.db',
-      version: 1,
-      onCreate: (db, version) {
-        return db.execute(
-            'CREATE TABLE user_data(id TEXT PRIMARY KEY, inscriptionDate TEXT, name TEXT, profilPicture TEXT, synced INTEGER)');
-      },
-    );
-
-    return db;
-  }
+  final firestore = FirebaseFirestore.instance;
 
   Future<void> addUserData(UserData userdata) async {
     state = userdata;
 
-    final documentPath = await syspath.getApplicationDocumentsDirectory();
-
-    final filename = path.basename(userdata.profilPicture.path);
-    final copiedImage =
-        await userdata.profilPicture.copy('${documentPath.path}/$filename');
-    final db = await getDatabase();
-
-    await db.insert('user_data', {
-      'id': userdata.userId,
+    // Save user data to Firestore
+    await firestore.collection('user_data').doc(userdata.userId).set({
+      'userId': userdata.userId,
       'inscriptionDate': userdata.inscriptionDate.toIso8601String(),
       'name': userdata.name,
-      'profilPicture': copiedImage.path,
-      'synced' : userdata.synced ? 1 : 0,
+      'profilPicture': userdata.profilPicture,
+      'synced': userdata.synced ? true : false,
     });
   }
 
   Future<void> loadData() async {
-    final db = await getDatabase();
-    final data = await db.query('user_data.db');
+    final docSnapshot = await firestore
+        .collection('user_data')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    if (!docSnapshot.exists) return;
 
-    if (data.isEmpty) {
-      return;
-    }
+    final data = docSnapshot.data()!;
+    final userData = UserData(
+      userId: data['userId'] as String,
+      inscriptionDate: DateTime.parse(data['inscriptionDate'] as String),
+      name: data['name'] as String,
+      profilPicture: data['profilPicture'] as String,
+      synced: data['synced'] as bool,
+    );
 
-    final userData = data.map((row) {
-      return UserData(
-        userId: row['id'] as String,
-        inscriptionDate: DateTime.parse(row['inscriptionDate'] as String),
-        name: row['name'] as String,
-        profilPicture: File(row['profilPicture'] as String),
-        synced: row['synced'] == 1,
-      );
-    }).toList()[0];
     state = userData;
   }
 }

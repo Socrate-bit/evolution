@@ -8,7 +8,8 @@ enum Validated { notYet, yes, no }
 
 class TrackedDay {
   TrackedDay({
-    id,
+    trackedDayId,
+    required this.userId,
     required this.habitId,
     required this.date,
     required this.done,
@@ -17,9 +18,11 @@ class TrackedDay {
     this.improvements,
     this.additionalMetrics,
     this.synced = false,
-  }) : id = id ?? idGenerator.v4();
+  }) : trackedDayId = trackedDayId ?? idGenerator.v4();
 
-  String id;
+
+  String trackedDayId;
+  String userId;
   String habitId;
   DateTime date;
   Validated done;

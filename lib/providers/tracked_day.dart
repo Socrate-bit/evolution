@@ -2,82 +2,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:sqflite/sqflite.dart' as sql;
-import 'package:sqflite/sqlite_api.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
 class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
   TrackedDayNotifier(this.ref) : super({});
   final Ref ref;
-
-  Future<Database> getDatabase() async {
-    final dbPath = await sql.getDatabasesPath();
-    final db = await sql.openDatabase(
-      '$dbPath/tracked_day.db',
-      version: 1,
-      onCreate: (db, version) {
-        return db.execute('''
-          CREATE TABLE TrackedDay (
-            id TEXT PRIMARY KEY,             
-            habitId TEXT NOT NULL,           
-            date TEXT NOT NULL,              
-            done INTEGER NOT NULL,           
-            notation_showUp REAL,            
-            notation_investment REAL,        
-            notation_method REAL,            
-            notation_result REAL, 
-            notation_goal REAL,           
-            notation_extra REAL,             
-            recap TEXT,                     
-            improvements TEXT,               
-            additionalMetrics TEXT,
-            synced INTEGER          
-          )
-        ''');
-      },
-    );
-    return db;
-  }
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> addTrackedDay(TrackedDay newTrackedDay) async {
-    state = {...state, newTrackedDay.id: newTrackedDay};
+    state = {...state, newTrackedDay.trackedDayId: newTrackedDay};
 
-    final db = await getDatabase();
-    await db.insert(
-      'TrackedDay',
-      {
-        'id': newTrackedDay.id,
-        'habitId': newTrackedDay.habitId,
-        'date': newTrackedDay.date.toIso8601String(),
-        'done': newTrackedDay.done == Validated.yes ? 1 : 0,
-        'notation_showUp': newTrackedDay.notation?.showUp,
-        'notation_investment': newTrackedDay.notation?.investment,
-        'notation_method': newTrackedDay.notation?.method,
-        'notation_result': newTrackedDay.notation?.result,
-        'notation_goal': newTrackedDay.notation?.goal,
-        'notation_extra': newTrackedDay.notation?.extra,
-        'recap': newTrackedDay.recap,
-        'improvements': newTrackedDay.improvements,
-        'additionalMetrics': newTrackedDay.additionalMetrics != null
-            ? jsonEncode(newTrackedDay.additionalMetrics)
-            : null,
-        'synced': newTrackedDay.synced ? 1 : 0,
-      },
-      conflictAlgorithm: sql.ConflictAlgorithm.replace,
-    );
+    await _firestore.collection('TrackedDay').doc(newTrackedDay.trackedDayId).set({
+      'userId' : newTrackedDay.userId, 
+      'habitId': newTrackedDay.habitId,
+      'date': newTrackedDay.date.toIso8601String(),
+      'done': newTrackedDay.done == Validated.yes ? true : false,
+      'notation_showUp': newTrackedDay.notation?.showUp,
+      'notation_investment': newTrackedDay.notation?.investment,
+      'notation_method': newTrackedDay.notation?.method,
+      'notation_result': newTrackedDay.notation?.result,
+      'notation_goal': newTrackedDay.notation?.goal,
+      'notation_extra': newTrackedDay.notation?.extra,
+      'recap': newTrackedDay.recap,
+      'improvements': newTrackedDay.improvements,
+      'additionalMetrics': newTrackedDay.additionalMetrics != null
+          ? jsonEncode(newTrackedDay.additionalMetrics)
+          : null,
+      'synced': newTrackedDay.synced ? true : false,
+    });
 
     ref.read(habitProvider.notifier).addTrackedDay(newTrackedDay);
   }
 
   Future<void> deleteTrackedDay(TrackedDay targetTrackedDay) async {
-    state = Map.from(state)..remove(targetTrackedDay.id);
+    state = Map.from(state)..remove(targetTrackedDay.trackedDayId);
 
-    final db = await getDatabase();
-    await db.delete(
-      'TrackedDay',
-      where: 'id = ?',
-      whereArgs: [targetTrackedDay.id],
-    );
+    await _firestore.collection('TrackedDay').doc(targetTrackedDay.trackedDayId).delete();
 
     ref.read(habitProvider.notifier).deleteTrackedDay(targetTrackedDay);
   }
@@ -94,18 +55,20 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
   }
 
   Future<void> loadData() async {
-    final db = await getDatabase();
-    final data = await db.query('TrackedDay');
+    final snapshot = await _firestore.collection('TrackedDay').get();
+    final data = snapshot.docs;
 
     if (data.isEmpty) return;
 
     final Map<String, TrackedDay> loadedData = {};
-    for (final row in data) {
+    for (final doc in data) {
+      final row = doc.data();
       final trackedDay = TrackedDay(
-        id: row['id'] as String,
+        trackedDayId: doc.id,
+        userId: row['userId'] as String,
         habitId: row['habitId'] as String,
         date: DateTime.parse(row['date'] as String),
-        done: (row['done'] as int) == 1 ? Validated.yes : Validated.no,
+        done: (row['done'] as bool) ? Validated.yes : Validated.no,
         notation: row['notation_showUp'] == null
             ? null
             : Rating(
@@ -121,9 +84,9 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
         additionalMetrics: row['additionalMetrics'] != null
             ? jsonDecode(row['additionalMetrics'] as String)
             : null,
-        synced: row['synced'] == 1,
+        synced: row['synced'] as bool,
       );
-      loadedData[trackedDay.id] = trackedDay;
+      loadedData[trackedDay.trackedDayId] = trackedDay;
     }
 
     state = loadedData;

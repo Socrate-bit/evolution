@@ -48,6 +48,8 @@ dependencies:
   path: ^1.9.0
   flutter_native_splash: ^2.4.1
   icons_launcher: ^2.1.7
+  firebase_storage: ^12.3.0
+  cloud_firestore: ^5.4.1
 
 flutter_native_splash:
  color: "#141414"

@@ -32,7 +32,7 @@ class HabitScreen extends ConsumerWidget {
     }
 
     final currentHabit = ref.watch(habitProvider).firstWhere(
-      (h) => h.id == habit.id,
+      (h) => h.habitId == habit.habitId,
       orElse: () => habit,
     );
 

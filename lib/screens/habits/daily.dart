@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
@@ -29,7 +30,8 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   void _startToEndSwiping(Habit habit) {
     if (habit.validationType == ValidationType.binary) {
       TrackedDay trackedDay = TrackedDay(
-        habitId: habit.id,
+        userId: FirebaseAuth.instance.currentUser!.uid,
+        habitId: habit.habitId,
         date: date,
         done: Validated.yes,
       );
@@ -50,9 +52,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) => DailyRecapScreen(
-          date, habit.id
-        ),
+        builder: (ctx) => DailyRecapScreen(date, habit.habitId),
       );
     }
   }
@@ -65,7 +65,8 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   @override
   Widget build(BuildContext context) {
     final habitsList = ref.watch(habitProvider);
-    final todayHabitsList = ref.watch(habitProvider.notifier).getTodayHabit(date);
+    final todayHabitsList =
+        ref.watch(habitProvider.notifier).getTodayHabit(date);
     final trackedDays = ref.watch(trackedDayProvider);
 
     Widget content = const Align(
@@ -73,8 +74,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     );
 
     if (habitsList.isNotEmpty) {
-      content = const Align(
-      child: Text('No habits today 💤'));
+      content = const Align(child: Text('No habits today 💤'));
     }
 
     if (todayHabitsList.isNotEmpty) {
@@ -97,7 +97,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
               if (direction == DismissDirection.startToEnd) {
                 _startToEndSwiping(todayHabitsList[index]);
               } else if (direction == DismissDirection.endToStart) {
-                _endToStartSwiping(trackedDay, todayHabitsList[index].id);
+                _endToStartSwiping(trackedDay, todayHabitsList[index].habitId);
               }
               return false;
             },

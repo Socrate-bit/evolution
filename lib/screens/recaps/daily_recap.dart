@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
@@ -99,7 +100,8 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     formKey.currentState!.save();
 
     RecapDay newRecapDay = RecapDay(
-      id: widget.oldDailyRecap?.id,
+      recapId: widget.oldDailyRecap?.recapId,
+      userId: FirebaseAuth.instance.currentUser!.uid,
       sleepQuality: values[0],
       wellBeing: values[1],
       energy: values[2],
@@ -127,6 +129,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     }
 
     TrackedDay trackedDay = TrackedDay(
+      userId: FirebaseAuth.instance.currentUser!.uid,
       habitId: widget.habitId,
       date: widget.date,
       done: Validated.yes,

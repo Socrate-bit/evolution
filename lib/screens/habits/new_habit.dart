@@ -68,7 +68,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
     Habit newHabit = Habit(
         userId: FirebaseAuth.instance.currentUser!.uid,
-        id: widget.habit?.id,
+        habitId: widget.habit?.habitId,
         icon: _enteredIcon,
         name: _enteredName!,
         description: _enteredDescription,

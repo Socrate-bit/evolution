@@ -6,6 +6,8 @@ import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -27,7 +29,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   String? _enteredPassWord;
 
   void _submit() async {
-    if (_pickedProfilPicture == null) {
+    if (_pickedProfilPicture == null && !_isLogin) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,12 +54,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (!_isLogin) {
         await _authentificater.createUserWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
+  final storage = firebase_storage.FirebaseStorage.instance;
 
+            final fileName = _pickedProfilPicture!.uri.pathSegments.last;
+            final storageRef = storage.ref().child('profile_pictures/$fileName');
+            await storageRef.putFile(_pickedProfilPicture!);
+            final downloadUrl = await storageRef.getDownloadURL();
+          
         ref.read(userDataProvider.notifier).addUserData(
               UserData(
+                  userId: FirebaseAuth.instance.currentUser!.uid,
                   inscriptionDate: DateTime.now(),
                   name: _enteredUserName!,
-                  profilPicture: _pickedProfilPicture!),
+                  profilPicture: downloadUrl),
             );
       } else {
         await _authentificater.signInWithEmailAndPassword(

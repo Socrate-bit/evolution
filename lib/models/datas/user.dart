@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
@@ -17,6 +16,6 @@ class UserData {
   String? userId;
   DateTime inscriptionDate;
   String name;
-  File profilPicture;
+  String profilPicture;
   bool synced;
 }

@@ -33,10 +33,6 @@ class ProfilScreen extends ConsumerWidget {
     void deleteAccount() async {
       try {
         await FirebaseAuth.instance.currentUser!.delete();
-        await ref.read(habitProvider.notifier).deleteDatabase('daily_recap.db');
-        await ref.read(habitProvider.notifier).deleteDatabase('habits.db');
-        await ref.read(habitProvider.notifier).deleteDatabase('tracked_day.db');
-        await ref.read(habitProvider.notifier).deleteDatabase('user_data.db');
         Navigator.of(context).pop();
       } catch (error) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -58,7 +54,7 @@ class ProfilScreen extends ConsumerWidget {
               tag: userData!.userId!,
               child: CircleAvatar(
                 radius: 64,
-                backgroundImage: FileImage(userData.profilPicture),
+                backgroundImage: NetworkImage(userData.profilPicture),
               ),
             ),
             const SizedBox(
