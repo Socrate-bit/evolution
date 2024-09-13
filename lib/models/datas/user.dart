@@ -18,4 +18,15 @@ class UserData {
   String name;
   String profilPicture;
   bool synced;
+
+  // Copy method to return a new instance of UserData with the same properties
+  UserData copy() {
+    return UserData(
+      userId: userId,
+      inscriptionDate: inscriptionDate,
+      name: name,
+      profilPicture: profilPicture,
+      synced: synced,
+    );
+  }
 }

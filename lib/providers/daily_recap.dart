@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,7 +26,8 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
       'frustrations': newRecapDay.frustrations,
       'satisfaction': newRecapDay.satisfaction,
       'selfEsteemProudness': newRecapDay.selfEsteemProudness,
-      'lookingForwardToWakeUpTomorrow': newRecapDay.lookingForwardToWakeUpTomorrow,
+      'lookingForwardToWakeUpTomorrow':
+          newRecapDay.lookingForwardToWakeUpTomorrow,
       'recap': newRecapDay.recap,
       'improvements': newRecapDay.improvements,
       'gratefulness': newRecapDay.gratefulness,
@@ -39,9 +41,13 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
 
   // Delete a RecapDay from state and Firestore
   Future<void> deleteRecapDay(RecapDay targetRecapDay) async {
-    state = state.where((day) => day.recapId != targetRecapDay.recapId).toList();
+    state =
+        state.where((day) => day.recapId != targetRecapDay.recapId).toList();
 
-    await _firestore.collection('RecapDay').doc(targetRecapDay.recapId).delete();
+    await _firestore
+        .collection('RecapDay')
+        .doc(targetRecapDay.recapId)
+        .delete();
   }
 
   // Update a RecapDay by deleting and re-adding it
@@ -52,7 +58,10 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
 
   // Load data from Firestore into the state
   Future<void> loadData() async {
-    final snapshot = await _firestore.collection('RecapDay').get();
+    final snapshot = await _firestore
+        .collection('RecapDay')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
 
     if (snapshot.docs.isEmpty) return;
 
@@ -68,11 +77,13 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
         driveMotivation: data['driveMotivation'] as double? ?? 0,
         stress: data['stress'] as double? ?? 0,
         focusMentalClarity: data['focusMentalClarity'] as double? ?? 0,
-        intelligenceMentalPower: data['intelligenceMentalPower'] as double? ?? 0,
+        intelligenceMentalPower:
+            data['intelligenceMentalPower'] as double? ?? 0,
         frustrations: data['frustrations'] as double? ?? 0,
         satisfaction: data['satisfaction'] as double? ?? 0,
         selfEsteemProudness: data['selfEsteemProudness'] as double? ?? 0,
-        lookingForwardToWakeUpTomorrow: data['lookingForwardToWakeUpTomorrow'] as double? ?? 0,
+        lookingForwardToWakeUpTomorrow:
+            data['lookingForwardToWakeUpTomorrow'] as double? ?? 0,
         recap: data['recap'] as String?,
         improvements: data['improvements'] as String?,
         additionalMetrics: data['additionalMetrics'] != null
@@ -84,9 +95,14 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
 
     state = loadedData;
   }
+
+  void cleanState() {
+    state = [];
+  }
 }
 
 // Riverpod provider for RecapDayNotifier
-final recapDayProvider = StateNotifierProvider<RecapDayNotifier, List<RecapDay>>(
+final recapDayProvider =
+    StateNotifierProvider<RecapDayNotifier, List<RecapDay>>(
   (ref) => RecapDayNotifier(ref),
 );

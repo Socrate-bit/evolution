@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
@@ -83,9 +84,9 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         itemCount: todayHabitsList.length,
         itemBuilder: (context, index) {
           TrackedDay? trackedDay =
-              trackedDays[todayHabitsList[index].trackedDays[date]];
+              trackedDays.firstWhereOrNull((trackedDay) {return trackedDay.habitId == habitsList[index].habitId;});
 
-          StatusAppearance? appearance = trackedDay != null
+          StatusAppearance? appearance = trackedDay !=null
               ? trackedDay.getStatusAppearance(Theme.of(context).colorScheme)
               : StatusAppearance(
                   backgroundColor: const Color.fromARGB(255, 51, 51, 51),

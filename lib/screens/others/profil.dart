@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
+import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/models/datas/user.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,22 +15,24 @@ final _imagePicker = ImagePicker();
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
 
+  void logOut(ref, context) async {
+    try {
+      Navigator.of(context).pop();
+      await FirebaseAuth.instance.signOut();
+      ref.read(userDataProvider.notifier).cleanState();
+      ref.read(habitProvider.notifier).cleanState();
+      ref.read(trackedDayProvider.notifier).cleanState();
+      ref.read(recapDayProvider.notifier).cleanState();
+    } catch (error) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     UserData? userData = ref.watch(userDataProvider);
-
-    void logOut() async {
-      try {
-        await FirebaseAuth.instance.signOut();
-        Navigator.of(context).pop();
-      } catch (error) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.toString())));
-      }
-
-      ;
-    }
 
     void deleteAccount() async {
       try {
@@ -41,7 +45,6 @@ class ProfilScreen extends ConsumerWidget {
       }
       ;
     }
-
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -71,7 +74,7 @@ class ProfilScreen extends ConsumerWidget {
               height: 32,
             ),
             CustomElevatedButton(
-              submit: logOut,
+              submit: () {logOut(ref, context);},
               text: 'Log-out',
             ),
             const SizedBox(

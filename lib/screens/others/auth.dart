@@ -6,8 +6,6 @@ import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -54,23 +52,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (!_isLogin) {
         await _authentificater.createUserWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
-  final storage = firebase_storage.FirebaseStorage.instance;
 
-            final fileName = _pickedProfilPicture!.uri.pathSegments.last;
-            final storageRef = storage.ref().child('profile_pictures/$fileName');
-            await storageRef.putFile(_pickedProfilPicture!);
-            final downloadUrl = await storageRef.getDownloadURL();
-          
-        ref.read(userDataProvider.notifier).addUserData(
-              UserData(
-                  userId: FirebaseAuth.instance.currentUser!.uid,
-                  inscriptionDate: DateTime.now(),
-                  name: _enteredUserName!,
-                  profilPicture: downloadUrl),
-            );
+        await ref.read(userDataProvider.notifier).addUserData(UserData(
+              userId: FirebaseAuth.instance.currentUser!.uid,
+              inscriptionDate: DateTime.now(),
+              name: _enteredUserName!,
+              profilPicture: _pickedProfilPicture!.path,
+            ));
       } else {
         await _authentificater.signInWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
+
+        await ref.read(userDataProvider.notifier).loadData();
       }
     } catch (error) {
       String errorMessage = error.toString();
@@ -132,7 +125,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             return null;
                           },
                           onSaved: (newValue) {
-                            _enteredEmailAddress = newValue;
+                            _enteredEmailAddress = newValue!.trim();
                           },
                         ),
                         if (!_isLogin) const SizedBox(height: 12),
@@ -153,7 +146,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               return null;
                             },
                             onSaved: (newValue) {
-                              _enteredUserName = newValue;
+                              _enteredUserName = newValue!.trim();
                             },
                           ),
                         const SizedBox(height: 12),
@@ -175,7 +168,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             return null;
                           },
                           onSaved: (newValue) {
-                            _enteredPassWord = newValue;
+                            _enteredPassWord = newValue!.trim();
                           },
                         ),
                         const SizedBox(height: 40)

@@ -24,10 +24,8 @@ class Habit {
       this.additionalMetrics,
       required this.orderIndex,
       this.synced = false,
-      trackedDays,
       frequencyChanges})
       : habitId = habitId ?? idGenerator.v4(),
-        trackedDays = trackedDays ?? {},
         frequencyChanges = frequencyChanges ?? {today: frequency};
 
   String userId;
@@ -41,7 +39,6 @@ class Habit {
   DateTime startDate;
   DateTime? endDate;
   List<String>? additionalMetrics;
-  Map<DateTime, String> trackedDays;
   int orderIndex;
   Map<DateTime, int> frequencyChanges;
   bool synced;
@@ -59,7 +56,6 @@ class Habit {
         startDate: startDate,
         endDate: endDate,
         additionalMetrics: additionalMetrics,
-        trackedDays: trackedDays,
         orderIndex: orderIndex);
   }
 }

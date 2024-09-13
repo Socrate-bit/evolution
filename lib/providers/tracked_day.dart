@@ -1,20 +1,23 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
-class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
-  TrackedDayNotifier(this.ref) : super({});
+class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
+  TrackedDayNotifier(this.ref) : super([]);
   final Ref ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> addTrackedDay(TrackedDay newTrackedDay) async {
-    state = {...state, newTrackedDay.trackedDayId: newTrackedDay};
+    state = [...state, newTrackedDay];
 
-    await _firestore.collection('TrackedDay').doc(newTrackedDay.trackedDayId).set({
-      'userId' : newTrackedDay.userId, 
+    await _firestore
+        .collection('TrackedDay')
+        .doc(newTrackedDay.trackedDayId)
+        .set({
+      'userId': newTrackedDay.userId,
       'habitId': newTrackedDay.habitId,
       'date': newTrackedDay.date.toIso8601String(),
       'done': newTrackedDay.done == Validated.yes ? true : false,
@@ -31,16 +34,34 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
           : null,
       'synced': newTrackedDay.synced ? true : false,
     });
-
-    ref.read(habitProvider.notifier).addTrackedDay(newTrackedDay);
   }
 
   Future<void> deleteTrackedDay(TrackedDay targetTrackedDay) async {
-    state = Map.from(state)..remove(targetTrackedDay.trackedDayId);
+    state = state
+        .where((td) => td.trackedDayId != targetTrackedDay.trackedDayId)
+        .toList();
 
-    await _firestore.collection('TrackedDay').doc(targetTrackedDay.trackedDayId).delete();
+    await _firestore
+        .collection('TrackedDay')
+        .doc(targetTrackedDay.trackedDayId)
+        .delete();
+  }
 
-    ref.read(habitProvider.notifier).deleteTrackedDay(targetTrackedDay);
+  Future<void> deleteHabitTrackedDays(Habit habit) async {
+    // Filter the tracked days by the habitId
+    final trackedDaysToDelete =
+        state.where((td) => td.habitId == habit.habitId).toList();
+
+    for (TrackedDay trackedDay in trackedDaysToDelete) {
+      // Remove the tracked day from state
+      deleteTrackedDay(trackedDay);
+
+      // Delete the corresponding document from Firestore
+      await _firestore
+          .collection('TrackedDay')
+          .doc(trackedDay.trackedDayId)
+          .delete();
+    }
   }
 
   Future<void> updateTrackedDay(TrackedDay targetTrackedDay) async {
@@ -48,19 +69,16 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
     addTrackedDay(targetTrackedDay);
   }
 
-  Future<void> deleteHabitTrackedDays(Habit habit) async {
-    for (String trackedDay in habit.trackedDays.values) {
-      deleteTrackedDay(state[trackedDay]!);
-    }
-  }
-
   Future<void> loadData() async {
-    final snapshot = await _firestore.collection('TrackedDay').get();
+    final snapshot = await _firestore
+        .collection('TrackedDay')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
     final data = snapshot.docs;
 
     if (data.isEmpty) return;
 
-    final Map<String, TrackedDay> loadedData = {};
+    final List<TrackedDay> loadedData = [];
     for (final doc in data) {
       final row = doc.data();
       final trackedDay = TrackedDay(
@@ -86,15 +104,19 @@ class TrackedDayNotifier extends StateNotifier<Map<String, TrackedDay>> {
             : null,
         synced: row['synced'] as bool,
       );
-      loadedData[trackedDay.trackedDayId] = trackedDay;
+      loadedData.add(trackedDay);
     }
 
     state = loadedData;
   }
+
+  void cleanState() {
+    state = [];
+  }
 }
 
 final trackedDayProvider =
-    StateNotifierProvider<TrackedDayNotifier, Map<String, TrackedDay>>(
+    StateNotifierProvider<TrackedDayNotifier, List<TrackedDay>>(
   (ref) {
     return TrackedDayNotifier(ref);
   },

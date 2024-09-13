@@ -31,7 +31,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool isLoading = true;
 
   void loadData() async {
-
     await ref.read(userDataProvider.notifier).loadData();
     await ref.read(habitProvider.notifier).loadData();
     await ref.read(trackedDayProvider.notifier).loadData();
@@ -76,7 +75,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               leading: IconButton(
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) => MyWidget()));
+                        builder: (ctx) => HabitList()));
                 },
                 icon: const Icon(
                   Icons.list,

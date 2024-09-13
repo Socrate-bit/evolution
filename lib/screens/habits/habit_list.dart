@@ -5,14 +5,14 @@ import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/screens/habits/habit_screen.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
 
-class MyWidget extends ConsumerStatefulWidget {
-  const MyWidget({super.key});
+class HabitList extends ConsumerStatefulWidget {
+  const HabitList({super.key});
 
   @override
-  ConsumerState<MyWidget> createState() => _MyWidgetState();
+  ConsumerState<HabitList> createState() => _MyWidgetState();
 }
 
-class _MyWidgetState extends ConsumerState<MyWidget> {
+class _MyWidgetState extends ConsumerState<HabitList> {
   late dynamic habitsNotifier;
   final defaultAppearance = StatusAppearance(
       backgroundColor: const Color.fromARGB(255, 51, 51, 51),

@@ -13,7 +13,7 @@ class ContainerController {
   final Habit habit;
   final DateTime date;
   final dynamic trackingStatus;
-  final Map<String, TrackedDay> trackedDays;
+  final List<TrackedDay> trackedDays;
   final ColorScheme colorScheme;
   final List<RecapDay> dailyRecaps;
 
@@ -46,7 +46,7 @@ class ContainerController {
           }, null);
       }
     } else {
-      final TrackedDay trackedDay = trackedDays[trackingStatus]!;
+      final TrackedDay trackedDay = trackedDays.firstWhere((td) {return td.habitId == habit.habitId;});
       Future<void> onLongPress() async {
         await ref
             .read(trackedDayProvider.notifier)
@@ -90,7 +90,7 @@ class ContainerController {
     } else if (trackingStatus == true) {
       return const Color.fromARGB(255, 52, 52, 52);
     } else {
-      final TrackedDay trackedDay = trackedDays[trackingStatus]!;
+      final TrackedDay trackedDay = trackedDays.firstWhere((td) {return td.habitId == habit.habitId;});
       return trackedDay
           .getStatusAppearance(colorScheme)
           .backgroundColor; // Assuming this returns a Color

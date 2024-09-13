@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/utilities/container_controller.dart';
-
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
@@ -18,33 +19,22 @@ class WeeklyTable extends ConsumerWidget {
   /// Returns a list representing the tracking status of each day in the given `habit`.
   /// Each element is either `false` for not tracked, `true` for tracked, or the ID of the `TrackedDay` object if it exists.
   List<dynamic> _getDayTrackingStatus(
-      Habit habit, List<DateTime> offsetWeekDays) {
-    final Map<DateTime, String> trackedDays = habit.trackedDays;
+      Habit habit, List<DateTime> offsetWeekDays, List<TrackedDay> trackedDays) {
     List<bool> isTrackedFilter = range.map((index) {
       return HabitNotifier.getHabitTrackingStatus(habit, offsetWeekDays[index]);
     }).toList();
 
     List<dynamic> result = range.map((index) {
+      final trackedDay = trackedDays.firstWhereOrNull(
+          (td) => td.habitId == habit.habitId && td.date == offsetWeekDays[index]);
       if (isTrackedFilter[index]) {
-        return trackedDays.containsKey(offsetWeekDays[index])
-            ? trackedDays[offsetWeekDays[index]]
-            : true;
+        return trackedDay != null ? trackedDay.trackedDayId : true;
       } else {
         return false;
       }
     }).toList();
 
     return result;
-  }
-
-  void Function(BuildContext context) _myCustomModalBottomSheet(Widget widget) {
-    return (context) {
-      showModalBottomSheet(
-          useSafeArea: true,
-          isScrollControlled: true,
-          context: context,
-          builder: (ctx) => widget);
-    };
   }
 
   bool _isActiveHabit(Habit habit) {
@@ -75,9 +65,9 @@ class WeeklyTable extends ConsumerWidget {
   }
 
   TableRow _buildHabitRow(Habit habit, BuildContext context, WidgetRef ref) {
-    final trackedDays = ref.read(trackedDayProvider);
-    final recapList = ref.read(recapDayProvider);
-    final trackingStatusList = _getDayTrackingStatus(habit, offsetWeekDays);
+    final trackedDays = ref.watch(trackedDayProvider);
+    final recapList = ref.watch(recapDayProvider);
+    final trackingStatusList = _getDayTrackingStatus(habit, offsetWeekDays, trackedDays);
     return TableRow(
       children: [
         Center(

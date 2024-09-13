@@ -1,11 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
-import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
-import 'package:tracker_v1/providers/tracked_day.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
   HabitNotifier(this.ref) : super([]);
@@ -51,15 +50,14 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'name': newHabit.name,
       'description': newHabit.description,
       'frequency': newHabit.frequency,
-      'weekdays': jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+      'weekdays':
+          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
       'validationType': newHabit.validationType.toString(),
       'startDate': newHabit.startDate.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
-      'trackedDays': jsonEncode(newHabit.trackedDays
-          .map((date, id) => MapEntry(date.toIso8601String(), id))),
       'orderIndex': newHabit.orderIndex,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
@@ -69,14 +67,16 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
   // Delete a Habit from state and Firestore
   Future<void> deleteHabit(Habit targetHabit) async {
-    state = state.where((habit) => habit.habitId != targetHabit.habitId).toList();
+    state =
+        state.where((habit) => habit.habitId != targetHabit.habitId).toList();
     await _firestore.collection('habits').doc(targetHabit.habitId).delete();
   }
 
   // Update a Habit by deleting and re-adding it
   Future<void> updateHabit(Habit targetHabit, Habit newHabit) async {
     int index = state.indexOf(targetHabit);
-    List<Habit> newState = state.where((habit) => habit.habitId != targetHabit.habitId).toList();
+    List<Habit> newState =
+        state.where((habit) => habit.habitId != targetHabit.habitId).toList();
     newState.insert(index, newHabit);
     state = newState;
 
@@ -86,15 +86,14 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'name': newHabit.name,
       'description': newHabit.description,
       'frequency': newHabit.frequency,
-      'weekdays': jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+      'weekdays':
+          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
       'validationType': newHabit.validationType.toString(),
       'startDate': newHabit.startDate.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
-      'trackedDays': jsonEncode(newHabit.trackedDays
-          .map((date, id) => MapEntry(date.toIso8601String(), id))),
       'orderIndex': newHabit.orderIndex,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
@@ -102,50 +101,13 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     });
   }
 
-  // Add a TrackedDay to the habit
-  Future<void> addTrackedDay(TrackedDay trackedDay) async {
-    state = state.map((habit) {
-      if (habit.habitId == trackedDay.habitId) {
-        Habit newHabit = habit.copy();
-        DateTime date = DateTime(
-          trackedDay.date.year,
-          trackedDay.date.month,
-          trackedDay.date.day,
-        );
-        newHabit.trackedDays[date] = trackedDay.trackedDayId;
-        return newHabit;
-      }
-      return habit;
-    }).toList();
-
-    Habit habit = state.firstWhere((habit) => habit.habitId == trackedDay.habitId);
-    await _firestore.collection('habits').doc(habit.habitId).update({
-      'trackedDays': jsonEncode(habit.trackedDays
-          .map((date, id) => MapEntry(date.toIso8601String(), id))),
-    });
-  }
-
-  // Delete a TrackedDay from the habit
-  Future<void> deleteTrackedDay(TrackedDay trackedDay) async {
-    state = state.map((habit) {
-      if (habit.habitId == trackedDay.habitId) {
-        Habit newHabit = habit.copy();
-        newHabit.trackedDays.remove(trackedDay.date);
-        return newHabit;
-      }
-      return habit;
-    }).toList();
-
-    Habit habit = state.firstWhere((habit) => habit.habitId == trackedDay.habitId);
-    await _firestore.collection('habits').doc(habit.habitId).update({
-      'trackedDays': jsonEncode(habit.trackedDays
-          .map((date, id) => MapEntry(date.toIso8601String(), id))),
-    });
-  }
-
   // Load data from Firestore into the state
   Future<void> loadData() async {
-    final snapshot = await _firestore.collection('habits').orderBy('orderIndex').get();
+    final snapshot = await _firestore
+        .collection('habits')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .orderBy('orderIndex')
+        .get();
 
     if (snapshot.docs.isEmpty) return;
 
@@ -154,7 +116,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       return Habit(
         habitId: doc.id,
         userId: data['userId'] as String,
-        icon: IconData(int.parse(data['icon'] as String), fontFamily: 'MaterialIcons'),
+        icon: IconData(int.parse(data['icon'] as String),
+            fontFamily: 'MaterialIcons'),
         name: data['name'] as String,
         description: data['description'] as String?,
         frequency: data['frequency'] as int,
@@ -170,20 +133,22 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         additionalMetrics: data['additionalMetrics'] != null
             ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
             : null,
-        trackedDays: data['trackedDays'] != null
-            ? (jsonDecode(data['trackedDays'] as String) as Map<String, dynamic>)
-                .map((key, value) => MapEntry(DateTime.parse(key), value as String))
-            : {},
         orderIndex: data['orderIndex'] as int,
         frequencyChanges: data['frequencyChanges'] != null
-            ? (jsonDecode(data['frequencyChanges'] as String) as Map<String, dynamic>)
-                .map((key, value) => MapEntry(DateTime.parse(key), value as int))
+            ? (jsonDecode(data['frequencyChanges'] as String)
+                    as Map<String, dynamic>)
+                .map(
+                    (key, value) => MapEntry(DateTime.parse(key), value as int))
             : {},
         synced: data['synced'] == true,
       );
     }).toList();
 
     state = loadedData;
+  }
+
+  void cleanState() {
+    state = [];
   }
 
   // Get a list of the habits that are tracked on the target day
@@ -196,7 +161,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     final bool isStarted = habit.startDate.isBefore(date) ||
         habit.startDate.isAtSameMomentAs(date);
     final bool isEnded = habit.endDate != null &&
-        (habit.endDate!.isBefore(date) || habit.endDate!.isAtSameMomentAs(date));
+        (habit.endDate!.isBefore(date) ||
+            habit.endDate!.isAtSameMomentAs(date));
     final bool isTracked =
         habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
     return isStarted && !isEnded && isTracked;

@@ -79,9 +79,6 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             : _enteredValidationType,
         startDate: _enteredStartDate ?? today,
         endDate: _enteredEndDate,
-        trackedDays: widget.habit != null
-            ? Map<DateTime, String>.from(widget.habit!.trackedDays)
-            : <DateTime, String>{},
         additionalMetrics: _enteredAdditionalMetrics,
         orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
         frequencyChanges: widget.habit != null
