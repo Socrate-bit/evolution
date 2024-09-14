@@ -17,8 +17,8 @@ class ProfilScreen extends ConsumerWidget {
 
   void logOut(ref, context) async {
     try {
-      Navigator.of(context).pop();
       await FirebaseAuth.instance.signOut();
+      Navigator.of(context).pop();
       ref.read(userDataProvider.notifier).cleanState();
       ref.read(habitProvider.notifier).cleanState();
       ref.read(trackedDayProvider.notifier).cleanState();
@@ -30,21 +30,21 @@ class ProfilScreen extends ConsumerWidget {
     }
   }
 
+  void deleteAccount(context) async {
+    try {
+      await FirebaseAuth.instance.currentUser!.delete();
+      Navigator.of(context).pop();
+    } catch (error) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+    ;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     UserData? userData = ref.watch(userDataProvider);
-
-    void deleteAccount() async {
-      try {
-        await FirebaseAuth.instance.currentUser!.delete();
-        Navigator.of(context).pop();
-      } catch (error) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.toString())));
-      }
-      ;
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -74,14 +74,18 @@ class ProfilScreen extends ConsumerWidget {
               height: 32,
             ),
             CustomElevatedButton(
-              submit: () {logOut(ref, context);},
+              submit: () {
+                logOut(ref, context);
+              },
               text: 'Log-out',
             ),
             const SizedBox(
               height: 8,
             ),
             CustomOutlinedButton(
-              submit: deleteAccount,
+              submit: () {
+                deleteAccount(context);
+              },
               text: 'Delete account',
             )
           ],

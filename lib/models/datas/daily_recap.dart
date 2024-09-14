@@ -20,6 +20,7 @@ class RecapDay {
     required this.date,
     this.recap,
     this.improvements,
+    required this.newHabit,
     this.gratefulness,
     this.proudness,
     this.additionalMetrics,
@@ -42,6 +43,7 @@ class RecapDay {
   DateTime date;
   String? recap;
   String? improvements;
+  bool newHabit;
   String? gratefulness;
   String? proudness;
   Map<String, dynamic>? additionalMetrics;

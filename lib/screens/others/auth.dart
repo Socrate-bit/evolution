@@ -62,8 +62,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       } else {
         await _authentificater.signInWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
-
-        await ref.read(userDataProvider.notifier).loadData();
       }
     } catch (error) {
       String errorMessage = error.toString();

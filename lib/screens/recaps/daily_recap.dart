@@ -37,6 +37,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     'What am I grateful for?': null,
     'What am I proud of?': null,
   };
+  bool _newHabit = false;
 
   // List of slider metadata (titles and tooltip contents)
   final sliderData = [
@@ -85,9 +86,11 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       values[8] = widget.oldDailyRecap!.satisfaction;
       values[9] = widget.oldDailyRecap!.selfEsteemProudness;
       values[10] = widget.oldDailyRecap!.lookingForwardToWakeUpTomorrow;
+      _newHabit = widget.oldDailyRecap!.newHabit;
       textFieldValues['Recap'] = widget.oldDailyRecap!.recap;
       textFieldValues['Improvements'] = widget.oldDailyRecap!.improvements;
-      textFieldValues['What am I grateful for?'] = widget.oldDailyRecap!.gratefulness;
+      textFieldValues['What am I grateful for?'] =
+          widget.oldDailyRecap!.gratefulness;
       textFieldValues['What am I proud of?'] = widget.oldDailyRecap!.proudness;
     }
   }
@@ -100,25 +103,25 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     formKey.currentState!.save();
 
     RecapDay newRecapDay = RecapDay(
-      recapId: widget.oldDailyRecap?.recapId,
-      userId: FirebaseAuth.instance.currentUser!.uid,
-      sleepQuality: values[0],
-      wellBeing: values[1],
-      energy: values[2],
-      driveMotivation: values[3],
-      stress: values[4],
-      focusMentalClarity: values[5],
-      intelligenceMentalPower: values[6],
-      frustrations: values[7],
-      satisfaction: values[8],
-      selfEsteemProudness: values[9],
-      lookingForwardToWakeUpTomorrow: values[10],
-      date: widget.date,
-      recap: textFieldValues['Recap'],
-      improvements: textFieldValues['Improvements'],
-      gratefulness: textFieldValues['What am I grateful for?'],
-      proudness: textFieldValues['What am I proud of?'],
-    );
+        recapId: widget.oldDailyRecap?.recapId,
+        userId: FirebaseAuth.instance.currentUser!.uid,
+        sleepQuality: values[0],
+        wellBeing: values[1],
+        energy: values[2],
+        driveMotivation: values[3],
+        stress: values[4],
+        focusMentalClarity: values[5],
+        intelligenceMentalPower: values[6],
+        frustrations: values[7],
+        satisfaction: values[8],
+        selfEsteemProudness: values[9],
+        lookingForwardToWakeUpTomorrow: values[10],
+        date: widget.date,
+        recap: textFieldValues['Recap'],
+        improvements: textFieldValues['Improvements'],
+        gratefulness: textFieldValues['What am I grateful for?'],
+        proudness: textFieldValues['What am I proud of?'],
+        newHabit: _newHabit);
 
     Navigator.of(context).pop();
 
@@ -141,7 +144,8 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   @override
   Widget build(BuildContext context) {
     Widget content = Column(children: [
-      const CustomToolTipTitle(title: 'Emotional checking', content: 'Emotional checking'),
+      const CustomToolTipTitle(
+          title: 'Emotional checking', content: 'Emotional checking'),
       // Generate sliders dynamically
       ...sliderData.asMap().entries.map((entry) {
         int index = entry.key;
@@ -170,6 +174,19 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
           tooltipContent: fieldInfo['tooltip']!,
         );
       }),
+
+      ListTile(
+        title: Text('New Habit / Focus / Goal',
+            style: Theme.of(context).textTheme.titleSmall!),
+        trailing: Checkbox(
+          value: _newHabit,
+          onChanged: (value) {
+            setState(() {
+              _newHabit = value!;
+            });
+          },
+        ),
+      ),
 
       const SizedBox(height: 32),
 

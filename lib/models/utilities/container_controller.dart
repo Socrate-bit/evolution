@@ -37,8 +37,11 @@ class ContainerController {
         case ValidationType.recapDay:
           return ActionHandlers(DailyRecapScreen(date, habit.habitId), null);
         case ValidationType.binary:
-          final TrackedDay newTrackedDay =
-              TrackedDay(userId: FirebaseAuth.instance.currentUser!.uid ,habitId: habit.habitId, date: date, done: Validated.yes);
+          final TrackedDay newTrackedDay = TrackedDay(
+              userId: FirebaseAuth.instance.currentUser!.uid,
+              habitId: habit.habitId,
+              date: date,
+              done: Validated.yes);
           return ActionHandlers(() async {
             await ref
                 .read(trackedDayProvider.notifier)
@@ -46,7 +49,9 @@ class ContainerController {
           }, null);
       }
     } else {
-      final TrackedDay trackedDay = trackedDays.firstWhere((td) {return td.habitId == habit.habitId;});
+      final TrackedDay trackedDay = trackedDays.firstWhere((td) {
+        return td.habitId == habit.habitId && td.date == date;
+      });
       Future<void> onLongPress() async {
         await ref
             .read(trackedDayProvider.notifier)
@@ -90,7 +95,9 @@ class ContainerController {
     } else if (trackingStatus == true) {
       return const Color.fromARGB(255, 52, 52, 52);
     } else {
-      final TrackedDay trackedDay = trackedDays.firstWhere((td) {return td.habitId == habit.habitId;});
+      final TrackedDay trackedDay = trackedDays.firstWhere((td) {
+        return td.habitId == habit.habitId && td.date == date ;
+      });
       return trackedDay
           .getStatusAppearance(colorScheme)
           .backgroundColor; // Assuming this returns a Color

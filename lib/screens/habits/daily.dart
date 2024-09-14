@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
+import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
@@ -39,21 +41,27 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
       ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
     } else if (habit.validationType == ValidationType.evaluation) {
+      TrackedDay? oldTrackedDay =
+          ref.read(trackedDayProvider).firstWhereOrNull((td) {
+        return td.habitId == habit.habitId && td.date == date;
+      });
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) => HabitRecapScreen(
-          habit,
-          date,
-        ),
+        builder: (ctx) =>
+            HabitRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
       );
     } else if (habit.validationType == ValidationType.recapDay) {
+      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
+        return td.habitId == habit.habitId && td.date == date;
+      });
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) => DailyRecapScreen(date, habit.habitId),
+        builder: (ctx) =>
+            DailyRecapScreen(date, habit.habitId, oldDailyRecap: oldRecapDay),
       );
     }
   }
@@ -83,10 +91,12 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         padding: const EdgeInsets.only(top: 4),
         itemCount: todayHabitsList.length,
         itemBuilder: (context, index) {
-          TrackedDay? trackedDay =
-              trackedDays.firstWhereOrNull((trackedDay) {return trackedDay.habitId == habitsList[index].habitId;});
+          TrackedDay? trackedDay = trackedDays.firstWhereOrNull((trackedDay) {
+            return trackedDay.habitId == habitsList[index].habitId &&
+                trackedDay.date == date;
+          });
 
-          StatusAppearance? appearance = trackedDay !=null
+          StatusAppearance? appearance = trackedDay != null
               ? trackedDay.getStatusAppearance(Theme.of(context).colorScheme)
               : StatusAppearance(
                   backgroundColor: const Color.fromARGB(255, 51, 51, 51),

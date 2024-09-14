@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/providers/daily_recap.dart';
-import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/screens/habits/daily.dart';
 import 'package:tracker_v1/screens/habits/habit_list.dart';
@@ -28,23 +25,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     const WeeklyScreen(),
     const WeeklyScreen()
   ];
-  bool isLoading = true;
-
-  void loadData() async {
-    await ref.read(userDataProvider.notifier).loadData();
-    await ref.read(habitProvider.notifier).loadData();
-    await ref.read(trackedDayProvider.notifier).loadData();
-    await ref.read(recapDayProvider.notifier).loadData();
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -67,89 +47,86 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final Color selectedIcon = Theme.of(context).colorScheme.secondary;
     final userData = ref.watch(userDataProvider);
 
-    return isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surfaceBright,
-            appBar: AppBar(
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) => HabitList()));
-                },
-                icon: const Icon(
-                  Icons.list,
-                  size: 30,
-                ),
-              ),
-              title: Text(_pageTitle),
-              titleTextStyle: Theme.of(context).textTheme.titleLarge,
-              centerTitle: true,
-              actions: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (ctx) => const ProfilScreen()));
-                  },
-                  child: Hero(
-                    tag: userData!.userId!,
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundImage: NetworkImage(userData.profilPicture),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  width: 8,
-                )
-              ],
-            ),
-            body: _selectedPage,
-            bottomNavigationBar: BottomAppBar(
-              height: 70,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: 6.0,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  IconButton(
-                      icon: Icon(Icons.check_box_outlined,
-                          color: _selectedIndex == 0 ? selectedIcon : null),
-                      iconSize: 30,
-                      onPressed: () => _onItemTapped(0)),
-                  IconButton(
-                      icon: Icon(Icons.event_note_rounded,
-                          color: _selectedIndex == 1 ? selectedIcon : null),
-                      iconSize: 30,
-                      onPressed: () => _onItemTapped(1)),
-                  const SizedBox(width: 48),
-                  IconButton(
-                      icon: Icon(Icons.bar_chart_rounded,
-                          color: _selectedIndex == 2 ? selectedIcon : null),
-                      iconSize: 30,
-                      onPressed: () => _onItemTapped(2)),
-                  IconButton(
-                      icon: Icon(Icons.people_alt_outlined,
-                          color: _selectedIndex == 3 ? selectedIcon : null),
-                      iconSize: 30,
-                      onPressed: () => _onItemTapped(3)),
-                ],
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceBright,
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (ctx) => const HabitList()));
+          },
+          icon: const Icon(
+            Icons.list,
+            size: 30,
+          ),
+        ),
+        title: Text(_pageTitle),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge,
+        centerTitle: true,
+        actions: [
+          InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
+            },
+            child: Hero(
+              tag: userData!.userId!,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage(userData.profilPicture),
               ),
             ),
-            floatingActionButton: FloatingActionButton(
-              elevation: 6,
-              shape: const CircleBorder(),
-              onPressed: _showNewHabit,
-              child: const Icon(
-                Icons.add_rounded,
-                size: 40,
-                color: Colors.white,
-              ),
-            ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
-          );
+          ),
+          const SizedBox(
+            width: 8,
+          )
+        ],
+      ),
+      body: _selectedPage,
+      bottomNavigationBar: BottomAppBar(
+        height: 70,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            IconButton(
+                icon: Icon(Icons.check_box_outlined,
+                    color: _selectedIndex == 0 ? selectedIcon : null),
+                iconSize: 30,
+                onPressed: () => _onItemTapped(0)),
+            IconButton(
+                icon: Icon(Icons.event_note_rounded,
+                    color: _selectedIndex == 1 ? selectedIcon : null),
+                iconSize: 30,
+                onPressed: () => _onItemTapped(1)),
+            const SizedBox(width: 48),
+            IconButton(
+                icon: Icon(Icons.bar_chart_rounded,
+                    color: _selectedIndex == 2 ? selectedIcon : null),
+                iconSize: 30,
+                onPressed: () => _onItemTapped(2)),
+            IconButton(
+                icon: Icon(Icons.people_alt_outlined,
+                    color: _selectedIndex == 3 ? selectedIcon : null),
+                iconSize: 30,
+                onPressed: () => _onItemTapped(3)),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        elevation: 6,
+        shape: const CircleBorder(),
+        onPressed: _showNewHabit,
+        child: const Icon(
+          Icons.add_rounded,
+          size: 40,
+          color: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
   }
 }
