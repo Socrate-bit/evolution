@@ -66,8 +66,7 @@ class MyApp extends ConsumerWidget {
               return FutureBuilder<void>(
                 future: loadData(ref), // Load data here
                 builder: (ctx, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting ||
-                      ref.read(userDataProvider) == null) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     // Show loading spinner while data is loading
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
