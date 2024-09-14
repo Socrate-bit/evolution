@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
@@ -80,7 +81,7 @@ class ContainerController {
                   .read(recapDayProvider.notifier)
                   .deleteRecapDay(recapDay);
             },
-            DailyRecapScreen(date, habit.habitId, oldDailyRecap: recapDay),
+            DailyRecapScreen(date, habit.habitId, oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
           );
         case ValidationType.binary:
           return ActionHandlers(onLongPress, null);
@@ -96,7 +97,7 @@ class ContainerController {
       return const Color.fromARGB(255, 52, 52, 52);
     } else {
       final TrackedDay trackedDay = trackedDays.firstWhere((td) {
-        return td.habitId == habit.habitId && td.date == date ;
+        return td.habitId == habit.habitId && td.date == date;
       });
       return trackedDay
           .getStatusAppearance(colorScheme)

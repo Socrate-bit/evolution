@@ -32,14 +32,25 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
   void _startToEndSwiping(Habit habit) {
     if (habit.validationType == ValidationType.binary) {
-      TrackedDay trackedDay = TrackedDay(
+      TrackedDay? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
+        (td) {
+          return td.habitId == habit.habitId && td.date == date;
+        },
+      );
+
+      if (trackedDay != null) {
+        ref.read(trackedDayProvider.notifier).updateTrackedDay(trackedDay);
+        return;
+      }
+
+      TrackedDay newTrackedDay = TrackedDay(
         userId: FirebaseAuth.instance.currentUser!.uid,
         habitId: habit.habitId,
         date: date,
         done: Validated.yes,
       );
 
-      ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
+      ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
     } else if (habit.validationType == ValidationType.evaluation) {
       TrackedDay? oldTrackedDay =
           ref.read(trackedDayProvider).firstWhereOrNull((td) {
@@ -53,22 +64,38 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
             HabitRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
       );
     } else if (habit.validationType == ValidationType.recapDay) {
+      TrackedDay? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
+        (td) {
+          return td.habitId == habit.habitId && td.date == date;
+        },
+      );
+
       RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
-        return td.habitId == habit.habitId && td.date == date;
+        return td.date == date;
       });
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
         builder: (ctx) =>
-            DailyRecapScreen(date, habit.habitId, oldDailyRecap: oldRecapDay),
+            DailyRecapScreen(date, habit.habitId, oldDailyRecap: oldRecapDay, oldTrackedDay: trackedDay),
       );
     }
   }
 
-  void _endToStartSwiping(trackedDay, habitId) {
+  void _endToStartSwiping(TrackedDay? trackedDay, Habit habit) {
     if (trackedDay == null) return;
     ref.read(trackedDayProvider.notifier).deleteTrackedDay(trackedDay);
+    if (habit.validationType == ValidationType.recapDay) {
+      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull(
+        (td) {
+          return td.date == date;
+        },
+      );
+      if (oldRecapDay != null) {
+        ref.read(recapDayProvider.notifier).deleteRecapDay(oldRecapDay);
+      }
+    }
   }
 
   @override
@@ -108,7 +135,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
               if (direction == DismissDirection.startToEnd) {
                 _startToEndSwiping(todayHabitsList[index]);
               } else if (direction == DismissDirection.endToStart) {
-                _endToStartSwiping(trackedDay, todayHabitsList[index].habitId);
+                _endToStartSwiping(trackedDay, todayHabitsList[index]);
               }
               return false;
             },

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
+import 'package:tracker_v1/providers/tracked_day.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
   HabitNotifier(this.ref) : super([]);
@@ -70,6 +72,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     state =
         state.where((habit) => habit.habitId != targetHabit.habitId).toList();
     await _firestore.collection('habits').doc(targetHabit.habitId).delete();
+
+    ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(targetHabit);
   }
 
   // Update a Habit by deleting and re-adding it

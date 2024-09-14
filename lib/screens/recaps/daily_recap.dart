@@ -12,15 +12,12 @@ import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class DailyRecapScreen extends ConsumerStatefulWidget {
-  const DailyRecapScreen(
-    this.date,
-    this.habitId, {
-    super.key,
-    this.oldDailyRecap,
-  });
+  const DailyRecapScreen(this.date, this.habitId,
+      {super.key, this.oldDailyRecap, this.oldTrackedDay});
 
   final DateTime date;
   final String habitId;
+  final TrackedDay? oldTrackedDay;
   final RecapDay? oldDailyRecap;
 
   @override
@@ -127,18 +124,22 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
 
     if (widget.oldDailyRecap == null) {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
+      TrackedDay trackedDay = TrackedDay(
+        userId: FirebaseAuth.instance.currentUser!.uid,
+        habitId: widget.habitId,
+        date: widget.date,
+        done: Validated.yes,
+      );
+
+      ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
     } else {
       ref.read(recapDayProvider.notifier).updateRecapDay(newRecapDay);
+      if (widget.oldTrackedDay != null) {
+        ref
+            .read(trackedDayProvider.notifier)
+            .updateTrackedDay(widget.oldTrackedDay!);
+      }
     }
-
-    TrackedDay trackedDay = TrackedDay(
-      userId: FirebaseAuth.instance.currentUser!.uid,
-      habitId: widget.habitId,
-      date: widget.date,
-      done: Validated.yes,
-    );
-
-    ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
   }
 
   @override
