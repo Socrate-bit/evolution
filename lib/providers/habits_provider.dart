@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
@@ -38,7 +37,6 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       );
     });
 
-    state = newState;
     await batch.commit();
   }
 

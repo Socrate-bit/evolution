@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
@@ -36,7 +35,7 @@ class ContainerController {
         case ValidationType.evaluation:
           return ActionHandlers(HabitRecapScreen(habit, date), null);
         case ValidationType.recapDay:
-          return ActionHandlers(DailyRecapScreen(date, habit.habitId), null);
+          return ActionHandlers(DailyRecapScreen(date, habit), null);
         case ValidationType.binary:
           final TrackedDay newTrackedDay = TrackedDay(
               userId: FirebaseAuth.instance.currentUser!.uid,
@@ -81,7 +80,7 @@ class ContainerController {
                   .read(recapDayProvider.notifier)
                   .deleteRecapDay(recapDay);
             },
-            DailyRecapScreen(date, habit.habitId, oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
+            DailyRecapScreen(date, habit, oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
           );
         case ValidationType.binary:
           return ActionHandlers(onLongPress, null);

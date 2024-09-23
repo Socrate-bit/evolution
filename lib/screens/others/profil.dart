@@ -1,28 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/providers/daily_recap.dart';
-import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/providers/data_manager.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/models/datas/user.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
-
-final _imagePicker = ImagePicker();
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
 
   void logOut(ref, context) async {
     try {
-      await FirebaseAuth.instance.signOut();
       Navigator.of(context).pop();
-      ref.read(userDataProvider.notifier).cleanState();
-      ref.read(habitProvider.notifier).cleanState();
-      ref.read(trackedDayProvider.notifier).cleanState();
-      ref.read(recapDayProvider.notifier).cleanState();
+      await ref.read(dataManagerProvider).signOut(); 
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
@@ -30,10 +20,10 @@ class ProfilScreen extends ConsumerWidget {
     }
   }
 
-  void deleteAccount(context) async {
+  void deleteAccount(ref, context) async {
     try {
-      await FirebaseAuth.instance.currentUser!.delete();
       Navigator.of(context).pop();
+      await ref.read(dataManagerProvider).deleteAccount(); 
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
@@ -84,7 +74,7 @@ class ProfilScreen extends ConsumerWidget {
             ),
             CustomOutlinedButton(
               submit: () {
-                deleteAccount(context);
+                deleteAccount(ref, context);
               },
               text: 'Delete account',
             )

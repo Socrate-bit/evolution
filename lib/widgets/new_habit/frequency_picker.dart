@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/widgets/new_habit/circle_day.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
+import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class FrequencyPicker extends StatefulWidget {
   FrequencyPicker({required this.passFrequency, required this.enteredWeekdays, super.key});
@@ -24,7 +25,7 @@ class _FrequencyPickerState extends State<FrequencyPicker> {
             subtitle: Text(_frequencyType
                 ? 'Switch to specific days:'
                 : 'Switch to random days:'),
-            title: const Text('Frequency'),
+            title: const CustomToolTipTitle(title: 'Frequency', content: 'Choose the frequency',),
             value: _frequencyType,
             onChanged: (value) {
               setState(() {

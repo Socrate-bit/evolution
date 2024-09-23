@@ -34,7 +34,7 @@ class BasicTextFormField extends StatelessWidget {
       onSaved: (value) {
         passValue(value);
       },
-      textInputAction: TextInputAction.done,
+      textInputAction: TextInputAction.newline,
       onFieldSubmitted: (value) {
         FocusScope.of(context).unfocus();
       },

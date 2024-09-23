@@ -36,7 +36,10 @@ class AuthNotifier extends StateNotifier<UserData?> {
         .collection('user_data')
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .get();
-    if (!docSnapshot.exists) return;
+
+    if (!docSnapshot.exists) {
+      return;
+    }
 
     final data = docSnapshot.data()!;
     final userData = UserData(

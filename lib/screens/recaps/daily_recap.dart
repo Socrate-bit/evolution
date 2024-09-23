@@ -2,32 +2,34 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
-import 'package:tracker_v1/widgets/recaps/custom_slider.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/widgets/recaps/custom_toggle.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class DailyRecapScreen extends ConsumerStatefulWidget {
-  const DailyRecapScreen(this.date, this.habitId,
+  const DailyRecapScreen(this.date, this.habit,
       {super.key, this.oldDailyRecap, this.oldTrackedDay});
 
   final DateTime date;
-  final String habitId;
+  final Habit habit;
   final TrackedDay? oldTrackedDay;
   final RecapDay? oldDailyRecap;
-
   @override
   ConsumerState<DailyRecapScreen> createState() => _HabitRecapScreenState();
 }
 
 class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   final formKey = GlobalKey<FormState>();
+  List<String>? _additionalMetrics;
+  Map<String, dynamic>? _additionalInputs;
 
-  List<double> values = List.filled(11, 0.0); // For storing slider values
+  List<double> values = List.filled(11, 2.5); // For storing slider values
   Map<String, String?> textFieldValues = {
     'Recap': null,
     'Improvements': null,
@@ -58,14 +60,21 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   ];
 
   // List of BigTextField metadata (titles and tooltips)
-  final textFieldData = [
+  final textFieldData1 = [
     {'title': 'Recap', 'tooltip': 'Provide a summary of your day'},
     {'title': 'Improvements', 'tooltip': 'Provide suggestions for improvement'},
+  ];
+
+  final textFieldData2 = [
     {
       'title': 'What am I grateful for?',
       'tooltip': 'Write what you\'re grateful for'
     },
     {'title': 'What am I proud of?', 'tooltip': 'Write what you\'re proud of'},
+    {
+      'title': 'Who did I help?',
+      'tooltip': 'Write what good actions you\'ve done'
+    },
   ];
 
   @override
@@ -89,6 +98,16 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       textFieldValues['What am I grateful for?'] =
           widget.oldDailyRecap!.gratefulness;
       textFieldValues['What am I proud of?'] = widget.oldDailyRecap!.proudness;
+      textFieldValues['Who did I help?'] = widget.oldDailyRecap!.altruism;
+      _additionalInputs = widget.oldDailyRecap!.additionalMetrics;
+    }
+
+    _additionalMetrics = widget.habit.additionalMetrics;
+    if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty) {
+      _additionalInputs = _additionalInputs ?? {};
+      for (String item in _additionalMetrics!) {
+        _additionalInputs![item] = _additionalInputs?[item];
+      }
     }
   }
 
@@ -118,7 +137,9 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         improvements: textFieldValues['Improvements'],
         gratefulness: textFieldValues['What am I grateful for?'],
         proudness: textFieldValues['What am I proud of?'],
-        newHabit: _newHabit);
+        altruism: textFieldValues['Who did I help?'],
+        newHabit: _newHabit,
+        additionalMetrics: _additionalInputs);
 
     Navigator.of(context).pop();
 
@@ -126,7 +147,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
       TrackedDay trackedDay = TrackedDay(
         userId: FirebaseAuth.instance.currentUser!.uid,
-        habitId: widget.habitId,
+        habitId: widget.habit.habitId,
         date: widget.date,
         done: Validated.yes,
       );
@@ -145,27 +166,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   @override
   Widget build(BuildContext context) {
     Widget content = Column(children: [
-      const CustomToolTipTitle(
-          title: 'Emotional checking', content: 'Emotional checking'),
-      // Generate sliders dynamically
-      ...sliderData.asMap().entries.map((entry) {
-        int index = entry.key;
-        var sliderInfo = entry.value;
-
-        return CustomSlider(
-          initialValue: values[index],
-          onChanged: (value) {
-            values[index] = value;
-          },
-          toolTipTitle: sliderInfo['title']!,
-          tooltipContent: sliderInfo['tooltip']!,
-        );
-      }),
-
-      const SizedBox(height: 32),
-
-      // Generate BigTextFields dynamically
-      ...textFieldData.map((fieldInfo) {
+      ...textFieldData1.map((fieldInfo) {
         return BigTextFormField(
           controlledValue: textFieldValues[fieldInfo['title']] ?? '',
           onSaved: (value) {
@@ -189,7 +190,62 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         ),
       ),
 
+      if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
+        ..._additionalMetrics!.map((item) {
+          return ListTile(
+            title: Text(item, style: Theme.of(context).textTheme.titleSmall!),
+            trailing: SizedBox(
+                width: 64,
+                child: TextFormField(
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    initialValue: _additionalInputs?[item],
+                    onSaved: (newValue) {
+                      _additionalInputs![item] = newValue;
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      counterText: '',
+                      fillColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceBright
+                          .withOpacity(0.75),
+                    ))),
+          );
+        }),
+      const SizedBox(height: 64),
+      const CustomToolTipTitle(
+          title: 'Emotional checking', content: 'Emotional checking'),
+      // Generate sliders dynamically
+      ...sliderData.asMap().entries.map((entry) {
+        int index = entry.key;
+        var sliderInfo = entry.value;
+
+        return CustomToggleButtonsSlider(
+          initialValue: values[index],
+          onChanged: (value) {
+            values[index] = value;
+          },
+          toolTipTitle: sliderInfo['title']!,
+          tooltipContent: sliderInfo['tooltip']!,
+        );
+      }),
+
       const SizedBox(height: 32),
+
+      // Generate BigTextFields dynamically
+      ...textFieldData2.map((fieldInfo) {
+        return BigTextFormField(
+          controlledValue: textFieldValues[fieldInfo['title']] ?? '',
+          onSaved: (value) {
+            textFieldValues[fieldInfo['title']!] = value;
+          },
+          toolTipTitle: fieldInfo['title']!,
+          tooltipContent: fieldInfo['tooltip']!,
+          maxLine: 1,
+        );
+      }),
+
+      const SizedBox(height: 64),
 
       // Submit Button
       CustomElevatedButton(

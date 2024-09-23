@@ -5,12 +5,13 @@ import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/new_habit/additional_metrics.dart';
 import 'package:tracker_v1/widgets/new_habit/date_picker.dart';
 import 'package:tracker_v1/widgets/new_habit/frequency_picker.dart';
-import 'package:tracker_v1/widgets/new_habit/text_form_field.dart';
 import 'package:tracker_v1/widgets/new_habit/icon_picker.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
+import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
   const NewHabitScreen({this.habit, super.key});
@@ -119,28 +120,28 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                   child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  BasicTextFormField(
-                    maxLength: 30,
-                    label: 'Name',
-                    optional: true,
-                    wrongEntryMessage: 'Invalid name',
-                    passValue: (value) {
+                  BigTextFormField(
+                    maxLenght: 100,
+                    maxLine: 1,
+                    controlledValue: _enteredName ?? '',
+                    onSaved: (value) {
                       _enteredName = value;
                     },
-                    initialValue: _enteredName,
+                    toolTipTitle: 'Name',
+                    tooltipContent: 'Provide a name of this habit',
                   ),
                 ],
               ))
             ],
           ),
           const SizedBox(height: 16),
-          BasicTextFormField(
-            maxLength: 100,
-            label: 'Description (Optional)',
-            passValue: (value) {
+          BigTextFormField(
+            controlledValue: _enteredDescription ?? '',
+            onSaved: (value) {
               _enteredDescription = value;
             },
-            initialValue: _enteredDescription,
+            toolTipTitle: 'Description',
+            tooltipContent: 'Provide a description of this habit',
           ),
           const SizedBox(height: 32),
           FrequencyPicker(
@@ -154,7 +155,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             subtitle: Text(_enteredValidationType == ValidationType.evaluation
                 ? 'Switch to simple habit:'
                 : 'Switch to activity:'),
-            title: const Text('Habit type'),
+            title: const CustomToolTipTitle(title: 'Habit type', content: 'Choose your habit type',),
             value: _enteredValidationType == ValidationType.evaluation,
             onChanged: (value) {
               setState(
@@ -170,7 +171,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           ),
           const SizedBox(height: 32),
           AdditionalMetrics(_enteredAdditionalMetrics),
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
           DatePickerWidget(
             passStartDate: (value) {
               _enteredStartDate = value;

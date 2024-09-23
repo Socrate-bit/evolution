@@ -23,6 +23,7 @@ class RecapDay {
     required this.newHabit,
     this.gratefulness,
     this.proudness,
+    this.altruism,
     this.additionalMetrics,
     this.synced = false,
   }) : recapId = recapId ?? idGenerator.v4();
@@ -46,6 +47,7 @@ class RecapDay {
   bool newHabit;
   String? gratefulness;
   String? proudness;
+  String? altruism;
   Map<String, dynamic>? additionalMetrics;
   bool synced;
 }

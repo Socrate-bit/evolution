@@ -29,9 +29,7 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Icon',
-        ),
+        Text('Icon', style: Theme.of(context).textTheme.titleMedium),
         IconButton(
             icon: Icon(_enteredIcon),
             iconSize: 40,

@@ -23,7 +23,9 @@ class DatePickerWidget extends StatefulWidget {
 class _DatePickerWidgetState extends State<DatePickerWidget> {
   @override
   Widget build(BuildContext context) {
-    bool locked = DateTime.now().isAfter(widget.startDate ?? DateTime.now());
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    bool locked = today.isAfter(widget.startDate ?? DateTime.now());
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -64,11 +66,12 @@ class _RoundedButtonState extends State<RoundedButton> {
   DateTime? _enteredDate;
 
   Future<void> _datePicker() async {
+    DateTime firstDate = DateTime(_today.year, _today.month, _today.day - 7);
     DateTime lastDate = DateTime(_today.year + 1, _today.month, _today.day);
 
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      firstDate: _today,
+      firstDate: firstDate,
       lastDate: lastDate,
       initialDate: _today,
     );
@@ -93,7 +96,7 @@ class _RoundedButtonState extends State<RoundedButton> {
         _enteredDate == null
             ? widget.initialValue
             : _formater.format(_enteredDate!).toString(),
-        style: const TextStyle(color: Colors.white),
+        style: Theme.of(context).textTheme.titleMedium,
       ),
     );
   }

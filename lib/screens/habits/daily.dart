@@ -24,11 +24,16 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   late DateTime date;
 
   @override
-  void initState() {
-    super.initState();
-    DateTime now = DateTime.now();
+void initState() {
+  super.initState();
+  DateTime now = DateTime.now();
+  if (now.hour >= 2) {
     date = DateTime(now.year, now.month, now.day);
+  } else {
+    date = DateTime(now.year, now.month, now.day - 1);
   }
+}
+
 
   void _startToEndSwiping(Habit habit) {
     if (habit.validationType == ValidationType.binary) {
@@ -78,7 +83,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         isScrollControlled: true,
         context: context,
         builder: (ctx) =>
-            DailyRecapScreen(date, habit.habitId, oldDailyRecap: oldRecapDay, oldTrackedDay: trackedDay),
+            DailyRecapScreen(date, habit, oldDailyRecap: oldRecapDay, oldTrackedDay: trackedDay),
       );
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/models/datas/user.dart';
+import 'package:tracker_v1/providers/data_manager.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
@@ -50,6 +51,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     try {
       if (!_isLogin) {
+        ref.read(firestoreUploadProvider.notifier).state = true;
+
         await _authentificater.createUserWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
 
@@ -59,11 +62,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               name: _enteredUserName!,
               profilPicture: _pickedProfilPicture!.path,
             ));
+
+        ref.read(firestoreUploadProvider.notifier).state = false;
       } else {
         await _authentificater.signInWithEmailAndPassword(
             email: _enteredEmailAddress!, password: _enteredPassWord!);
       }
     } catch (error) {
+      ref.read(firestoreUploadProvider.notifier).state = false;
       String errorMessage = error.toString();
       if (error is FirebaseAuthException) {
         errorMessage = error.message ?? errorMessage;
@@ -76,6 +82,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           .showSnackBar(SnackBar(content: Text(errorMessage)));
     }
 
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _isAuthentifying = false;
     });
