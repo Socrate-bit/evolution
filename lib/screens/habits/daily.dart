@@ -124,7 +124,7 @@ void initState() {
         itemCount: todayHabitsList.length,
         itemBuilder: (context, index) {
           TrackedDay? trackedDay = trackedDays.firstWhereOrNull((trackedDay) {
-            return trackedDay.habitId == habitsList[index].habitId &&
+            return trackedDay.habitId == todayHabitsList[index].habitId &&
                 trackedDay.date == date;
           });
 

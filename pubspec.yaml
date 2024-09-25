@@ -50,6 +50,7 @@ dependencies:
   icons_launcher: ^2.1.7
   firebase_storage: ^12.3.0
   cloud_firestore: ^5.4.1
+  flutter_heatmap_calendar: ^1.0.5
 
 flutter_native_splash:
  color: "#141414"

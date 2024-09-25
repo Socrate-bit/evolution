@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
+import 'package:tracker_v1/models/utilities/rating_utility.dart';
 import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
@@ -42,6 +43,8 @@ class TrackedDay {
         (notation!.extra);
   }
 
+
+
   StatusAppearance getStatusAppearance(colorScheme) {
     double? rating = totalRating();
 
@@ -64,19 +67,10 @@ class TrackedDay {
         } else {
           Color? statusColor;
 
-          if (rating < 2.5) {
-            statusColor = Colors.redAccent.withOpacity(0.6);
-          } else if (rating < 5) {
-            statusColor = colorScheme.primary;
-          } else if (rating < 7.5) {
-            statusColor = colorScheme.tertiary;
-          } else if (rating < 10) {
-            statusColor = colorScheme.secondary;
-          } else if (rating >= 10) {
-            statusColor = Colors.deepPurple;
-          }
+          statusColor = RatingUtility.getRatingColor(rating /2);
+
           return StatusAppearance(
-            backgroundColor: statusColor!,
+            backgroundColor: statusColor,
             lineThroughCond: true,
             elementsColor: Colors.white.withOpacity(0.45),
             icon: Icon(Icons.check,
