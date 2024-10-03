@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:icons_launcher/cli_commands.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/new_habit/additional_metrics.dart';
@@ -35,6 +36,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   DateTime? _enteredStartDate;
   DateTime? _enteredEndDate;
   List<String> _enteredAdditionalMetrics = [];
+  int _enteredPonderation = 3;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       _enteredValidationType = widget.habit!.validationType;
       _enteredStartDate = widget.habit!.startDate;
       _enteredEndDate = widget.habit!.endDate;
+      _enteredPonderation = widget.habit!.ponderation;
       _enteredAdditionalMetrics = List.from(widget.habit!.additionalMetrics!);
     }
   }
@@ -82,6 +85,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         endDate: _enteredEndDate,
         additionalMetrics: _enteredAdditionalMetrics,
         orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
+        ponderation: _enteredPonderation,
         frequencyChanges: widget.habit != null
             ? Map<DateTime, int>.from(widget.habit!.frequencyChanges)
             : {today: _enteredFrequency});
@@ -143,6 +147,39 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             toolTipTitle: 'Description',
             tooltipContent: 'Provide a description of this habit',
           ),
+          Row(
+            children: [const CustomToolTipTitle(title: 'Importance:', content: 'Importance'),
+              Expanded(
+                child: Center(
+                  child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceBright,
+                          borderRadius: BorderRadius.circular(5)),
+                      child: DropdownButton(
+                        value: _enteredPonderation,
+                        icon: const Icon(Icons.arrow_drop_down),
+                        isDense: true,
+                        dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                        items: Ponderation.values.reversed
+                            .map(
+                              (item) => DropdownMenuItem(
+                                value: item.index + 1,
+                                child: Text(item.name.toString().capitalize()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _enteredPonderation = value;
+                          });
+                        },
+                      )),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 32),
           FrequencyPicker(
             passFrequency: (value) {
@@ -155,7 +192,10 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             subtitle: Text(_enteredValidationType == ValidationType.evaluation
                 ? 'Switch to simple habit:'
                 : 'Switch to activity:'),
-            title: const CustomToolTipTitle(title: 'Habit type', content: 'Choose your habit type',),
+            title: const CustomToolTipTitle(
+              title: 'Habit type',
+              content: 'Choose your habit type',
+            ),
             value: _enteredValidationType == ValidationType.evaluation,
             onChanged: (value) {
               setState(

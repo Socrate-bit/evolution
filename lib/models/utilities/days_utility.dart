@@ -12,12 +12,22 @@ class DaysUtility {
   };
 
   static final Map<WeekDay, String> weekDayToSign = {
-    WeekDay.monday: 'M',
-    WeekDay.tuesday: 'T',
-    WeekDay.wednesday: 'W',
-    WeekDay.thursday: 'Th',
-    WeekDay.friday: 'F',
-    WeekDay.saturday: 'S',
-    WeekDay.sunday: 'Su',
+    WeekDay.monday: 'MO',
+    WeekDay.tuesday: 'TU',
+    WeekDay.wednesday: 'WE',
+    WeekDay.thursday: 'TH',
+    WeekDay.friday: 'FR',
+    WeekDay.saturday: 'SA',
+    WeekDay.sunday: 'SU',
+  };
+
+  static final Map<int, String> NumberToSign = {
+    1: 'MO',
+    2: 'TU',
+    3: 'WE',
+    4: 'TH',
+    5: 'FR',
+    6: 'SA',
+    7: 'SU',
   };
 }

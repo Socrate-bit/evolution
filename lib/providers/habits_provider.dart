@@ -59,6 +59,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
       'orderIndex': newHabit.orderIndex,
+      'ponderation': newHabit.ponderation,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
       'synced': newHabit.synced ? true : false,
@@ -96,6 +97,47 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
+      'ponderation': newHabit.ponderation,
+      'orderIndex': newHabit.orderIndex,
+      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
+          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+      'synced': false,
+    });
+  }
+
+  Future<void> pauseHabit(Habit targetHabit, bool paused) async {
+    int index = state.indexOf(targetHabit);
+    Habit newHabit;
+
+    if (paused) {
+      int frequency = targetHabit.weekdays.length;
+      newHabit = targetHabit..frequency = frequency;
+      newHabit.frequencyChanges.addAll({today: frequency});
+    } else {
+      newHabit = targetHabit..frequency = 0;
+      newHabit.frequencyChanges.addAll({today: 0});
+    }
+
+    List<Habit> newState =
+        state.where((habit) => habit.habitId != targetHabit.habitId).toList();
+    newState.insert(index, newHabit);
+    state = newState;
+
+    await _firestore.collection('habits').doc(newHabit.habitId).set({
+      'userId': newHabit.userId,
+      'icon': newHabit.icon.codePoint.toString(),
+      'name': newHabit.name,
+      'description': newHabit.description,
+      'frequency': newHabit.frequency,
+      'weekdays':
+          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+      'validationType': newHabit.validationType.toString(),
+      'startDate': newHabit.startDate.toIso8601String(),
+      'endDate': newHabit.endDate?.toIso8601String(),
+      'additionalMetrics': newHabit.additionalMetrics != null
+          ? jsonEncode(newHabit.additionalMetrics)
+          : null,
+      'ponderation': newHabit.ponderation,
       'orderIndex': newHabit.orderIndex,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
@@ -135,6 +177,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         additionalMetrics: data['additionalMetrics'] != null
             ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
             : null,
+        ponderation: data['ponderation'] as int,
         orderIndex: data['orderIndex'] as int,
         frequencyChanges: data['frequencyChanges'] != null
             ? (jsonDecode(data['frequencyChanges'] as String)
@@ -160,6 +203,13 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
   // Helper function to check if the habit is tracked on the target day
   static bool getHabitTrackingStatus(Habit habit, DateTime date) {
+    final bool paused =
+        habit.frequencyChanges.values.toList().reversed.toList()[0] == 0 &&
+            !habit.frequencyChanges.keys
+                .toList()
+                .reversed
+                .toList()[0]
+                .isAfter(date);
     final bool isStarted = habit.startDate.isBefore(date) ||
         habit.startDate.isAtSameMomentAs(date);
     final bool isEnded = habit.endDate != null &&
@@ -167,7 +217,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
             habit.endDate!.isAtSameMomentAs(date));
     final bool isTracked =
         habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
-    return isStarted && !isEnded && isTracked;
+    return isStarted && !isEnded && isTracked && !paused;
   }
 }
 

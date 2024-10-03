@@ -33,7 +33,7 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
       child: Column(
         children: [
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 30),
+            margin: const EdgeInsets.only(bottom: 24),
             child: Column(
               children: [
                 WeekShifter(
@@ -44,8 +44,10 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
                         weekIndex += value;
                       });
                     }),
-                WeeklyTable(
-                    offsetWeekDays: offsetWeekDays)
+                const SizedBox(
+                  height: 8,
+                ),
+                WeeklyTable(offsetWeekDays: offsetWeekDays)
               ],
             ),
           ),

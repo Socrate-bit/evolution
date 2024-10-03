@@ -14,9 +14,6 @@ class HabitList extends ConsumerStatefulWidget {
 
 class _MyWidgetState extends ConsumerState<HabitList> {
   late dynamic habitsNotifier;
-  final defaultAppearance = StatusAppearance(
-      backgroundColor: const Color.fromARGB(255, 51, 51, 51),
-      elementsColor: Colors.white);
 
   @override
   void initState() {
@@ -52,20 +49,35 @@ class _MyWidgetState extends ConsumerState<HabitList> {
           onReorder(oldIndex, newIndex);
         },
         itemCount: habitsList.length,
-        itemBuilder: (ctx, item) => GestureDetector(
-          key: ObjectKey(habitsList[item]),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (ctx) => HabitScreen(habitsList[item]),
-              ),
-            );
-          },
-          child: HabitWidget(
-              name: habitsList[item].name,
-              icon: habitsList[item].icon,
-              appearance: defaultAppearance),
-        ),
+        itemBuilder: (ctx, item) {
+          StatusAppearance defaultAppearance = StatusAppearance(
+              backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+              elementsColor: Colors.white,
+              icon: habitsList[item]
+                          .frequencyChanges
+                          .values
+                          .toList()
+                          .reversed
+                          .toList()[0] ==
+                      0
+                  ? const Icon(Icons.pause_circle_filled)
+                  : null);
+
+          return GestureDetector(
+            key: ObjectKey(habitsList[item]),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => HabitScreen(habitsList[item]),
+                ),
+              );
+            },
+            child: HabitWidget(
+                name: habitsList[item].name,
+                icon: habitsList[item].icon,
+                appearance: defaultAppearance),
+          );
+        },
       );
     }
 

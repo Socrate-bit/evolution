@@ -9,6 +9,7 @@ import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
+import 'package:tracker_v1/widgets/daily/day_switch.dart';
 import 'package:tracker_v1/widgets/daily/habit_item.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
@@ -24,16 +25,15 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   late DateTime date;
 
   @override
-void initState() {
-  super.initState();
-  DateTime now = DateTime.now();
-  if (now.hour >= 2) {
-    date = DateTime(now.year, now.month, now.day);
-  } else {
-    date = DateTime(now.year, now.month, now.day - 1);
+  void initState() {
+    super.initState();
+    DateTime now = DateTime.now();
+    if (now.hour >= 2) {
+      date = DateTime(now.year, now.month, now.day);
+    } else {
+      date = DateTime(now.year, now.month, now.day - 1);
+    }
   }
-}
-
 
   void _startToEndSwiping(Habit habit) {
     if (habit.validationType == ValidationType.binary) {
@@ -82,8 +82,8 @@ void initState() {
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) =>
-            DailyRecapScreen(date, habit, oldDailyRecap: oldRecapDay, oldTrackedDay: trackedDay),
+        builder: (ctx) => DailyRecapScreen(date, habit,
+            oldDailyRecap: oldRecapDay, oldTrackedDay: trackedDay),
       );
     }
   }
@@ -100,6 +100,44 @@ void initState() {
       if (oldRecapDay != null) {
         ref.read(recapDayProvider.notifier).deleteRecapDay(oldRecapDay);
       }
+    }
+  }
+
+  String? getCurrentStreak(List<TrackedDay> trackedDays, Habit habit) {
+    int streak = -1;
+    List<TrackedDay> habitTrackedDays = trackedDays
+        .where((TrackedDay trackedDay) =>
+            trackedDay.habitId == habit.habitId &&
+            (trackedDay.date.isBefore(date) ||
+                trackedDay.date.isAtSameMomentAs(date)))
+        .toList();
+    habitTrackedDays.sort((a, b) {
+      return a.date.isAfter(b.date) ? -1 : 1;
+    });
+
+    DateTime start = date;
+    for (TrackedDay trackeDay in habitTrackedDays) {
+      if (trackeDay.date != start) break;
+      streak += 1;
+      start = trackeDay.date.subtract(const Duration(days: 1));
+    }
+
+    if (streak < 1) {
+      return null;
+    } else if (streak < 7) {
+      return '🔥${streak.toString()}';
+    } else if (streak < 14) {
+      return '🔥🔥${streak.toString()}';
+    } else if (streak < 30) {
+      return '🔥🔥🔥${streak.toString()}';
+    } else if (streak < 61) {
+      return '🔥🔥🔥🔥${streak.toString()}';
+    } else if (streak < 122) {
+      return '🔥🔥🔥🔥🔥${streak.toString()}';
+    } else if (streak < 365) {
+      return '🔥🔥🔥🔥🔥🔥${streak.toString()}';
+    } else {
+      return '🔥🔥🔥🔥🔥🔥🔥${streak.toString()}';
     }
   }
 
@@ -155,12 +193,24 @@ void initState() {
               name: todayHabitsList[index].name,
               icon: todayHabitsList[index].icon,
               appearance: appearance,
+              streak: getCurrentStreak(trackedDays, todayHabitsList[index]),
             ),
           );
         },
       );
     }
 
-    return content;
+    return Column(
+      children: [
+        DaySwitch((value) {
+          setState(
+            () {
+              date = value;
+            },
+          );
+        }, date),
+        Expanded(child: content),
+      ],
+    );
   }
 }

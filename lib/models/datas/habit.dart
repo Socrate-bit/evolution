@@ -6,6 +6,8 @@ const idGenerator = Uuid();
 
 enum ValidationType { binary, evaluation, recapDay }
 
+enum Ponderation { negligible, additional, valuable, significant, critical }
+
 DateTime now = DateTime.now();
 DateTime today = DateTime(now.year, now.month, now.day);
 
@@ -22,6 +24,7 @@ class Habit {
       required this.startDate,
       this.endDate,
       this.additionalMetrics,
+      this.ponderation = 3,
       required this.orderIndex,
       this.synced = false,
       frequencyChanges})
@@ -39,6 +42,7 @@ class Habit {
   DateTime startDate;
   DateTime? endDate;
   List<String>? additionalMetrics;
+  int ponderation;
   int orderIndex;
   Map<DateTime, int> frequencyChanges;
   bool synced;

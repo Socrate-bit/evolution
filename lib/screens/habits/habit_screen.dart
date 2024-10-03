@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
-import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/screens/habits/new_habit.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
-import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:tracker_v1/widgets/habit_screen/heatmap.dart';
 import 'package:tracker_v1/widgets/habit_screen/recap_list.dart';
 
@@ -88,7 +85,28 @@ class HabitScreen extends ConsumerWidget {
                 const SizedBox(
                   height: 8,
                 ),
-                CustomElevatedButton(
+                if (habit.frequencyChanges.values
+                        .toList()
+                        .reversed
+                        .toList()[0] ==
+                    0)
+                  CustomElevatedButton(
+                    submit: () {
+                      ref.read(habitProvider.notifier).pauseHabit(habit, true);
+                    },
+                    text: 'Unpause habit',
+                  )
+                else
+                  CustomElevatedButton(
+                    submit: () {
+                      ref.read(habitProvider.notifier).pauseHabit(habit, false);
+                    },
+                    text: 'Pause habit',
+                  ),
+                const SizedBox(
+                  height: 8,
+                ),
+                CustomOutlinedButton(
                   submit: resetData,
                   text: 'Reset data',
                 ),

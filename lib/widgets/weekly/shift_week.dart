@@ -14,22 +14,30 @@ class WeekShifter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      IconButton(
-        onPressed: () {
-          updateWeekIndex(-1);
-        },
-        icon: const Icon(Icons.arrow_left_rounded, size: 60),
-      ),
-      Text(
-          '${dateFormatter.format(offsetWeekDays.first)} - ${dateFormatter.format(offsetWeekDays.last)}',
-          style: const TextStyle(color: Colors.white, fontSize: 16)),
-      IconButton(
-        onPressed: () {
-          updateWeekIndex(1);
-        },
-        icon: const Icon(Icons.arrow_right_rounded, size: 60),
-      )
-    ]);
+    return Container(
+      alignment: Alignment.center,
+      color: Theme.of(context).colorScheme.surface,
+      height: 60,
+      child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () {
+                updateWeekIndex(-1);
+              },
+              icon: const Icon(Icons.arrow_left_rounded, size: 60),
+            ),
+            Text(
+                '${dateFormatter.format(offsetWeekDays.first)} - ${dateFormatter.format(offsetWeekDays.last)}',
+                style: const TextStyle(color: Colors.white, fontSize: 16)),
+            IconButton(
+              onPressed: () {
+                updateWeekIndex(1);
+              },
+              icon: const Icon(Icons.arrow_right_rounded, size: 60),
+            )
+          ]),
+    );
   }
 }

@@ -25,7 +25,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
-    bool locked = today.isAfter(widget.startDate ?? DateTime.now());
+    bool locked = false;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

@@ -4,7 +4,8 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class FrequencyPicker extends StatefulWidget {
-  FrequencyPicker({required this.passFrequency, required this.enteredWeekdays, super.key});
+  FrequencyPicker(
+      {required this.passFrequency, required this.enteredWeekdays, super.key});
 
   final Function(int value) passFrequency;
   final List<WeekDay> enteredWeekdays;
@@ -21,17 +22,19 @@ class _FrequencyPickerState extends State<FrequencyPicker> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SwitchListTile(
-            subtitle: Text(_frequencyType
-                ? 'Switch to specific days:'
-                : 'Switch to random days:'),
-            title: const CustomToolTipTitle(title: 'Frequency', content: 'Choose the frequency',),
-            value: _frequencyType,
-            onChanged: (value) {
-              setState(() {
-                _frequencyType = value;
-              });
-            }),
+        const CustomToolTipTitle(title: 'Frequency: ', content: 'Frequency'),
+        const SizedBox(height: 8,),
+        // SwitchListTile(
+        //     subtitle: Text(_frequencyType
+        //         ? 'Switch to specific days:'
+        //         : 'Switch to random days:'),
+        //     title: const CustomToolTipTitle(title: 'Frequency', content: 'Choose the frequency',),
+        //     value: _frequencyType,
+        //     onChanged: (value) {
+        //       setState(() {
+        //         _frequencyType = value;
+        //       });
+        //     }),
         if (_frequencyType)
           Container(
             padding: const EdgeInsets.all(8),

@@ -50,6 +50,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: () {
             Navigator.of(context)

@@ -39,7 +39,7 @@ class TrackedDay {
         (notation!.investment * 2 / 5) +
         (notation!.method * 2 / 5) +
         (notation!.result * 2 / 5) +
-        (notation!.goal == 0 ? 0 : notation!.goal * 2 / 5) +
+        (notation!.goal == 0 ? 0 : notation!.goal * 2) +
         (notation!.extra);
   }
 

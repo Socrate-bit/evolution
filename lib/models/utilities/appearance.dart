@@ -6,6 +6,6 @@ class StatusAppearance {
 
   final Color backgroundColor;
   final Color elementsColor;
-  final Widget? icon;
+  Widget? icon;
   final TextDecoration? lineThrough;
 }

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 
-class HabitWidget extends StatelessWidget {
+class HabitWidget extends ConsumerWidget {
   const HabitWidget(
       {required this.name,
       required this.icon,
       required this.appearance,
+      this.streak,
       super.key});
 
   final String name;
   final IconData icon;
   final StatusAppearance appearance;
+  final String? streak;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -38,7 +41,25 @@ class HabitWidget extends StatelessWidget {
               fontSize: 16),
         ),
         const Spacer(),
-        if (appearance.icon != null) appearance.icon!,
+        if (appearance.icon != null)
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (streak != null)
+                Positioned(
+                  top: -3,
+                  right: 16,
+                  child: Text(
+                    streak!,
+                    style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w900),
+                  ),
+                ),
+              appearance.icon!,
+            ],
+          ),
       ]),
     );
   }
