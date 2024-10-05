@@ -10,6 +10,15 @@ class DaysUtility {
     WeekDay.saturday: 6,
     WeekDay.sunday: 7,
   };
+  static final Map<int, WeekDay> NumberToWeekDay = {
+    1: WeekDay.monday,
+    2: WeekDay.tuesday,
+    3: WeekDay.wednesday,
+    4: WeekDay.thursday,
+    5: WeekDay.friday,
+    6: WeekDay.saturday,
+    7: WeekDay.sunday,
+  };
 
   static final Map<WeekDay, String> weekDayToSign = {
     WeekDay.monday: 'MO',

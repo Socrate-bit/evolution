@@ -18,6 +18,7 @@ class Habit {
       required this.icon,
       required this.name,
       this.description,
+      this.newHabit,
       required this.frequency,
       required this.weekdays,
       required this.validationType,
@@ -36,6 +37,7 @@ class Habit {
   IconData icon;
   String name;
   String? description;
+  String? newHabit;
   int frequency;
   List<WeekDay> weekdays;
   ValidationType validationType;

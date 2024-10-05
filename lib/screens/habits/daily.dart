@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
@@ -15,7 +17,8 @@ import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 
 class DailyScreen extends ConsumerStatefulWidget {
-  const DailyScreen({super.key});
+  const DailyScreen(this.dateDisplay, {super.key});
+  final Function dateDisplay;
 
   @override
   ConsumerState<DailyScreen> createState() => _MainScreenState();
@@ -23,15 +26,28 @@ class DailyScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<DailyScreen> {
   late DateTime date;
+  DateTime now = DateTime.now();
+  final _formater = DateFormat('d MMM');
 
   @override
   void initState() {
     super.initState();
-    DateTime now = DateTime.now();
     if (now.hour >= 2) {
       date = DateTime(now.year, now.month, now.day);
     } else {
       date = DateTime(now.year, now.month, now.day - 1);
+    }
+  }
+
+  String _displayedDate(DateTime value) {
+    if (DateTime(now.year, now.month, now.day) == value) {
+      return 'Today';
+    } else if (DateTime(now.year, now.month, now.day + 1) == value) {
+      return 'Tomorrow';
+    } else if (DateTime(now.year, now.month, now.day - 1) == value) {
+      return 'Yesterday';
+    } else {
+      return _formater.format(value);
     }
   }
 
@@ -116,10 +132,19 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     });
 
     DateTime start = date;
+
     for (TrackedDay trackeDay in habitTrackedDays) {
-      if (trackeDay.date != start) break;
+      if (!habitTrackedDays.map((e) => e.date).contains(start)) break;
+      if (trackeDay.date != start) continue;
       streak += 1;
       start = trackeDay.date.subtract(const Duration(days: 1));
+      while (!habit.weekdays
+          .map(
+            (e) => DaysUtility.weekDayToNumber[e],
+          )
+          .contains(start.weekday)) {
+        start = start.subtract(const Duration(days: 1));
+      }
     }
 
     if (streak < 1) {
@@ -206,6 +231,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
           setState(
             () {
               date = value;
+              widget.dateDisplay(_displayedDate(value));
             },
           );
         }, date),

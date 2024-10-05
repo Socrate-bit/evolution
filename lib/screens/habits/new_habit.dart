@@ -29,6 +29,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   IconData _enteredIcon = Icons.self_improvement;
   String? _enteredName;
   String? _enteredDescription;
+  String? _mainImprovement;
   int _enteredFrequency = 7;
   List<WeekDay> _enteredWeekdays = [];
   ValidationType _enteredValidationType = ValidationType.binary;
@@ -45,6 +46,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       _enteredIcon = widget.habit!.icon;
       _enteredName = widget.habit!.name;
       _enteredDescription = widget.habit!.description;
+      _mainImprovement = widget.habit!.newHabit;
       _enteredFrequency = widget.habit!.frequency;
       _enteredWeekdays = List.from(widget.habit!.weekdays);
       _enteredValidationType = widget.habit!.validationType;
@@ -76,6 +78,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         icon: _enteredIcon,
         name: _enteredName!,
         description: _enteredDescription,
+        newHabit: _mainImprovement,
         frequency: _enteredFrequency,
         weekdays: _enteredWeekdays,
         validationType: _enteredName == 'Daily recap'
@@ -148,7 +151,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             tooltipContent: 'Provide a description of this habit',
           ),
           Row(
-            children: [const CustomToolTipTitle(title: 'Importance:', content: 'Importance'),
+            children: [
+              const CustomToolTipTitle(
+                  title: 'Importance:', content: 'Importance'),
               Expanded(
                 child: Center(
                   child: Container(
@@ -160,7 +165,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                         value: _enteredPonderation,
                         icon: const Icon(Icons.arrow_drop_down),
                         isDense: true,
-                        dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                        dropdownColor:
+                            Theme.of(context).colorScheme.surfaceBright,
                         items: Ponderation.values.reversed
                             .map(
                               (item) => DropdownMenuItem(
@@ -189,12 +195,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-            subtitle: Text(_enteredValidationType == ValidationType.evaluation
-                ? 'Switch to simple habit:'
-                : 'Switch to activity:'),
             title: const CustomToolTipTitle(
-              title: 'Habit type',
-              content: 'Choose your habit type',
+              title: 'Recap',
+              content: 'Allow recap for this habit or no',
             ),
             value: _enteredValidationType == ValidationType.evaluation,
             onChanged: (value) {
@@ -209,6 +212,18 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               );
             },
           ),
+          const SizedBox(height: 32),
+          if (_enteredValidationType == ValidationType.evaluation)
+            BigTextFormField(
+              maxLenght: 100,
+              maxLine: 1,
+              controlledValue: _mainImprovement ?? '',
+              onSaved: (value) {
+                _mainImprovement = value;
+              },
+              toolTipTitle: 'Main improvement',
+              tooltipContent: 'Main improvement',
+            ),
           const SizedBox(height: 32),
           AdditionalMetrics(_enteredAdditionalMetrics),
           const SizedBox(height: 32),

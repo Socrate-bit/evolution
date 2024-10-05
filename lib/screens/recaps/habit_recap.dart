@@ -60,7 +60,6 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       _enteredRecap = widget.oldTrackedDay!.recap;
       _enteredImprovement = widget.oldTrackedDay!.improvements;
       _additionalInputs = widget.oldTrackedDay!.additionalMetrics;
-
     }
 
     values = [
@@ -136,7 +135,17 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         }),
 
         ListTile(
-          title: Text('New Habit / Focus / Goal',
+          subtitle: widget.habit.newHabit == null ||
+                  widget.habit.newHabit!.trim().isEmpty
+              ? null
+              : Text(
+                  widget.habit.newHabit!,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(color: Colors.grey),
+                ),
+          title: Text('Main improvement',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _goal,

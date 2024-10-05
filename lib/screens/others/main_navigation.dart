@@ -18,13 +18,27 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   String _pageTitle = 'Today';
   final List<String> _titlesList = ['Today', 'Week', 'Statistics', 'Together'];
   int _selectedIndex = 0;
-  Widget _selectedPage = const DailyScreen();
-  final List<Widget> _pagesList = [
-    const DailyScreen(),
-    const WeeklyScreen(),
-    const WeeklyScreen(),
-    const WeeklyScreen()
-  ];
+  late Widget _selectedPage;
+  late List<Widget> _pagesList;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _selectedPage = DailyScreen(_displayDate);
+    _pagesList = [
+      DailyScreen(_displayDate),
+      const WeeklyScreen(),
+      const WeeklyScreen(),
+      const WeeklyScreen()
+    ];
+  }
+
+  void _displayDate(value) {
+    setState(() {
+      _pageTitle = value;
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {

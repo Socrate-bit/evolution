@@ -135,7 +135,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                     fontWeight: _today == dayList[item]
                                         ? FontWeight.bold
                                         : null,
-                                    fontSize: 10,
+                                    fontSize: 14,
                                     color: _today == dayList[item]
                                         ? Colors.white
                                         : Colors.grey)),

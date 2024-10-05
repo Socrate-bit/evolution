@@ -49,6 +49,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'icon': newHabit.icon.codePoint.toString(),
       'name': newHabit.name,
       'description': newHabit.description,
+      'newHabit': newHabit.newHabit,
       'frequency': newHabit.frequency,
       'weekdays':
           jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
@@ -88,6 +89,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'icon': newHabit.icon.codePoint.toString(),
       'name': newHabit.name,
       'description': newHabit.description,
+      'newHabit': newHabit.newHabit,
       'frequency': newHabit.frequency,
       'weekdays':
           jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
@@ -128,6 +130,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'icon': newHabit.icon.codePoint.toString(),
       'name': newHabit.name,
       'description': newHabit.description,
+      'newHabit': newHabit.newHabit,
       'frequency': newHabit.frequency,
       'weekdays':
           jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
@@ -164,6 +167,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
             fontFamily: 'MaterialIcons'),
         name: data['name'] as String,
         description: data['description'] as String?,
+        newHabit: data['newHabit'] as String?,
         frequency: data['frequency'] as int,
         weekdays: (jsonDecode(data['weekdays'] as String) as List)
             .map((day) => WeekDay.values.firstWhere((e) => e.toString() == day))
@@ -203,13 +207,23 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
   // Helper function to check if the habit is tracked on the target day
   static bool getHabitTrackingStatus(Habit habit, DateTime date) {
-    final bool paused =
-        habit.frequencyChanges.values.toList().reversed.toList()[0] == 0 &&
-            !habit.frequencyChanges.keys
-                .toList()
-                .reversed
-                .toList()[0]
-                .isAfter(date);
+    bool paused = false;
+    List<int> values = habit.frequencyChanges.values.toList();
+    List<DateTime> keys = habit.frequencyChanges.keys.toList();
+
+    for (int i = habit.frequencyChanges.length; i > 0; i--) {
+      int index = i - 1;
+
+      if (values[index] == 0) {
+        if (keys[index].isBefore(date) &&
+            (habit.frequencyChanges.length <= index + 1
+                ? true
+                : keys[index + 1].isAfter(date))) {
+          paused = true;
+        }
+      }
+    }
+
     final bool isStarted = habit.startDate.isBefore(date) ||
         habit.startDate.isAtSameMomentAs(date);
     final bool isEnded = habit.endDate != null &&
