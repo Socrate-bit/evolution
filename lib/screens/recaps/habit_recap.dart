@@ -143,9 +143,9 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium!
-                      .copyWith(color: Colors.grey),
+                      .copyWith(),
                 ),
-          title: Text('Main improvement',
+          title: Text('Focus of the week',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _goal,

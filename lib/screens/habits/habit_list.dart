@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/utilities/appearance.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/screens/habits/habit_screen.dart';
-import 'package:tracker_v1/widgets/daily/habit_item.dart';
+import 'package:tracker_v1/widgets/global/habits_reorderable_list.dart';
 
 class HabitList extends ConsumerStatefulWidget {
   const HabitList({super.key});
@@ -13,78 +12,24 @@ class HabitList extends ConsumerStatefulWidget {
 }
 
 class _MyWidgetState extends ConsumerState<HabitList> {
-  late dynamic habitsNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    // Store a reference to the notifier here
-    habitsNotifier = ref.read(habitProvider.notifier);
-  }
-
-  Future<void> databaseOrderChange() async {
-    await habitsNotifier.databaseOrderChange();
-  }
-
-  void onReorder(int oldIndex, int newIndex) {
-    habitsNotifier.stateOrderChange(oldIndex, newIndex);
-  }
-
-  @override
-  void dispose() {
-    databaseOrderChange();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final habitsList = ref.watch(habitProvider);
-    Widget content = const Align(
-      child: Text('No habits yet, create one!'),
-    );
+    final habitsList = ref
+        .watch(habitProvider)
+        .where((habit) => habit.validationType != HabitType.unique)
+        .toList();
+    Widget content;
 
     if (habitsList.isNotEmpty) {
-      content = ReorderableListView.builder(
-        onReorder: (int oldIndex, int newIndex) {
-          onReorder(oldIndex, newIndex);
-        },
-        itemCount: habitsList.length,
-        itemBuilder: (ctx, item) {
-          StatusAppearance defaultAppearance = StatusAppearance(
-              backgroundColor: const Color.fromARGB(255, 51, 51, 51),
-              elementsColor: Colors.white,
-              icon: habitsList[item]
-                          .frequencyChanges
-                          .values
-                          .toList()
-                          .reversed
-                          .toList()[0] ==
-                      0
-                  ? const Icon(Icons.pause_circle_filled)
-                  : null);
-
-          return GestureDetector(
-            key: ObjectKey(habitsList[item]),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (ctx) => HabitScreen(habitsList[item]),
-                ),
-              );
-            },
-            child: HabitWidget(
-                name: habitsList[item].name,
-                icon: habitsList[item].icon,
-                appearance: defaultAppearance),
-          );
-        },
-      );
+      content = HabitsReorderableList(habitsList: habitsList);
+    } else {
+      content = const Align(child: Text('No habits yet, create one!'));
     }
 
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          title: const Text('Habits List'),
+          title: const Text('All Routines'),
           centerTitle: true,
         ),
         body: content);

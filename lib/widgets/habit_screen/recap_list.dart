@@ -19,9 +19,9 @@ class RecapList extends ConsumerWidget {
       WidgetRef ref) {
     DateTime date = oldTrackedDay.date;
 
-    if (habit.validationType == ValidationType.binary) {
+    if (habit.validationType == HabitType.simple) {
       return;
-    } else if (habit.validationType == ValidationType.evaluation) {
+    } else if (habit.validationType == HabitType.recap) {
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
@@ -29,7 +29,7 @@ class RecapList extends ConsumerWidget {
         builder: (ctx) =>
             HabitRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
       );
-    } else if (habit.validationType == ValidationType.recapDay) {
+    } else if (habit.validationType == HabitType.recapDay) {
       RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
         return td.date == date;
       });

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tracker_v1/models/utilities/score_computing.dart';
+import 'package:tracker_v1/widgets/daily/score.dart';
 
-class WeekShifter extends StatelessWidget {
+class WeekShifter extends ConsumerWidget {
   const WeekShifter(
       {required this.dateFormatter,
       required this.offsetWeekDays,
@@ -12,32 +15,56 @@ class WeekShifter extends StatelessWidget {
   final List<DateTime> offsetWeekDays;
   final void Function(int value) updateWeekIndex;
 
+  computeWeeklyScore(ref) {
+    return scoreComputing(offsetWeekDays[0], ref,
+        offsetWeekDays.where((e) => e.isBefore(DateTime.now())).toList());
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       alignment: Alignment.center,
       color: Theme.of(context).colorScheme.surface,
       height: 60,
       child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            IconButton(
-              onPressed: () {
-                updateWeekIndex(-1);
-              },
-              icon: const Icon(Icons.arrow_left_rounded, size: 60),
-            ),
-            Text(
-                '${dateFormatter.format(offsetWeekDays.first)} - ${dateFormatter.format(offsetWeekDays.last)}',
-                style: const TextStyle(color: Colors.white, fontSize: 16)),
-            IconButton(
-              onPressed: () {
-                updateWeekIndex(1);
-              },
-              icon: const Icon(Icons.arrow_right_rounded, size: 60),
-            )
-          ]),
+        children: [
+          Container(
+            alignment: Alignment.center,
+            width: 300,
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      updateWeekIndex(-1);
+                    },
+                    icon: const Icon(Icons.arrow_left_rounded, size: 60),
+                  ),
+                  Text(
+                      '${dateFormatter.format(offsetWeekDays.first)} - ${dateFormatter.format(offsetWeekDays.last)}',
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 16)),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      updateWeekIndex(1);
+                    },
+                    icon: const Icon(
+                      Icons.arrow_right_rounded,
+                      size: 60,
+                    ),
+                  )
+                ]),
+          ),
+          ScoreCard(
+            offsetWeekDays[0],
+            computeWeeklyScore(ref),
+            weekly: true,
+          )
+        ],
+      ),
     );
   }
 }

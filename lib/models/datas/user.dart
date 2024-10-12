@@ -29,4 +29,27 @@ class UserData {
       synced: synced,
     );
   }
+
+  // fromJson method to convert a JSON map into a UserData instance
+  factory UserData.fromJson(Map<String, dynamic> json) {
+    return UserData(
+      userId: json['userId'] as String?,
+      inscriptionDate: DateTime.parse(json['inscriptionDate'] as String),
+      name: json['name'] as String,
+      profilPicture: json['profilPicture'] as String,
+      synced:
+          json['synced'] as bool? ?? false, // Handle possible null for synced
+    );
+  }
+
+  // toJson method to convert a UserData instance into a JSON map
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'inscriptionDate': inscriptionDate.toIso8601String(),
+      'name': name,
+      'profilPicture': profilPicture,
+      'synced': synced,
+    };
+  }
 }

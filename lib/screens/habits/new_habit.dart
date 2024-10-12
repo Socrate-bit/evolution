@@ -32,10 +32,11 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   String? _mainImprovement;
   int _enteredFrequency = 7;
   List<WeekDay> _enteredWeekdays = [];
-  ValidationType _enteredValidationType = ValidationType.binary;
+  HabitType _enteredValidationType = HabitType.simple;
   DateTime now = DateTime.now();
   DateTime? _enteredStartDate;
   DateTime? _enteredEndDate;
+  TimeOfDay? _enteredTimeOfTheDay;
   List<String> _enteredAdditionalMetrics = [];
   int _enteredPonderation = 3;
 
@@ -52,6 +53,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       _enteredValidationType = widget.habit!.validationType;
       _enteredStartDate = widget.habit!.startDate;
       _enteredEndDate = widget.habit!.endDate;
+      _enteredTimeOfTheDay = widget.habit!.timeOfTheDay;
       _enteredPonderation = widget.habit!.ponderation;
       _enteredAdditionalMetrics = List.from(widget.habit!.additionalMetrics!);
     }
@@ -82,10 +84,11 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         frequency: _enteredFrequency,
         weekdays: _enteredWeekdays,
         validationType: _enteredName == 'Daily recap'
-            ? ValidationType.recapDay
+            ? HabitType.recapDay
             : _enteredValidationType,
         startDate: _enteredStartDate ?? today,
         endDate: _enteredEndDate,
+        timeOfTheDay: _enteredTimeOfTheDay,
         additionalMetrics: _enteredAdditionalMetrics,
         orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
         ponderation: _enteredPonderation,
@@ -109,7 +112,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   @override
   Widget build(BuildContext context) {
     return CustomModalBottomSheet(
-      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
+      title: widget.habit != null ? 'Edit Item' : 'New Item',
       formKey: formKey,
       content: Column(
         children: [
@@ -194,26 +197,71 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             enteredWeekdays: _enteredWeekdays,
           ),
           const SizedBox(height: 16),
-          SwitchListTile(
-            title: const CustomToolTipTitle(
-              title: 'Recap',
-              content: 'Allow recap for this habit or no',
-            ),
-            value: _enteredValidationType == ValidationType.evaluation,
-            onChanged: (value) {
-              setState(
-                () {
-                  if (value == true) {
-                    _enteredValidationType = ValidationType.evaluation;
-                  } else {
-                    _enteredValidationType = ValidationType.binary;
-                  }
-                },
-              );
-            },
+          Row(children: [
+            const CustomToolTipTitle(title: 'Time:', content: 'Time'),
+            Expanded(
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    _enteredTimeOfTheDay = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                    setState(() {
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5)),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceBright),
+                  child: Text(
+                    _enteredTimeOfTheDay == null
+                        ? 'No time picked'
+                        : _enteredTimeOfTheDay!.format(context),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+            )
+          ]),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const CustomToolTipTitle(
+                  title: 'Item type:', content: 'Item type'),
+              Expanded(
+                child: Center(
+                  child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceBright,
+                          borderRadius: BorderRadius.circular(5)),
+                      child: DropdownButton(
+                        value: _enteredValidationType,
+                        icon: const Icon(Icons.arrow_drop_down),
+                        isDense: true,
+                        dropdownColor:
+                            Theme.of(context).colorScheme.surfaceBright,
+                        items: HabitType.values
+                            .map(
+                              (item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(item.name.toString().capitalize()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _enteredValidationType = value;
+                          });
+                        },
+                      )),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 32),
-          if (_enteredValidationType == ValidationType.evaluation)
+          if (_enteredValidationType == HabitType.recap)
             BigTextFormField(
               maxLenght: 100,
               maxLine: 1,
@@ -225,7 +273,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               tooltipContent: 'Main improvement',
             ),
           const SizedBox(height: 32),
+          if (_enteredValidationType == HabitType.recap)
           AdditionalMetrics(_enteredAdditionalMetrics),
+          if (_enteredValidationType == HabitType.recap)
           const SizedBox(height: 32),
           DatePickerWidget(
             passStartDate: (value) {
@@ -236,6 +286,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             },
             startDate: _enteredStartDate,
             endDate: _enteredEndDate,
+            unique: _enteredValidationType == HabitType.unique,
           ),
           const SizedBox(height: 64),
           CustomElevatedButton(

@@ -9,10 +9,12 @@ class DatePickerWidget extends StatefulWidget {
       required this.passEndDate,
       this.startDate,
       this.endDate,
+      this.unique = false,
       super.key});
 
   final void Function(DateTime value) passStartDate;
   final void Function(DateTime value) passEndDate;
+  final bool unique;
   final DateTime? startDate;
   final DateTime? endDate;
 
@@ -23,8 +25,6 @@ class DatePickerWidget extends StatefulWidget {
 class _DatePickerWidgetState extends State<DatePickerWidget> {
   @override
   Widget build(BuildContext context) {
-    DateTime now = DateTime.now();
-    DateTime today = DateTime(now.year, now.month, now.day);
     bool locked = false;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -35,9 +35,11 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
             widget.startDate != null
                 ? _formater.format(widget.startDate!).toString()
                 : 'Start date'),
+        if (!widget.unique)
         const SizedBox(
           width: 16,
         ),
+        if (!widget.unique)
         RoundedButton(
           widget.passEndDate,
           widget.endDate != null

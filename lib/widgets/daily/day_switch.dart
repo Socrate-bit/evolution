@@ -4,6 +4,7 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/utilities/rating_utility.dart';
 import 'package:tracker_v1/models/utilities/score_computing.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
+import 'package:tracker_v1/widgets/daily/score.dart';
 
 class DaySwitch extends ConsumerStatefulWidget {
   final Function switchDay;
@@ -38,28 +39,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
     widget.switchDay(pickedDay);
   }
 
-  String _displayedScore(double score) {
-    String displayedScore = '-';
-
-    if (score == null || score.isNaN) {
-      return displayedScore;
-    }
-
-    if (score == score.toInt()) {
-      displayedScore = score.toInt().toString();
-    } else {
-      displayedScore = score.toStringAsFixed(2);
-    }
-
-    if (score > 10) {
-      displayedScore += ' 🥇';
-    } else if (score >= 7.5) {
-      displayedScore += ' 🎉';
-    }
-
-    return displayedScore;
-  }
-
+ 
   @override
   void initState() {
     _pageController = PageController(initialPage: 52);
@@ -136,7 +116,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                         ? FontWeight.bold
                                         : null,
                                     fontSize: 14,
-                                    color: _today == dayList[item]
+                                    color: _today.compareTo(dayList[item]) >= 0
                                         ? Colors.white
                                         : Colors.grey)),
                             const SizedBox(height: 3),
@@ -205,32 +185,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
               },
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Container(
-                height: 32,
-                width: 88,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: _selectedDay.isAfter(_today) ||
-                            ref
-                                .watch(habitProvider.notifier)
-                                .getTodayHabit(_selectedDay)
-                                .isEmpty
-                        ? const Color.fromARGB(255, 51, 51, 51)
-                        : RatingUtility.getRatingColor(score[0] / 2)
-                            .withOpacity(0.75)),
-                alignment: Alignment.center,
-                child: Text(
-                  _displayedScore(score[0]),
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          )
+          ScoreCard(_selectedDay, score)
         ],
       ),
     );

@@ -4,7 +4,7 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 
 const idGenerator = Uuid();
 
-enum ValidationType { binary, evaluation, recapDay }
+enum HabitType { simple, recap, unique, recapDay }
 
 enum Ponderation { negligible, additional, valuable, significant, critical }
 
@@ -23,6 +23,7 @@ class Habit {
       required this.weekdays,
       required this.validationType,
       required this.startDate,
+      this.timeOfTheDay,
       this.endDate,
       this.additionalMetrics,
       this.ponderation = 3,
@@ -30,7 +31,11 @@ class Habit {
       this.synced = false,
       frequencyChanges})
       : habitId = habitId ?? idGenerator.v4(),
-        frequencyChanges = frequencyChanges ?? {today: frequency};
+        frequencyChanges = frequencyChanges ?? {today: frequency} {
+    validationType == HabitType.unique
+        ? endDate = DateTime(startDate.year, startDate.month, startDate.day + 1)
+        : endDate = endDate;
+  }
 
   String userId;
   String habitId;
@@ -40,8 +45,9 @@ class Habit {
   String? newHabit;
   int frequency;
   List<WeekDay> weekdays;
-  ValidationType validationType;
+  HabitType validationType;
   DateTime startDate;
+  TimeOfDay? timeOfTheDay;
   DateTime? endDate;
   List<String>? additionalMetrics;
   int ponderation;

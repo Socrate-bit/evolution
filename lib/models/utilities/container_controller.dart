@@ -32,11 +32,11 @@ class ContainerController {
       return ActionHandlers(null, null);
     } else if (trackingStatus == true) {
       switch (habit.validationType) {
-        case ValidationType.evaluation:
+        case HabitType.recap:
           return ActionHandlers(HabitRecapScreen(habit, date), null);
-        case ValidationType.recapDay:
+        case HabitType.recapDay:
           return ActionHandlers(DailyRecapScreen(date, habit), null);
-        case ValidationType.binary:
+        case HabitType.simple || HabitType.unique:
           final TrackedDay newTrackedDay = TrackedDay(
               userId: FirebaseAuth.instance.currentUser!.uid,
               habitId: habit.habitId,
@@ -59,7 +59,7 @@ class ContainerController {
       }
 
       switch (habit.validationType) {
-        case ValidationType.evaluation:
+        case HabitType.recap:
           return ActionHandlers(
               onLongPress,
               HabitRecapScreen(
@@ -67,7 +67,7 @@ class ContainerController {
                 date,
                 oldTrackedDay: trackedDay,
               ));
-        case ValidationType.recapDay:
+        case HabitType.recapDay:
           RecapDay recapDay = dailyRecaps.firstWhere((recapDay) {
             return recapDay.date == date;
           });
@@ -82,7 +82,7 @@ class ContainerController {
             },
             DailyRecapScreen(date, habit, oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
           );
-        case ValidationType.binary:
+        case HabitType.simple  || HabitType.unique:
           return ActionHandlers(onLongPress, null);
       }
     }

@@ -2,7 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
+import 'package:tracker_v1/providers/reordered_day.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/providers/user_stats_provider.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 
 final dataManagerProvider = Provider((ref) => DataManager(ref));
@@ -25,7 +27,7 @@ class DataManager {
 
   Future<void> deleteAccount() async {
     await FirebaseAuth.instance.currentUser!.delete();
-  }
+  } 
 
   Future<void> loadData() async {
     try {
@@ -38,7 +40,10 @@ class DataManager {
       await Future.wait([
         ref.read(habitProvider.notifier).loadData(),
         ref.read(trackedDayProvider.notifier).loadData(),
-        ref.read(recapDayProvider.notifier).loadData()
+        ref.read(recapDayProvider.notifier).loadData(),
+        ref.read(ReorderedDayProvider.notifier).loadData(),
+        ref.read(userStatsProvider.notifier).loadUserStats()
+
       ]);
     } catch (error) {
       signOut();

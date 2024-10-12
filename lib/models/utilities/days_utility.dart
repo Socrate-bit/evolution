@@ -30,6 +30,16 @@ class DaysUtility {
     WeekDay.sunday: 'SU',
   };
 
+  static final Map<WeekDay, String> weekDayToAbrev = {
+    WeekDay.monday: 'Mon',
+    WeekDay.tuesday: 'Tue',
+    WeekDay.wednesday: 'Wed',
+    WeekDay.thursday: 'Thu',
+    WeekDay.friday: 'Fri',
+    WeekDay.saturday: 'Sat',
+    WeekDay.sunday: 'Sun',
+  };
+
   static final Map<int, String> NumberToSign = {
     1: 'MO',
     2: 'TU',

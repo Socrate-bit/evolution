@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
+import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
 import 'package:tracker_v1/models/utilities/container_controller.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
@@ -126,9 +127,10 @@ class WeeklyTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allHabits = ref.watch(habitProvider);
+    final allHabits = ref.watch(habitProvider).where((habit) => habit.validationType != HabitType.unique)
+        .toList();
     final activeHabits =
-        allHabits.where((habit) => _isActiveHabit(habit)).toList();
+        allHabits.where((habit) => _isActiveHabit(habit)).toList()..sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),

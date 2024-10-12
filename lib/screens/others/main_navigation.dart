@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/screens/habits/daily.dart';
 import 'package:tracker_v1/screens/habits/habit_list.dart';
+import 'package:tracker_v1/screens/others/garden.dart';
 import 'package:tracker_v1/screens/others/profil.dart';
 import 'package:tracker_v1/screens/habits/weekly.dart';
 import 'package:tracker_v1/screens/habits/new_habit.dart';
@@ -29,8 +30,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _pagesList = [
       DailyScreen(_displayDate),
       const WeeklyScreen(),
-      const WeeklyScreen(),
-      const WeeklyScreen()
+      const GardenScreen(),
+      const GardenScreen()
     ];
   }
 
@@ -101,44 +102,58 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       body: _selectedPage,
       bottomNavigationBar: BottomAppBar(
         height: 70,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
+        shape: _selectedIndex == 0 ? const CircularNotchedRectangle() : null,
+        notchMargin: 8.0 ,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            IconButton(
-                icon: Icon(Icons.check_box_outlined,
-                    color: _selectedIndex == 0 ? selectedIcon : null),
-                iconSize: 30,
-                onPressed: () => _onItemTapped(0)),
-            IconButton(
-                icon: Icon(Icons.event_note_rounded,
-                    color: _selectedIndex == 1 ? selectedIcon : null),
-                iconSize: 30,
-                onPressed: () => _onItemTapped(1)),
-            const SizedBox(width: 48),
-            IconButton(
-                icon: Icon(Icons.bar_chart_rounded,
-                    color: _selectedIndex == 2 ? selectedIcon : null),
-                iconSize: 30,
-                onPressed: () => _onItemTapped(2)),
-            IconButton(
-                icon: Icon(Icons.people_alt_outlined,
-                    color: _selectedIndex == 3 ? selectedIcon : null),
-                iconSize: 30,
-                onPressed: () => _onItemTapped(3)),
+            Expanded(
+              child: IconButton(
+                  icon: Icon(Icons.check_box_outlined,
+                      color: _selectedIndex == 0 ? selectedIcon : null),
+                  iconSize: 30,
+                  onPressed: () => _onItemTapped(0)),
+            ),
+            Expanded(
+                child: IconButton(
+                    icon: Icon(Icons.event_note_rounded,
+                        color: _selectedIndex == 1 ? selectedIcon : null),
+                    iconSize: 30,
+                    onPressed: () => _onItemTapped(1))),
+            AnimatedContainer(
+                duration: _selectedIndex != 0
+                    ? const Duration(milliseconds: 600)
+                    : const Duration(milliseconds: 300),
+                width: _selectedIndex == 0 ? 80 : 0),
+            Expanded(
+                child: IconButton(
+                    icon: Icon(Icons.bar_chart_rounded,
+                        color: _selectedIndex == 2 ? selectedIcon : null),
+                    iconSize: 30,
+                    onPressed: () => _onItemTapped(2))),
+            Expanded(
+                child: IconButton(
+                    icon: Icon(Icons.people_alt_outlined,
+                        color: _selectedIndex == 3 ? selectedIcon : null),
+                    iconSize: 30,
+                    onPressed: () => _onItemTapped(3))),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 6,
-        shape: const CircleBorder(),
-        onPressed: _showNewHabit,
-        child: const Icon(
-          Icons.add_rounded,
-          size: 40,
-          color: Colors.white,
+      floatingActionButton: AnimatedScale(
+        scale: _selectedIndex == 0 ? 1 : 0, // Shrink to 0 before disappearing
+        duration: _selectedIndex != 0
+            ? const Duration(milliseconds: 500)
+            : const Duration(milliseconds: 200),
+        child: FloatingActionButton(
+          elevation: 6,
+          shape: const CircleBorder(),
+          onPressed: _showNewHabit,
+          child: const Icon(
+            Icons.add_rounded,
+            size: 40,
+            color: Colors.white,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

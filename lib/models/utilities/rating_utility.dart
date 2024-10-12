@@ -17,7 +17,7 @@ class RatingUtility {
     if (value <= 3.75) return Colors.green; 
     if (value <= 5) return Colors.blue;
     if (value > 5) return Colors.purple;
-    return Colors.grey;
+    return const Color.fromARGB(255, 51, 51, 51);
     
   }
 

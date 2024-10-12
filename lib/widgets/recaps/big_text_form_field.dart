@@ -24,7 +24,7 @@ class BigTextFormField extends StatelessWidget {
       children: [
         CustomToolTipTitle(title: toolTipTitle, content: tooltipContent),
         TextFormField(
-          textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.newline,
           onFieldSubmitted: (value) {
             FocusScope.of(context).unfocus();
           },

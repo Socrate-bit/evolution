@@ -56,6 +56,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'validationType': newHabit.validationType.toString(),
       'startDate': newHabit.startDate.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
+      'timeOfTheDay': newHabit.timeOfTheDay != null
+          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
+          : null,
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
@@ -96,6 +99,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'validationType': newHabit.validationType.toString(),
       'startDate': newHabit.startDate.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
+      'timeOfTheDay': newHabit.timeOfTheDay != null
+          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
+          : null,
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
@@ -137,6 +143,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'validationType': newHabit.validationType.toString(),
       'startDate': newHabit.startDate.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
+      'timeOfTheDay': newHabit.timeOfTheDay != null
+          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
+          : null,
       'additionalMetrics': newHabit.additionalMetrics != null
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
@@ -160,6 +169,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
     final List<Habit> loadedData = snapshot.docs.map((doc) {
       final data = doc.data();
+
       return Habit(
         habitId: doc.id,
         userId: data['userId'] as String,
@@ -172,11 +182,14 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         weekdays: (jsonDecode(data['weekdays'] as String) as List)
             .map((day) => WeekDay.values.firstWhere((e) => e.toString() == day))
             .toList(),
-        validationType: ValidationType.values
+        validationType: HabitType.values
             .firstWhere((e) => e.toString() == data['validationType']),
         startDate: DateTime.parse(data['startDate'] as String),
         endDate: data['endDate'] != null
             ? DateTime.parse(data['endDate'] as String)
+            : null,
+        timeOfTheDay: data['timeOfTheDay'] != null
+            ? stringToTimeOfDay(data['timeOfTheDay'] as String)
             : null,
         additionalMetrics: data['additionalMetrics'] != null
             ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
@@ -240,3 +253,11 @@ final habitProvider = StateNotifierProvider<HabitNotifier, List<Habit>>(
     return HabitNotifier(ref);
   },
 );
+
+TimeOfDay stringToTimeOfDay(String timeString) {
+  final format = timeString.split(":");
+  int hour = int.parse(format[0]);
+  int minute = int.parse(format[1]);
+
+  return TimeOfDay(hour: hour, minute: minute);
+}
