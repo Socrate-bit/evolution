@@ -28,13 +28,18 @@ class AuthNotifier extends StateNotifier<UserData?> {
     userdata = userdata.copy()..profilPicture = downloadUrl;
 
     // Save user data to Firestore using the toJson method
-    await firestore.collection('user_data').doc(userdata.userId).set(userdata.toJson());
+    await firestore
+        .collection('user_data')
+        .doc(userdata.userId)
+        .set(userdata.toJson());
 
     // Update local state
     state = userdata;
 
     // Add user stats (assuming userStatsProvider handles user stats)
-    ref.read(userStatsProvider.notifier).addUserStats(UserStats(userId: userdata.userId!));
+    ref
+        .read(userStatsProvider.notifier)
+        .addUserStats(UserStats(userId: userdata.userId!));
   }
 
   // Load user data from Firestore and set local state
@@ -58,6 +63,36 @@ class AuthNotifier extends StateNotifier<UserData?> {
   // Clear the state when needed
   void cleanState() {
     state = null;
+  }
+
+  // Method to update existing user data in Firestore
+  Future<void> updateUserData(UserData updatedUserData) async {
+    File? pickedProfilPicture;
+
+    // Check if a new profile picture is provided
+    if (updatedUserData.profilPicture.isNotEmpty &&
+        updatedUserData.profilPicture.startsWith('/')) {
+      pickedProfilPicture = File(updatedUserData.profilPicture);
+
+      // Upload the new profile picture to Firebase Storage
+      final storage = firebase_storage.FirebaseStorage.instance;
+      final fileName = pickedProfilPicture.uri.pathSegments.last;
+      final storageRef = storage.ref().child('profile_pictures/$fileName');
+      await storageRef.putFile(pickedProfilPicture);
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // Update the UserData object with the new profile picture URL
+      updatedUserData = updatedUserData.copy()..profilPicture = downloadUrl;
+    }
+
+    // Update the user data in Firestore using the toJson method
+    await firestore
+        .collection('user_data')
+        .doc(updatedUserData.userId)
+        .update(updatedUserData.toJson());
+
+    // Update local state with the updated user data
+    state = updatedUserData;
   }
 }
 

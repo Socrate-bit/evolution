@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_launcher/cli_commands.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
@@ -39,6 +40,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   TimeOfDay? _enteredTimeOfTheDay;
   List<String> _enteredAdditionalMetrics = [];
   int _enteredPonderation = 3;
+  Color _color = Color.fromARGB(255, 52, 52, 52);
 
   @override
   void initState() {
@@ -55,6 +57,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       _enteredEndDate = widget.habit!.endDate;
       _enteredTimeOfTheDay = widget.habit!.timeOfTheDay;
       _enteredPonderation = widget.habit!.ponderation;
+      _color = widget.habit!.color;
       _enteredAdditionalMetrics = List.from(widget.habit!.additionalMetrics!);
     }
   }
@@ -92,6 +95,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         additionalMetrics: _enteredAdditionalMetrics,
         orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
         ponderation: _enteredPonderation,
+        color: _color,
         frequencyChanges: widget.habit != null
             ? Map<DateTime, int>.from(widget.habit!.frequencyChanges)
             : {today: _enteredFrequency});
@@ -107,6 +111,20 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     }
 
     Navigator.of(context).pop();
+  }
+
+  void showColorPicker() {
+    showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+            backgroundColor: Colors.black,
+            content: BlockPicker(
+                pickerColor: _color,
+                onColorChanged: (value) {
+                  setState(() {
+                    _color = value;
+                  });
+                })));
   }
 
   @override
@@ -143,6 +161,13 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                 ],
               ))
             ],
+          ),
+          const SizedBox(height: 16),
+          InkWell(
+            child: CircleAvatar(
+              backgroundColor: _color,
+            ),
+            onTap: showColorPicker,
           ),
           const SizedBox(height: 16),
           BigTextFormField(
@@ -203,16 +228,20 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    _enteredTimeOfTheDay = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-                    setState(() {
-                    });
+                    _enteredTimeOfTheDay = await showTimePicker(
+                        context: context,
+                        initialTime:
+                            widget.habit?.timeOfTheDay ?? TimeOfDay.now(),
+                        initialEntryMode: TimePickerEntryMode.input);
+                    setState(() {});
                   },
                   style: ElevatedButton.styleFrom(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 24),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5)),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceBright),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceBright),
                   child: Text(
                     _enteredTimeOfTheDay == null
                         ? 'No time picked'
@@ -274,9 +303,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             ),
           const SizedBox(height: 32),
           if (_enteredValidationType == HabitType.recap)
-          AdditionalMetrics(_enteredAdditionalMetrics),
+            AdditionalMetrics(_enteredAdditionalMetrics),
           if (_enteredValidationType == HabitType.recap)
-          const SizedBox(height: 32),
+            const SizedBox(height: 32),
           DatePickerWidget(
             passStartDate: (value) {
               _enteredStartDate = value;

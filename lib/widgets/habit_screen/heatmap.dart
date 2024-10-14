@@ -23,8 +23,8 @@ class CustomHeatMap extends ConsumerWidget {
         (TrackedDay trackedDay) => MapEntry(
           trackedDay.date,
           RatingUtility.getRatingNumber(
-            trackedDay.totalRating() == null
-                ? trackedDay.totalRating()
+            trackedDay.notation == null
+                ? 4
                 : trackedDay.totalRating()! / 2,
           ),
         ),
@@ -32,6 +32,8 @@ class CustomHeatMap extends ConsumerWidget {
     );
 
     return HeatMap(
+        startDate: DateTime(today.year-1, today.month, today.day),
+        endDate:today,
         datasets: heatMapDataSet,
         colorMode: ColorMode.color,
         size: 10,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/data_manager.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/models/datas/user.dart';
+import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
 
@@ -12,7 +13,7 @@ class ProfilScreen extends ConsumerWidget {
   void logOut(ref, context) async {
     try {
       Navigator.of(context).pop();
-      await ref.read(dataManagerProvider).signOut(); 
+      await ref.read(dataManagerProvider).signOut();
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
@@ -23,13 +24,33 @@ class ProfilScreen extends ConsumerWidget {
   void deleteAccount(ref, context) async {
     try {
       Navigator.of(context).pop();
-      await ref.read(dataManagerProvider).deleteAccount(); 
+      await ref.read(dataManagerProvider).deleteAccount();
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.toString())));
     }
-    ;
+  }
+
+  void showConfirmationDigalog(context, ref, Function() function, String text) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        actions: [CustomOutlinedButton(submit: function, text: text)],
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Are you sure? This operation is irreversible.',
+            ),
+            SizedBox(
+              height: 16,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -43,12 +64,13 @@ class ProfilScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
         child: Column(
           children: [
-            Hero(
-              tag: userData!.userId!,
-              child: CircleAvatar(
-                radius: 64,
-                backgroundImage: NetworkImage(userData.profilPicture),
-              ),
+            PictureAvatar(
+              setPicture: (value) {
+                ref.read(userDataProvider.notifier).updateUserData(
+                    userData.copy()..profilPicture = value.path);
+              },
+              radius: 100,
+              profilPicture: userData!.profilPicture,
             ),
             const SizedBox(
               height: 16,
@@ -74,7 +96,10 @@ class ProfilScreen extends ConsumerWidget {
             ),
             CustomOutlinedButton(
               submit: () {
-                deleteAccount(ref, context);
+                showConfirmationDigalog(context, ref, () {
+                  deleteAccount(ref, context);
+                  Navigator.of(context).pop();
+                }, 'Yes I want to delete my account and all its data');
               },
               text: 'Delete account',
             )

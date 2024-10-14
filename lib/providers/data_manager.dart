@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
@@ -26,8 +28,75 @@ class DataManager {
   }
 
   Future<void> deleteAccount() async {
+    final userData = ref.read(userDataProvider);
+    final firestore = FirebaseFirestore.instance;
+    final fireStorage = FirebaseStorage.instance;
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Initialize Firestore batch
+    final batch = firestore.batch();
+
+    // Delete documents from 'habits' collection
+    final habitsQuery = await firestore
+        .collection('habits')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in habitsQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete documents from 'TrackedDay' collection
+    final trackedDaysQuery = await firestore
+        .collection('TrackedDay')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in trackedDaysQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete documents from 'TrackedDay' collection
+    final reordersDaysQuery = await firestore
+        .collection('special_day_reorders')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in reordersDaysQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete documents from 'RecapDay' collection
+    final recapDaysQuery = await firestore
+        .collection('RecapDay')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in recapDaysQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete user data from 'user_data' collection
+    final userDataQuery = await firestore
+        .collection('user_data')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in userDataQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Commit the batch deletion
+    await batch.commit();
+
+    // Delete profile picture from Firebase Storage
+    if (userData?.profilPicture != null && userData!.profilPicture.isNotEmpty) {
+      try {
+        final storageRef = fireStorage.refFromURL(userData.profilPicture);
+        await storageRef.delete();
+      } catch (e) {
+        print('Error deleting profile picture: $e');
+      }
+    }
+
+    // Delete FirebaseAuth account
     await FirebaseAuth.instance.currentUser!.delete();
-  } 
+  }
 
   Future<void> loadData() async {
     try {
@@ -43,7 +112,6 @@ class DataManager {
         ref.read(recapDayProvider.notifier).loadData(),
         ref.read(ReorderedDayProvider.notifier).loadData(),
         ref.read(userStatsProvider.notifier).loadUserStats()
-
       ]);
     } catch (error) {
       signOut();

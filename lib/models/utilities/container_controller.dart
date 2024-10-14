@@ -28,9 +28,7 @@ class ContainerController {
 
   // Returns the appropriate action based on the habit's validation type
   ActionHandlers getAction(WidgetRef ref) {
-    if (trackingStatus == false) {
-      return ActionHandlers(null, null);
-    } else if (trackingStatus == true) {
+    if (trackingStatus.runtimeType == bool) {
       switch (habit.validationType) {
         case HabitType.recap:
           return ActionHandlers(HabitRecapScreen(habit, date), null);
@@ -80,9 +78,10 @@ class ContainerController {
                   .read(recapDayProvider.notifier)
                   .deleteRecapDay(recapDay);
             },
-            DailyRecapScreen(date, habit, oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
+            DailyRecapScreen(date, habit,
+                oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
           );
-        case HabitType.simple  || HabitType.unique:
+        case HabitType.simple || HabitType.unique:
           return ActionHandlers(onLongPress, null);
       }
     }

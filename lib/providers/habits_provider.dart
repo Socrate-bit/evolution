@@ -64,6 +64,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
           : null,
       'orderIndex': newHabit.orderIndex,
       'ponderation': newHabit.ponderation,
+      'color': newHabit.color.value,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
       'synced': newHabit.synced ? true : false,
@@ -106,6 +107,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
       'ponderation': newHabit.ponderation,
+      'color': newHabit.color.value,
       'orderIndex': newHabit.orderIndex,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
@@ -150,6 +152,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
           ? jsonEncode(newHabit.additionalMetrics)
           : null,
       'ponderation': newHabit.ponderation,
+      'color': newHabit.color.value,
       'orderIndex': newHabit.orderIndex,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
           .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
@@ -195,6 +198,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
             ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
             : null,
         ponderation: data['ponderation'] as int,
+        color: Color(data['color'] as int? ?? 4281611316),
         orderIndex: data['orderIndex'] as int,
         frequencyChanges: data['frequencyChanges'] != null
             ? (jsonDecode(data['frequencyChanges'] as String)

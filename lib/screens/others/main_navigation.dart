@@ -143,8 +143,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       floatingActionButton: AnimatedScale(
         scale: _selectedIndex == 0 ? 1 : 0, // Shrink to 0 before disappearing
         duration: _selectedIndex != 0
-            ? const Duration(milliseconds: 500)
-            : const Duration(milliseconds: 200),
+            ? const Duration(milliseconds: 300)
+            : const Duration(milliseconds: 180),
         child: FloatingActionButton(
           elevation: 6,
           shape: const CircleBorder(),

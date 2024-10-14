@@ -30,6 +30,11 @@ class HabitScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     void resetData() {
       ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
+      ref.read(habitProvider.notifier).updateHabit(
+          habit,
+          habit.copy()
+            ..frequencyChanges = {today: habit.frequency}
+            ..startDate = today);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Data deleted')));
@@ -39,6 +44,26 @@ class HabitScreen extends ConsumerWidget {
           (h) => h.habitId == habit.habitId,
           orElse: () => habit,
         );
+
+    void showConfirmationDialog(
+        context, ref, Function() function, String text) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          actions: [CustomOutlinedButton(submit: function, text: text)],
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Are you sure? This operation is irreversible.'),
+              SizedBox(
+                height: 16,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -83,11 +108,12 @@ class HabitScreen extends ConsumerWidget {
                                     'Priority: ', // First part (regular style)
                               ),
                               TextSpan(
-                                text: Ponderation.values.reversed
-                                    .toList()[habit.ponderation]
+                                text: Ponderation.values
+                                    .toList()[habit.ponderation - 1]
                                     .name
                                     .capitalize(), // Second part (italic style)
-                                style: TextStyle(fontStyle: FontStyle.italic),
+                                style: const TextStyle(
+                                    fontStyle: FontStyle.italic),
                               ),
                             ],
                           ),
@@ -197,7 +223,7 @@ class HabitScreen extends ConsumerWidget {
                   height: 18,
                 ),
                 if (habit.validationType != HabitType.unique)
-                CustomHeatMap(habit),
+                  CustomHeatMap(habit),
                 const SizedBox(
                   height: 6,
                 ),
@@ -241,7 +267,12 @@ class HabitScreen extends ConsumerWidget {
                   height: 8,
                 ),
                 CustomOutlinedButton(
-                  submit: resetData,
+                  submit: () {
+                    showConfirmationDialog(context, ref, () {
+                      resetData;
+                      Navigator.of(context).pop();
+                    }, 'Yes I want to reset data for this habit');
+                  },
                   text: 'Reset data',
                 ),
                 const SizedBox(
@@ -249,8 +280,11 @@ class HabitScreen extends ConsumerWidget {
                 ),
                 CustomOutlinedButton(
                   submit: () {
-                    ref.read(habitProvider.notifier).deleteHabit(habit);
-                    Navigator.of(context).pop();
+                    showConfirmationDialog(context, ref, () {
+                      ref.read(habitProvider.notifier).deleteHabit(habit);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    }, 'Yes I want to delete this habit and its data');
                   },
                   text: 'Delete habit',
                 )

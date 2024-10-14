@@ -21,7 +21,7 @@ class CustomOutlinedButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
               side: const BorderSide(color: Colors.redAccent),
               foregroundColor: Theme.of(context).colorScheme.primary),
-          child: Text(text,
+          child: Text(text, textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.redAccent.withOpacity(0.5))),

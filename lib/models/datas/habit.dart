@@ -29,6 +29,7 @@ class Habit {
       this.ponderation = 3,
       required this.orderIndex,
       this.synced = false,
+      required this.color, 
       frequencyChanges})
       : habitId = habitId ?? idGenerator.v4(),
         frequencyChanges = frequencyChanges ?? {today: frequency} {
@@ -52,6 +53,7 @@ class Habit {
   List<String>? additionalMetrics;
   int ponderation;
   int orderIndex;
+  Color color;
   Map<DateTime, int> frequencyChanges;
   bool synced;
 
@@ -62,12 +64,18 @@ class Habit {
         icon: icon,
         name: name,
         description: description,
+        newHabit : newHabit,
         frequency: frequency,
         weekdays: weekdays,
         validationType: validationType,
         startDate: startDate,
+        timeOfTheDay: timeOfTheDay,
         endDate: endDate,
         additionalMetrics: additionalMetrics,
-        orderIndex: orderIndex);
+        ponderation: ponderation,
+        orderIndex: orderIndex,
+        frequencyChanges: frequencyChanges,
+        color: color,
+        synced: synced);
   }
 }

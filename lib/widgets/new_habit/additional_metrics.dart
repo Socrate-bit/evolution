@@ -69,12 +69,27 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
                   itemCount: widget.enteredAdditionalMetrics.length,
                   itemBuilder: (ctx, item) {
                     return Center(
-                      child: Text(
-                        widget.enteredAdditionalMetrics[item],
-                        style: const TextStyle(color: Colors.white),
-                        softWrap: true,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.enteredAdditionalMetrics[item],
+                            softWrap: true,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  widget.enteredAdditionalMetrics.remove(
+                                      widget.enteredAdditionalMetrics[item]);
+                                });
+                              },
+                              icon: const Icon(
+                                Icons.delete,
+                                size: 20,
+                              ))
+                        ],
                       ),
                     );
                   }),

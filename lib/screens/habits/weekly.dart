@@ -29,30 +29,25 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
   @override
   Widget build(BuildContext context) {
     final List<DateTime> offsetWeekDays = _getOffsetWeekDays;
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              children: [
-                WeekShifter(
-                    dateFormatter: _dateFormatter,
-                    offsetWeekDays: offsetWeekDays,
-                    updateWeekIndex: (value) {
-                      setState(() {
-                        weekIndex += value;
-                      });
-                    }),
-                const SizedBox(
-                  height: 8,
-                ),
-                WeeklyTable(offsetWeekDays: offsetWeekDays)
-              ],
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        WeekShifter(
+            dateFormatter: _dateFormatter,
+            offsetWeekDays: offsetWeekDays,
+            updateWeekIndex: (value) {
+              setState(() {
+                weekIndex += value;
+              });
+            }),
+        const SizedBox(
+          height: 8,
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: WeeklyTable(offsetWeekDays: offsetWeekDays)),
+        )
+      ],
     );
   }
 }
