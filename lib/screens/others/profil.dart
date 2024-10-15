@@ -60,50 +60,53 @@ class ProfilScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-        child: Column(
-          children: [
-            PictureAvatar(
-              setPicture: (value) {
-                ref.read(userDataProvider.notifier).updateUserData(
-                    userData.copy()..profilPicture = value.path);
-              },
-              radius: 100,
-              profilPicture: userData!.profilPicture,
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            Text(
-              userData.name,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24),
-            ),
-            const SizedBox(
-              height: 32,
-            ),
-            CustomElevatedButton(
-              submit: () {
-                logOut(ref, context);
-              },
-              text: 'Log-out',
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            CustomOutlinedButton(
-              submit: () {
-                showConfirmationDigalog(context, ref, () {
-                  deleteAccount(ref, context);
-                  Navigator.of(context).pop();
-                }, 'Yes I want to delete my account and all its data');
-              },
-              text: 'Delete account',
-            )
-          ],
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+          child: Column(
+            children: [
+              PictureAvatar(
+                setPicture: (value) {
+                  ref.read(userDataProvider.notifier).updateUserData(
+                      userData.copy()..profilPicture = value.path);
+                },
+                radius: 100,
+                profilPicture: userData!.profilPicture,
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              Text(
+                userData.name,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24),
+              ),
+              const SizedBox(
+                height: 32,
+              ),
+              CustomElevatedButton(
+                submit: () {
+                  logOut(ref, context);
+                },
+                text: 'Log-out',
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              CustomOutlinedButton(
+                submit: () {
+                  showConfirmationDigalog(context, ref, () {
+                    deleteAccount(ref, context);
+                    Navigator.of(context).pop();
+                  }, 'Yes I want to delete my account and all its data');
+                },
+                text: 'Delete account',
+              )
+            ],
+          ),
         ),
       ),
     );

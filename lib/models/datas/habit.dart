@@ -38,6 +38,8 @@ class Habit {
         : endDate = endDate;
   }
 
+
+
   String userId;
   String habitId;
   IconData icon;

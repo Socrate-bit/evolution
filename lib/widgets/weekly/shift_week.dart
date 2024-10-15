@@ -15,7 +15,7 @@ class WeekShifter extends ConsumerWidget {
   final List<DateTime> offsetWeekDays;
   final void Function(int value) updateWeekIndex;
 
-  computeWeeklyScore(ref) {
+  _computeWeeklyScore(ref) {
     return scoreComputing(offsetWeekDays[0], ref,
         offsetWeekDays.where((e) => e.isBefore(DateTime.now())).toList());
   }
@@ -60,7 +60,7 @@ class WeekShifter extends ConsumerWidget {
           ),
           ScoreCard(
             offsetWeekDays[0],
-            computeWeeklyScore(ref),
+            _computeWeeklyScore(ref),
             weekly: true,
           )
         ],

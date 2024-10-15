@@ -82,7 +82,7 @@ class HabitWidget extends ConsumerWidget {
     }
   }
 
-  void _endToStartSwiping(TrackedDay? trackedDay, Habit habit, ref) {
+  void _endToStartSwiping(TrackedDay? trackedDay, Habit habit, WidgetRef ref) {
     if (trackedDay == null) return;
     ref.read(trackedDayProvider.notifier).deleteTrackedDay(trackedDay);
     if (habit.validationType == HabitType.recapDay) {

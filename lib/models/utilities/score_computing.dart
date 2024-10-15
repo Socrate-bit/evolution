@@ -8,6 +8,7 @@ import 'package:tracker_v1/providers/tracked_day.dart';
 List scoreComputing(DateTime date, WidgetRef ref, [List<DateTime>? dates]) {
   List<Habit> todayHabitsList = [];
   List<TrackedDay> todayTrackedDaysList;
+  List<int> ponderation = [1, 2, 4, 8, 16];
 
   if (dates != null) {
     for (DateTime date in dates) {
@@ -35,19 +36,18 @@ List scoreComputing(DateTime date, WidgetRef ref, [List<DateTime>? dates]) {
       todayHabitsList.isNotEmpty;
 
   double totalMax =
-      todayHabitsList.fold(0, (double sum, b) => sum + b.ponderation);
+      todayHabitsList.fold(0, (double sum, b) => sum + ponderation[b.ponderation-1]);
   double total = 0;
 
-  for (Habit habit in todayHabitsList) {
-    TrackedDay? trackedDay = todayTrackedDaysList
-        .firstWhereOrNull((t) => t.habitId == habit.habitId);
-    if (trackedDay == null) {
+  for (TrackedDay trackedDay in todayTrackedDaysList) {
+    Habit? habit = todayHabitsList.firstWhereOrNull((habit) => habit.habitId == trackedDay.habitId);
+    if (habit == null) {
       continue;
     } else {
       if (habit.validationType == HabitType.recap) {
-        total += (habit.ponderation * trackedDay.totalRating()! / 10);
+        total += (ponderation[habit.ponderation-1] * trackedDay.totalRating()! / 10);
       } else {
-        total += habit.ponderation;
+        total += ponderation[habit.ponderation-1];
       }
     }
   }

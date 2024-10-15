@@ -12,8 +12,8 @@ import 'package:tracker_v1/widgets/habit_screen/heatmap.dart';
 import 'package:tracker_v1/widgets/habit_screen/recap_list.dart';
 
 class HabitScreen extends ConsumerWidget {
-  const HabitScreen(this.habit, {super.key});
-  final Habit habit;
+  const HabitScreen(this.initialHabit, {super.key});
+  final Habit initialHabit;
 
   void showNewHabit(Habit targetHabit, context) {
     showModalBottomSheet(
@@ -28,6 +28,8 @@ class HabitScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Habit habit = ref.watch(habitProvider).firstWhere((h) => h.habitId == initialHabit.habitId);
+
     void resetData() {
       ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
       ref.read(habitProvider.notifier).updateHabit(

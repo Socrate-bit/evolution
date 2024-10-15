@@ -132,6 +132,37 @@ class WeeklyTable extends ConsumerWidget {
     );
   }
 
+  String getRatioValidated(
+      List<Habit> activeHabits, List<TrackedDay> trackedDays) {
+    final int totalToValidate = activeHabits.fold(0, (total, habit) {
+      total += habit.frequency;
+      if (habit.startDate.isAfter(offsetWeekDays.first)) {
+        for (WeekDay weekDay in habit.weekdays) {
+          if (DaysUtility.weekDayToNumber[weekDay]! < habit.startDate.weekday) {
+            total += -1;
+          }
+        }
+      }
+      if (habit.endDate != null &&
+          (habit.endDate!.isBefore(offsetWeekDays.last) ||
+              habit.endDate!.isAtSameMomentAs(offsetWeekDays.last))) {
+        for (WeekDay weekDay in habit.weekdays) {
+          if (DaysUtility.weekDayToNumber[weekDay]! >= habit.endDate!.weekday) {
+            total += -1;
+          }
+        }
+      }
+      return total;
+    });
+
+    final int totalValidated = trackedDays
+        .where((trackedDay) => _isInTheWeek(trackedDay.date, trackedDay.date))
+        .length;
+    final String ratioValidated =
+        totalToValidate != 0 ? '$totalValidated/$totalToValidate' : '-';
+    return ratioValidated;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allHabits = ref
@@ -146,13 +177,7 @@ class WeeklyTable extends ConsumerWidget {
     final trackedDays = ref.watch(trackedDayProvider);
     final recapList = ref.watch(recapDayProvider);
 
-    final int totalToValidate =
-        activeHabits.fold(0, (total, habit) => total += habit.frequency);
-    final int totalValidated = trackedDays
-        .where((trackedDay) => _isInTheWeek(trackedDay.date, trackedDay.date))
-        .length;
-    final String ratioValidated =
-        totalToValidate != 0 ? '$totalValidated/$totalToValidate' : '-';
+    String ratioValidated = getRatioValidated(activeHabits, trackedDays);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -176,9 +201,12 @@ class WeeklyTable extends ConsumerWidget {
           ),
           if (activeHabits.isEmpty)
             Container(
-                alignment: Alignment.center,
-                height: 400,
-                child: Center(child: Text('No habits this week 💤'))),
+              alignment: Alignment.center,
+              height: 400,
+              child: const Center(
+                child: Text('No habits this week 💤'),
+              ),
+            ),
           const SizedBox(
             height: 80,
           )
