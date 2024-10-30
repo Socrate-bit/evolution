@@ -7,9 +7,13 @@ import 'package:tracker_v1/models/utilities/container_controller.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/Scores/score_computing.dart';
+import 'package:tracker_v1/models/utilities/is_in_the_week.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/widgets/daily/score.dart';
 import 'package:tracker_v1/widgets/weekly/day_container.dart';
 
 class WeeklyTable extends ConsumerWidget {
@@ -18,8 +22,6 @@ class WeeklyTable extends ConsumerWidget {
   static const List range = [0, 1, 2, 3, 4, 5, 6];
   final List<DateTime> offsetWeekDays;
 
-  /// Returns a list representing the tracking status of each day in the given `habit`.
-  /// Each element is either `false` for not tracked, `true` for tracked, or the ID of the `TrackedDay` object if it exists.
   List<dynamic> _getDayTrackingStatus(Habit habit,
       List<DateTime> offsetWeekDays, List<TrackedDay> trackedDays) {
     List<bool> isTrackedFilter = range.map((index) {
@@ -35,28 +37,10 @@ class WeeklyTable extends ConsumerWidget {
     return result;
   }
 
-  bool _isInTheWeek(DateTime date1, DateTime? date2) {
-    final startBeforeEndOfWeek = date1.isBefore(offsetWeekDays.last) ||
-        date1.isAtSameMomentAs(offsetWeekDays.last);
-    final endAfterStartOfWeek = date2 == null ||
-        date2.isAfter(offsetWeekDays.first) ||
-        date2.isAtSameMomentAs(offsetWeekDays.first);
-    return startBeforeEndOfWeek && endAfterStartOfWeek;
-  }
-
-  TableRow _buildTableHeader(String ratioValidated) {
+  TableRow _buildTableHeader() {
     return TableRow(
       children: [
-        TableCell(
-            child: Container(
-          alignment: Alignment.center,
-          width: 200,
-          child: Text(
-            ratioValidated,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        )),
+        SizedBox(),
         ...range.map(
           (item) => Column(
             children: [
@@ -84,7 +68,10 @@ class WeeklyTable extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(width: 8),
-              Icon(habit.icon),
+              Icon(
+                habit.icon,
+                color: habit.color.withOpacity(0.25),
+              ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -132,35 +119,42 @@ class WeeklyTable extends ConsumerWidget {
     );
   }
 
-  String getRatioValidated(
-      List<Habit> activeHabits, List<TrackedDay> trackedDays) {
-    final int totalToValidate = activeHabits.fold(0, (total, habit) {
-      total += habit.frequency;
-      if (habit.startDate.isAfter(offsetWeekDays.first)) {
-        for (WeekDay weekDay in habit.weekdays) {
-          if (DaysUtility.weekDayToNumber[weekDay]! < habit.startDate.weekday) {
-            total += -1;
-          }
-        }
-      }
-      if (habit.endDate != null &&
-          (habit.endDate!.isBefore(offsetWeekDays.last) ||
-              habit.endDate!.isAtSameMomentAs(offsetWeekDays.last))) {
-        for (WeekDay weekDay in habit.weekdays) {
-          if (DaysUtility.weekDayToNumber[weekDay]! >= habit.endDate!.weekday) {
-            total += -1;
-          }
-        }
-      }
-      return total;
-    });
-
-    final int totalValidated = trackedDays
-        .where((trackedDay) => _isInTheWeek(trackedDay.date, trackedDay.date))
-        .length;
-    final String ratioValidated =
-        totalToValidate != 0 ? '$totalValidated/$totalToValidate' : '-';
-    return ratioValidated;
+  TableRow buildDailyRow(ref, double? ratioValidated) {
+    List<(double?, bool, Color, DateTime)> scores = offsetWeekDays.map((d) {
+      double? score = notationComputing([d], ref);
+      double? ratio = ratioComputing([d], ref);
+      Color color = score == null
+          ? const Color.fromARGB(255, 37, 37, 38)
+          : RatingUtility.getRatingColor(score / 2).withOpacity(0.5);
+      return (score, ratio == 100, color, d);
+    }).toList();
+    return TableRow(
+      decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+      children: [
+        TableCell(
+            child: Container(
+          alignment: Alignment.center,
+          width: 200,
+          child: Text(
+            ratioValidated == null ? '-' : '${ratioValidated.toInt()}%',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        )),
+        ...scores.map((entry) {
+          return Container(
+            color: !entry.$4.isAfter(today) 
+                ? entry.$3
+                : const Color.fromARGB(255, 37, 37, 38),
+            alignment: Alignment.center,
+            child: Text(
+              !entry.$4.isAfter(today) ? displayedScore(entry.$1) : '-',
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          );
+        })
+      ],
+    );
   }
 
   @override
@@ -170,14 +164,17 @@ class WeeklyTable extends ConsumerWidget {
         .where((habit) => habit.validationType != HabitType.unique)
         .toList();
     final activeHabits = allHabits
-        .where((habit) => _isInTheWeek(habit.startDate, habit.endDate))
+        .where((habit) =>
+            isInTheWeek(habit.startDate, habit.endDate, offsetWeekDays) &&
+            !HabitNotifier.isPaused(
+                habit, offsetWeekDays.first, offsetWeekDays.last))
         .toList()
       ..sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
     final trackedDays = ref.watch(trackedDayProvider);
     final recapList = ref.watch(recapDayProvider);
 
-    String ratioValidated = getRatioValidated(activeHabits, trackedDays);
+    double? ratioValidated = ratioComputing(offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -194,9 +191,11 @@ class WeeklyTable extends ConsumerWidget {
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20))),
             children: [
-              _buildTableHeader(ratioValidated),
-              ...activeHabits.map((habit) =>
-                  _buildHabitRow(habit, context, ref, trackedDays, recapList)),
+              _buildTableHeader(),
+              if (activeHabits.isNotEmpty) buildDailyRow(ref, ratioValidated),
+              if (activeHabits.isNotEmpty)
+                ...activeHabits.map((habit) => _buildHabitRow(
+                    habit, context, ref, trackedDays, recapList)),
             ],
           ),
           if (activeHabits.isEmpty)
@@ -207,9 +206,6 @@ class WeeklyTable extends ConsumerWidget {
                 child: Text('No habits this week 💤'),
               ),
             ),
-          const SizedBox(
-            height: 80,
-          )
         ],
       ),
     );

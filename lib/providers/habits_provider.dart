@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
@@ -12,31 +13,42 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final Ref ref;
 
-  // Change the order of the habits in the state
-  void stateOrderChange(int oldIndex, int newIndex) {
+  static List<Habit> orderChange(
+      List<Habit> habitList, int oldIndex, int newIndex,
+      {update = false}) {
+
+    List<Habit> newState = List.from(habitList);
+
+
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
 
-    List<Habit> newState = List.from(state);
     Habit removedItem = newState.removeAt(oldIndex);
     newState.insert(newIndex, removedItem);
-    state = newState;
-  }
 
-  // Update the order of habits in Firestore
-  Future<void> databaseOrderChange() async {
-    WriteBatch batch = _firestore.batch();
+    newState.sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
-    List<Habit> newState = List.from(state);
     newState.asMap().forEach((int index, Habit habit) {
       habit.orderIndex = index;
+    });
+
+    return newState;
+  }
+
+  // Change the order of the habits in the state
+  void databaseOrderChange(int oldIndex, int newIndex) async {
+    WriteBatch batch = _firestore.batch();
+    List<Habit> newState = orderChange(state, oldIndex, newIndex);
+
+    newState.asMap().forEach((int index, Habit habit) {
       batch.update(
         _firestore.collection('habits').doc(habit.habitId),
         {'orderIndex': index},
       );
     });
 
+    state = newState;
     await batch.commit();
   }
 
@@ -223,7 +235,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   }
 
   // Helper function to check if the habit is tracked on the target day
-  static bool getHabitTrackingStatus(Habit habit, DateTime date) {
+  static bool isPaused(Habit habit, DateTime date1, [DateTime? date2]) {
     bool paused = false;
     List<int> values = habit.frequencyChanges.values.toList();
     List<DateTime> keys = habit.frequencyChanges.keys.toList();
@@ -232,14 +244,23 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       int index = i - 1;
 
       if (values[index] == 0) {
-        if (keys[index].isBefore(date) &&
+        if ((keys[index].isBefore(date1) ||
+                keys[index].isAtSameMomentAs(date1) ||
+                keys[index] == habit.startDate) &&
             (habit.frequencyChanges.length <= index + 1
                 ? true
-                : keys[index + 1].isAfter(date))) {
+                : keys[index + 1].isAfter(date2 ?? date1))) {
           paused = true;
         }
       }
     }
+
+    return paused;
+  }
+
+  // Helper function to check if the habit is tracked on the target day
+  static bool getHabitTrackingStatus(Habit habit, DateTime date) {
+    bool paused = isPaused(habit, date);
 
     final bool isStarted = habit.startDate.isBefore(date) ||
         habit.startDate.isAtSameMomentAs(date);

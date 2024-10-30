@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:tracker_v1/models/utilities/score_computing.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/utilities/Scores/score_computing.dart';
 import 'package:tracker_v1/widgets/daily/score.dart';
 
 class WeekShifter extends ConsumerWidget {
@@ -16,8 +17,8 @@ class WeekShifter extends ConsumerWidget {
   final void Function(int value) updateWeekIndex;
 
   _computeWeeklyScore(ref) {
-    return scoreComputing(offsetWeekDays[0], ref,
-        offsetWeekDays.where((e) => e.isBefore(DateTime.now())).toList());
+    return notationComputing(
+        offsetWeekDays.where((e) => !e.isAfter(today)).toList(), ref);
   }
 
   @override

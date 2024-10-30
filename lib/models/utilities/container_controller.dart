@@ -88,24 +88,24 @@ class ContainerController {
   }
 
   // Determines the color based on the tracking status
-  Color getFillColor() {
+  (Color, dynamic) getFillColor() {
     if (trackingStatus == false) {
-      return colorScheme.surfaceBright;
+      return (colorScheme.surfaceBright, null);
     } else if (trackingStatus == true) {
-      return const Color.fromARGB(255, 52, 52, 52);
+      return (const Color.fromARGB(255, 52, 52, 52), null);
     } else {
       final TrackedDay trackedDay = trackedDays.firstWhere((td) {
         return td.habitId == habit.habitId && td.date == date;
       });
-      return trackedDay
+      return (trackedDay
           .getStatusAppearance(colorScheme)
-          .backgroundColor; // Assuming this returns a Color
+          .backgroundColor , trackedDay.totalRating()); 
     }
   }
 
   // Initializer function that setups up the fill color and action
   List<dynamic> initController(WidgetRef ref) {
-    final Color fillColor = getFillColor();
+    final (Color, dynamic) fillColor = getFillColor();
     final ActionHandlers actions = getAction(ref);
     return [fillColor, actions];
   }

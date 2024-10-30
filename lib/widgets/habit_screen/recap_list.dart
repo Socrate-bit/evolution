@@ -48,7 +48,7 @@ class RecapList extends ConsumerWidget {
     List<TrackedDay> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
-    }).toList();
+    }).toList()..sort((a, b) => a.date.isAfter(b.date) ? -1 : 1);
 
     return Container(
       decoration: BoxDecoration(

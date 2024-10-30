@@ -1,40 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 
-class ScoreCard extends ConsumerWidget {
-  ScoreCard(this._selectedDay, this._score, {super.key, this.weekly=false});
+String displayedScore(double? score, {bool elloge = false}) {
+  String displayedScore = '-';
 
-  final DateTime _selectedDay;
-  final DateTime _today = DateTime.now();
-  final _score;
-  final bool weekly;
-
-  String _displayedScore(double? score) {
-    String displayedScore = '-';
-
-    if (score == null || score.isNaN) {
-      return displayedScore;
-    }
-
-    if (score == score.toInt()) {
-      displayedScore = score.toInt().toString();
-    } else {
-      displayedScore = score.toStringAsFixed(2);
-    }
-
-    if (score > 10) {
-      displayedScore += ' 🥇';
-    } else if (score >= 7.5) {
-      displayedScore += ' 🎉';
-    }
-
+  if (score == null || score.isNaN) {
     return displayedScore;
   }
 
+  if (score == score.toInt()) {
+    displayedScore = score.toInt().toString();
+  } else {
+    displayedScore = score
+        .toStringAsFixed(1)
+        .replaceAll(RegExp(r'0+$'), '')
+        .replaceAll(RegExp(r'\.$'), '');
+  }
+
+  if (elloge) {
+    displayedScore += '/10';
+  }
+  if (score >= 10 && elloge) {
+    displayedScore += ' 🥇';
+  } else if (score >= 8 && elloge) {
+    displayedScore += ' 🎉';
+  }
+
+  return displayedScore;
+}
+
+class ScoreCard extends ConsumerWidget {
+  ScoreCard(this._selectedDay, this._score,
+      {super.key, this.weekly = false, this.full = false, this.time});
+
+  final DateTime _selectedDay;
+  final DateTime _today = DateTime.now();
+  final double? _score;
+  final bool full;
+  final bool weekly;
+  final TimeOfDay? time;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    DateTime selectedDayNight = DateTime(_selectedDay.year, _selectedDay.month,
+        _selectedDay.day, time?.hour ?? 20, time?.minute ?? 0);
+
     return Expanded(
       child: Center(
         child: Container(
@@ -42,17 +55,22 @@ class ScoreCard extends ConsumerWidget {
           width: 88,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: _selectedDay.isAfter(_today) || (!weekly &&
-                      ref
-                          .watch(habitProvider.notifier)
-                          .getTodayHabit(_selectedDay)
-                          .isEmpty) 
+              color: _selectedDay.isAfter(_today) || (!full && now.isBefore(selectedDayNight)) ||
+                      (!weekly &&
+                          ref
+                              .watch(habitProvider.notifier)
+                              .getTodayHabit(_selectedDay)
+                              .isEmpty)
                   ? const Color.fromARGB(255, 51, 51, 51)
-                  : RatingUtility.getRatingColor(_score[0] / 2)
-                      .withOpacity(0.75)),
+                  : _score == null
+                      ? const Color.fromARGB(255, 51, 51, 51)
+                      : RatingUtility.getRatingColor(_score / 2)
+                          .withOpacity(0.5)),
           alignment: Alignment.center,
           child: Text(
-            _displayedScore(_score[0]),
+            !_selectedDay.isAfter(_today)
+                ? displayedScore(_score, elloge: true)
+                : '-',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium!
@@ -63,3 +81,4 @@ class ScoreCard extends ConsumerWidget {
     );
   }
 }
+

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
 
 class CustomToggleButtonsSlider extends StatefulWidget {
   const CustomToggleButtonsSlider({
@@ -27,7 +27,6 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
   void initState() {
     super.initState();
     controlledValue = widget.initialValue;
-    print(controlledValue); // Initialize controlled value
   }
 
   @override
@@ -49,12 +48,9 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
               minHeight: 20, // Minimum height for the buttons
               minWidth: 50, // Minimum width for the buttons
             ),
-            isSelected:
-                List.generate(5, (index) => index == ratingKeys.indexOf(controlledValue)),
-            fillColor: RatingUtility.getRatingColor(controlledValue.toDouble()),
-            selectedColor: Colors.white,
-            color:
-                Theme.of(context).colorScheme.onSurface, // Color for unselected
+            isSelected: List.generate(
+                5, (index) => index == ratingKeys.indexOf(controlledValue)),
+            fillColor: RatingUtility.getRatingColor(controlledValue.toDouble()),// Color for unselected
             onPressed: (index) {
               setState(() {
                 controlledValue = ratingKeys[index];
@@ -64,6 +60,11 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
             },
             children: List.generate(5, (index) {
               return Container(
+                decoration: BoxDecoration(
+                    color: controlledValue > index +1
+                        ? RatingUtility.getRatingColor(
+                            controlledValue.toDouble())
+                        : null),
                 width: 64, // Set a custom width
                 height: 20, // Set a custom height (less height)
                 alignment: Alignment.center, // Center the text inside
@@ -71,7 +72,10 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
                   RatingUtility.ratingText.values
                       .toList()[index], // Button labels as 1 to 5
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.background,
+                      color: controlledValue > index +1
+                        ? RatingUtility.getRatingColor(
+                            controlledValue.toDouble())
+                        : Theme.of(context).colorScheme.background,
                       fontWeight: FontWeight.bold),
                 ),
               );

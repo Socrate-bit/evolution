@@ -34,7 +34,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
             widget.passStartDate,
             widget.startDate != null
                 ? _formater.format(widget.startDate!).toString()
-                : 'Start date'),
+                : 'Start date', initialValue: widget.startDate,),
         if (!widget.unique)
         const SizedBox(
           width: 16,
@@ -44,7 +44,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
           widget.passEndDate,
           widget.endDate != null
               ? _formater.format(widget.endDate!).toString()
-              : 'End date',
+              : 'End date', initialValue: widget.endDate,
         ),
       ],
     );
@@ -52,12 +52,13 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
 }
 
 class RoundedButton extends StatefulWidget {
-  const RoundedButton(this.passDate, this.initialValue,
-      {super.key, this.locked = false});
+  const RoundedButton(this.passDate, this.initialText,
+      {super.key, this.locked = false, this.initialValue});
 
   final void Function(DateTime value) passDate;
-  final String initialValue;
+  final String initialText;
   final bool locked;
+  final DateTime? initialValue;
 
   @override
   State<RoundedButton> createState() => _RoundedButtonState();
@@ -68,14 +69,16 @@ class _RoundedButtonState extends State<RoundedButton> {
   DateTime? _enteredDate;
 
   Future<void> _datePicker() async {
-    DateTime firstDate = DateTime(_today.year, _today.month, _today.day - 7);
-    DateTime lastDate = DateTime(_today.year + 1, _today.month, _today.day);
+    DateTime initial = widget.initialValue ?? _today;
+
+    DateTime firstDate = DateTime(initial.year - 1, initial.month, initial.day);
+    DateTime lastDate = DateTime(initial.year + 1, initial.month, initial.day);
 
     DateTime? pickedDate = await showDatePicker(
       context: context,
       firstDate: firstDate,
       lastDate: lastDate,
-      initialDate: _today,
+      initialDate: initial,
     );
 
     if (pickedDate != null) {
@@ -96,7 +99,7 @@ class _RoundedButtonState extends State<RoundedButton> {
           backgroundColor: Theme.of(context).colorScheme.surfaceBright),
       child: Text(
         _enteredDate == null
-            ? widget.initialValue
+            ? widget.initialText
             : _formater.format(_enteredDate!).toString(),
         style: Theme.of(context).textTheme.titleMedium,
       ),

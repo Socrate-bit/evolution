@@ -20,8 +20,6 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
 
   // Delete a ReorderedDay from state and Firestore
   Future<void> deleteReorderedDay(ReorderedDay targetReorder) async {
-    state = state.where((reorder) => reorder.date != targetReorder.date).toList();
-
     await _firestore
         .collection('special_day_reorders')
         .doc('${targetReorder.userId}_${targetReorder.date.toIso8601String()}')
@@ -30,8 +28,16 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
 
   // Update a ReorderedDay by deleting and re-adding it
   Future<void> updateReorderedDay(ReorderedDay updatedReorder) async {
-    await deleteReorderedDay(updatedReorder);
-    await addReorderedDay(updatedReorder);
+    state = [
+      ...state.where((reorder) => reorder.date != updatedReorder.date),
+      updatedReorder
+    ];
+
+    await _firestore
+        .collection('special_day_reorders')
+        .doc(
+            '${updatedReorder.userId}_${updatedReorder.date.toIso8601String()}')
+        .set(updatedReorder.toJson());
   }
 
   // Load all special day reorders for the current user

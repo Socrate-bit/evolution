@@ -110,9 +110,13 @@ class HabitWidget extends ConsumerWidget {
     });
 
     DateTime start = date!;
-
+    
     for (TrackedDay trackeDay in habitTrackedDays) {
-      if (!habitTrackedDays.map((e) => e.date).contains(start)) break;
+      start = DateTime(start.year, start.month, start.day);
+      if (!habitTrackedDays.map((e) => e.date).contains(start)) {
+        break;
+      }
+      
       if (trackeDay.date != start) continue;
       streak += 1;
       start = trackeDay.date.subtract(const Duration(days: 1));
@@ -184,9 +188,10 @@ class HabitWidget extends ConsumerWidget {
               0;
     } else {
       appearance = StatusAppearance(
-          backgroundColor: habit.color.value == Color.fromARGB(255, 52, 52, 52).value
-              ? const Color.fromARGB(255, 52, 52, 52)
-              : habit.color.withOpacity(0.1),
+          backgroundColor:
+              habit.color.value == Color.fromARGB(255, 52, 52, 52).value
+                  ? const Color.fromARGB(255, 52, 52, 52)
+                  : habit.color.withOpacity(0.1),
           elementsColor: Colors.white,
           icon: habit.frequencyChanges.values.toList().reversed.toList()[0] == 0
               ? const Icon(Icons.pause_circle_filled)
@@ -271,7 +276,7 @@ class HabitWidget extends ConsumerWidget {
                         width: 16,
                       ),
                       Container(
-                        width: 230,
+                        width: 200,
                         child: Text(
                           habit.name,
                           overflow: TextOverflow.ellipsis,
@@ -285,23 +290,27 @@ class HabitWidget extends ConsumerWidget {
                       ),
                       const Spacer(),
                       if (appearance.icon != null)
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            if (streak != null)
-                              Positioned(
-                                top: -6,
-                                right: 16,
-                                child: Text(
-                                  streak,
-                                  style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.w900),
+                        SizedBox(
+                          height: 30,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            children: [
+                              if (streak != null)
+                                Positioned(
+                                  top: -6,
+                                  right: 18,
+                                  child: Text(
+                                    streak,
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.orange,
+                                        fontWeight: FontWeight.w900),
+                                  ),
                                 ),
-                              ),
-                            appearance.icon!,
-                          ],
+                              appearance.icon!,
+                            ],
+                          ),
                         ),
                     ]),
               ),

@@ -3,37 +3,75 @@ import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
+import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 
 class CustomHeatMap extends ConsumerWidget {
-  final Habit habit;
-
   const CustomHeatMap(this.habit, {super.key});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  final Habit habit;
+
+  List<DateTime> generateDateList() {
+    DateTime now = DateTime.now();
+    DateTime startDate = DateTime(now.year - 1, now.month, now.day);
+
+    // Find the end of the current week (Sunday)
+    DateTime endOfWeek = now.add(Duration(days: DateTime.sunday - now.weekday));
+
+    List<DateTime> dateList = [];
+    DateTime currentDate = startDate;
+
+    while (currentDate.isBefore(endOfWeek) ||
+        currentDate.isAtSameMomentAs(endOfWeek)) {
+      dateList.add(currentDate);
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    return dateList;
+  }
+
+  Map<DateTime, int> getHeatMapDataSet(WidgetRef ref) {
+    Map<DateTime, int> heatMapDataSet = {};
     List<TrackedDay> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
     }).toList();
 
-    Map<DateTime, int> heatMapDataSet = Map.fromEntries(
-      trackedDays.map(
-        (TrackedDay trackedDay) => MapEntry(
-          trackedDay.date,
-          RatingUtility.getRatingNumber(
-            trackedDay.notation == null
-                ? 4
-                : trackedDay.totalRating()! / 2,
-          ),
-        ),
-      ),
-    );
+    List<DateTime> dates = generateDateList();
+
+    for (DateTime date in dates) {
+      bool trackingStatus = HabitNotifier.getHabitTrackingStatus(habit, date);
+
+      if (trackingStatus == false || date.isAfter(today)) {
+        heatMapDataSet[date] = 0;
+      } else {
+        TrackedDay? trackedDay = trackedDays.firstWhereOrNull((td) {
+          return td.date == date;
+        });
+
+        if (trackedDay == null) {
+          heatMapDataSet[date] = 1;
+        } else {
+          trackedDay.notation == null
+              ? heatMapDataSet[date] = 6
+              : heatMapDataSet[date] = RatingUtility.getRatingNumber(
+                  trackedDay.totalRating()! / 2,
+                );
+        }
+      }
+    }
+    return heatMapDataSet;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Map<DateTime, int> heatMapDataSet = getHeatMapDataSet(ref);
 
     return HeatMap(
-        startDate: DateTime(today.year-1, today.month, today.day),
-        endDate:today,
+        startDate: DateTime(today.year - 1, today.month, today.day),
+        endDate: today,
         datasets: heatMapDataSet,
         colorMode: ColorMode.color,
         size: 10,
@@ -42,13 +80,15 @@ class CustomHeatMap extends ConsumerWidget {
         scrollable: true,
         showColorTip: false,
         fontSize: 0,
-        defaultColor: const Color.fromARGB(255, 52, 52, 52).withOpacity(0.5),
+        defaultColor: const Color.fromARGB(255, 52, 52, 52).withOpacity(0.2),
         colorsets: const {
-          0: Colors.red,
-          1: Colors.orange,
-          2: Color.fromARGB(255, 248, 189, 51),
-          3: Colors.green,
-          4: Colors.blue
+          1: Color.fromARGB(255, 52, 52, 52),
+          2: Colors.red,
+          3: Colors.orange,
+          4: Color.fromARGB(255, 248, 189, 51),
+          5: Colors.green,
+          6: Colors.blue,
+          7: Colors.purple,
         });
   }
 }

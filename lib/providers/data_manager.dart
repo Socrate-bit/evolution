@@ -114,6 +114,7 @@ class DataManager {
         ref.read(userStatsProvider.notifier).loadUserStats()
       ]);
     } catch (error) {
+      print(error);
       signOut();
     }
   }

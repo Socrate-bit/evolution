@@ -32,6 +32,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
       'improvements': newRecapDay.improvements,
       'newHabit': newRecapDay.newHabit ? 1 : 0,
       'gratefulness': newRecapDay.gratefulness,
+      'emotionalRecap': newRecapDay.emotionalRecap,
       'proudness': newRecapDay.proudness,
       'altruism': newRecapDay.altruism,
       'additionalMetrics': newRecapDay.additionalMetrics != null
@@ -93,6 +94,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
             ? jsonDecode(data['additionalMetrics'] as String)
             : null,
         gratefulness: data['gratefulness'] as String?,
+        emotionalRecap: data['gratefulness'] as String?,
         proudness: data['proudness'] as String?,
         altruism: data['altruism'] as String?,
         synced: data['synced'] == true,

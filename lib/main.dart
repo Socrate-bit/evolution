@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/data_manager.dart';
+import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/providers/user_stats_provider.dart';
 import 'package:tracker_v1/theme.dart';
 import 'package:tracker_v1/screens/others/auth.dart';
 import 'package:tracker_v1/screens/others/main_navigation.dart';
@@ -15,7 +17,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   FlutterNativeSplash.preserve(widgetsBinding: widgetbinding);
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const ProviderScope(child: MyApp(), ));
   await Future.delayed(const Duration(seconds: 3));
   FlutterNativeSplash.remove();
 }

@@ -271,7 +271,7 @@ class HabitScreen extends ConsumerWidget {
                 CustomOutlinedButton(
                   submit: () {
                     showConfirmationDialog(context, ref, () {
-                      resetData;
+                      resetData();
                       Navigator.of(context).pop();
                     }, 'Yes I want to reset data for this habit');
                   },

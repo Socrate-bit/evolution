@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/providers/user_stats_provider.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
 import 'package:tracker_v1/screens/habits/daily.dart';
 import 'package:tracker_v1/screens/habits/habit_list.dart';
-import 'package:tracker_v1/screens/others/garden.dart';
+import 'package:tracker_v1/screens/others/leaderboard.dart';
 import 'package:tracker_v1/screens/others/profil.dart';
 import 'package:tracker_v1/screens/habits/weekly.dart';
 import 'package:tracker_v1/screens/habits/new_habit.dart';
+import 'package:tracker_v1/screens/others/statistics.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -17,21 +20,20 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   String _pageTitle = 'Today';
-  final List<String> _titlesList = ['Today', 'Week', 'Statistics', 'Together'];
+  final List<String> _titlesList = ['Today', 'Week', 'Statistics', 'Leaderboard'];
   int _selectedIndex = 0;
   late Widget _selectedPage;
   late List<Widget> _pagesList;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _selectedPage = DailyScreen(_displayDate);
     _pagesList = [
       DailyScreen(_displayDate),
       const WeeklyScreen(),
-      const GardenScreen(),
-      const GardenScreen()
+      const StatisticsScreen(),
+      const LeaderboardScreen(),
     ];
   }
 
@@ -61,6 +63,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final Color selectedIcon = Theme.of(context).colorScheme.secondary;
     final userData = ref.watch(userDataProvider);
+    ref.listen(trackedDayProvider, (t1, t2) {ref.read(userStatsProvider.notifier).updateStreaks();});
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,

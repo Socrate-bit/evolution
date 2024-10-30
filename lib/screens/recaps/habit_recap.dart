@@ -28,7 +28,6 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
   double _showUpRating = 0;
   double _investmentRating = 0;
   double _resultRating = 0;
-  double _methodRating = 0;
   bool _extra = false;
   bool _goal = false;
   String? _enteredRecap;
@@ -38,9 +37,8 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
 
   // Prepare slider data for dynamic generation
   final List<Map<String, String>> sliderData = [
-    {'title': 'Show-up', 'tooltip': 'Rate how well you showed up.'},
-    {'title': 'Investment', 'tooltip': 'Rate your level of investment.'},
-    {'title': 'Method', 'tooltip': 'Rate your method efficiency.'},
+    {'title': 'Quantity', 'tooltip': 'Rate how well you showed up.'},
+    {'title': 'Quality', 'tooltip': 'Rate your level of investment.'},
     {'title': 'Result', 'tooltip': 'Rate the result of your effort.'},
   ];
 
@@ -51,12 +49,11 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
     super.initState();
 
     if (widget.oldTrackedDay != null) {
-      _showUpRating = widget.oldTrackedDay!.notation!.showUp!;
-      _investmentRating = widget.oldTrackedDay!.notation!.investment;
+      _showUpRating = widget.oldTrackedDay!.notation!.quantity!;
+      _investmentRating = widget.oldTrackedDay!.notation!.quality;
       _resultRating = widget.oldTrackedDay!.notation!.result;
-      _methodRating = widget.oldTrackedDay!.notation!.method;
-      _extra = widget.oldTrackedDay!.notation!.extra == 1 ? true : false;
-      _goal = widget.oldTrackedDay!.notation!.goal == 1 ? true : false;
+      _extra = widget.oldTrackedDay!.notation!.dailyGoal == 1 ? true : false;
+      _goal = widget.oldTrackedDay!.notation!.weeklyFocus == 1 ? true : false;
       _enteredRecap = widget.oldTrackedDay!.recap;
       _enteredImprovement = widget.oldTrackedDay!.improvements;
       _additionalInputs = widget.oldTrackedDay!.additionalMetrics;
@@ -64,8 +61,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
 
     values = [
       _showUpRating,
-      _investmentRating,
-      _methodRating,
+    _investmentRating,
       _resultRating,
     ];
     _additionalMetrics = widget.habit.additionalMetrics;
@@ -91,12 +87,11 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       date: widget.date,
       done: Validated.yes,
       notation: Rating(
-        showUp: values[0],
-        investment: values[1],
-        method: values[2],
-        result: values[3],
-        goal: _goal ? 1 : 0,
-        extra: _extra ? 1 : 0,
+        quantity: values[0],
+        quality: values[1],
+        result: values[2],
+        weeklyFocus: _goal ? 1 : 0,
+        dailyGoal: _extra ? 1 : 0,
       ),
       additionalMetrics: _additionalInputs,
       recap: _enteredRecap,
@@ -145,7 +140,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
                       .bodyMedium!
                       .copyWith(),
                 ),
-          title: Text('Focus of the week',
+          title: Text('Weekly focus',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _goal,
@@ -158,7 +153,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         ),
         // Extra checkbox field
         ListTile(
-          title: Text('Extra', style: Theme.of(context).textTheme.titleSmall!),
+          title: Text('Daily goal', style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _extra,
             onChanged: (value) {

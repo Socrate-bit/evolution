@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
+import 'package:tracker_v1/widgets/daily/score.dart';
 import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
@@ -21,7 +22,6 @@ class TrackedDay {
     this.synced = false,
   }) : trackedDayId = trackedDayId ?? idGenerator.v4();
 
-
   String trackedDayId;
   String userId;
   String habitId;
@@ -35,15 +35,12 @@ class TrackedDay {
 
   double? totalRating() {
     if (notation == null) return null;
-    return (notation!.showUp! * 2 / 5) +
-        (notation!.investment * 2 / 5) +
-        (notation!.method * 2 / 5) +
+    return (notation!.quantity! * 2 / 5) +
+        (notation!.quality * 2 / 5) +
         (notation!.result * 2 / 5) +
-        (notation!.goal == 0 ? 0 : notation!.goal * 2) +
-        (notation!.extra);
+        (notation!.weeklyFocus == 0 ? 0 : notation!.weeklyFocus * 2) +
+        (notation!.dailyGoal == 0 ? 0 : notation!.dailyGoal * 2);
   }
-
-
 
   StatusAppearance getStatusAppearance(colorScheme) {
     double? rating = totalRating();
@@ -67,14 +64,23 @@ class TrackedDay {
         } else {
           Color? statusColor;
 
-          statusColor = RatingUtility.getRatingColor(rating /2);
+          statusColor = RatingUtility.getRatingColor(rating / 2);
 
           return StatusAppearance(
             backgroundColor: statusColor,
             lineThroughCond: true,
             elementsColor: Colors.white.withOpacity(0.45),
-            icon: Icon(Icons.check,
-                size: 30, color: Colors.white.withOpacity(0.45)),
+            icon: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 30), // Set minimum width
+              child: Text(
+                displayedScore(totalRating()),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.55),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16),
+              ),
+            ),
           );
         }
 
@@ -88,18 +94,16 @@ class TrackedDay {
 
 class Rating {
   Rating({
-    required this.showUp,
-    required this.investment,
-    required this.method,
+    required this.quantity,
+    required this.quality,
     required this.result,
-    required this.goal,
-    this.extra = 0,
+    required this.weeklyFocus,
+    required this.dailyGoal,
   });
 
-  double? showUp;
-  double investment;
-  double method;
+  double? quantity;
+  double quality;
   double result;
-  double goal;
-  double extra;
+  double weeklyFocus;
+  double dailyGoal;
 }

@@ -21,6 +21,7 @@ class RecapDay {
     this.recap,
     this.improvements,
     required this.newHabit,
+    this.emotionalRecap,
     this.gratefulness,
     this.proudness,
     this.altruism,
@@ -45,9 +46,40 @@ class RecapDay {
   String? recap;
   String? improvements;
   bool newHabit;
+  String? emotionalRecap;
   String? gratefulness;
   String? proudness;
   String? altruism;
   Map<String, dynamic>? additionalMetrics;
   bool synced;
+
+ dynamic getProperty(String propertyName) {
+    var properties = {
+      'recapId': recapId,
+      'userId': userId,
+      'sleepQuality': sleepQuality,
+      'wellBeing': wellBeing,
+      'energy': energy,
+      'driveMotivation': driveMotivation,
+      'stress': stress,
+      'focusMentalClarity': focusMentalClarity,
+      'intelligenceMentalPower': intelligenceMentalPower,
+      'frustrations': frustrations,
+      'satisfaction': satisfaction,
+      'selfEsteemProudness': selfEsteemProudness,
+      'lookingForwardToWakeUpTomorrow': lookingForwardToWakeUpTomorrow,
+      'date': date,
+      'recap': recap,
+      'improvements': improvements,
+      'newHabit': newHabit,
+      'emotionalRecap': emotionalRecap,
+      'gratefulness': gratefulness,
+      'proudness': proudness,
+      'altruism': altruism,
+      'additionalMetrics': additionalMetrics,
+      'synced': synced,
+    };
+    return properties[propertyName];
+  }
+
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
-import 'package:tracker_v1/models/utilities/score_computing.dart';
+import 'package:tracker_v1/models/utilities/Scores/score_computing.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/daily/score.dart';
 
@@ -39,7 +41,6 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
     widget.switchDay(pickedDay);
   }
 
- 
   @override
   void initState() {
     _pageController = PageController(initialPage: 52);
@@ -50,14 +51,52 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _pageController.dispose();
   }
 
+  Color getCircleColor(DateTime day, bool isFull, {TimeOfDay? time}) {
+    DateTime selectedDayNight = DateTime(today.year, today.month, today.day,
+        time?.hour ?? 20, time?.minute ?? 0);
+
+    if (day.isAfter(_now) ||
+        (now.isBefore(selectedDayNight) &&
+            !isFull &&
+            day.isAtSameMomentAs(today)) ||
+        ref.watch(habitProvider.notifier).getTodayHabit(day).isEmpty) {
+      if (now.isBefore(selectedDayNight) && day.isAtSameMomentAs(today)) {
+        return Colors.white;
+      }
+      return _selectedDay == day
+          ? const Color.fromARGB(255, 51, 51, 51)
+          : Theme.of(context).colorScheme.surface;
+    } else {
+      return RatingUtility.getRatingColor(
+        notationComputing([day], ref)! / 2,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    List score = scoreComputing(_selectedDay, ref);
+    double? score = notationComputing([_selectedDay], ref);
+    double? ratio = ratioComputing([_selectedDay], ref);
+    TimeOfDay? time;
+
+    if (_selectedDay == today) {
+      List<Habit> todayHabit = ref
+          .watch(habitProvider.notifier)
+          .getTodayHabit(_selectedDay)
+          .where((h) => h.timeOfTheDay != null)
+          .toList();
+      List<TimeOfDay?> timeOfDay = todayHabit
+          .map((h) => h.timeOfTheDay)
+          .toList()
+        ..sort((a, b) => compareTimeOfDay(a, b));
+      if (todayHabit.isNotEmpty) {
+        time = timeOfDay.last;
+      }
+    }
 
     return Container(
       alignment: Alignment.center,
@@ -72,27 +111,25 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
               itemBuilder: (ctx, item) {
                 weekIndex = item - 52;
                 final List<DateTime> dayList = _getOffsetWeekDays;
-                bool previousScore = false;
+                bool previousFull = false;
                 return ListView.builder(
                   padding: const EdgeInsets.only(left: 16, bottom: 8),
                   scrollDirection: Axis.horizontal,
                   itemCount: 7,
                   itemBuilder: (ctx, item) {
+                    bool isFull = false;
 
-                    List score = [null, false];
                     bool display = !dayList[item].isAfter(_today) &&
                         ref
                             .watch(habitProvider.notifier)
                             .getTodayHabit(dayList[item])
                             .isNotEmpty;
-                    
-                    bool accessedPreviousScore = previousScore;
-                    previousScore = false;
-                    if (display) {
-                      score = scoreComputing(dayList[item], ref);
-                      previousScore = score[1];
-                    }
 
+                    bool accessedPreviousScore = previousFull;
+                    if (display) {
+                      isFull = ratioComputing([dayList[item]], ref) == 100;
+                      previousFull = isFull;
+                    }
 
                     return InkWell(
                       onTap: () {
@@ -112,70 +149,66 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                 DaysUtility
                                     .NumberToSign[dayList[item].weekday]!,
                                 style: TextStyle(
-                                    fontWeight: _today == dayList[item]
-                                        ? FontWeight.bold
-                                        : null,
+                                    // fontWeight: _today == dayList[item]
+                                    //     ? FontWeight.bold
+                                    //     : null,
                                     fontSize: 14,
                                     color: _today.compareTo(dayList[item]) >= 0
                                         ? Colors.white
                                         : Colors.grey)),
                             const SizedBox(height: 3),
-                            Stack(alignment: Alignment.center,clipBehavior: Clip.none, children: [
-                              if (accessedPreviousScore && score[1] && display)
-                                Positioned(
-                                    right: 20,
-                                    child: Container(width: 20, height: 4,
-                                  color: RatingUtility.getRatingColor(
-                                    scoreComputing(dayList[item], ref)[0] / 2,
-                                  ),
-                                )),
-                              Container(
-                                  alignment: Alignment.center,
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: display && score[1]
-                                        ? RatingUtility.getRatingColor(
-                                            scoreComputing(
-                                                    dayList[item], ref)[0] /
+                            Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (accessedPreviousScore &&
+                                      isFull &&
+                                      display)
+                                    Positioned(
+                                        right: 20,
+                                        child: Container(
+                                          width: 20,
+                                          height: 4,
+                                          color: RatingUtility.getRatingColor(
+                                            notationComputing(
+                                                    [dayList[item]], ref)! /
                                                 2,
-                                          )
-                                        : _selectedDay == dayList[item]
-                                            ? const Color.fromARGB(
-                                                255, 51, 51, 51)
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .surface,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      width: 2,
-                                      color: dayList[item].isAfter(_today) ||
-                                              ref
-                                                  .watch(habitProvider.notifier)
-                                                  .getTodayHabit(dayList[item])
-                                                  .isEmpty
-                                          ? _selectedDay == dayList[item]
-                                              ? const Color.fromARGB(
-                                                  255, 51, 51, 51)
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .surface
-                                          : RatingUtility.getRatingColor(
-                                              scoreComputing(
-                                                      dayList[item], ref)[0] /
-                                                  2,
-                                            ),
-                                    ),
-                                  ),
-                                  child: Text(dayList[item].day.toString(),
-                                      style: TextStyle(
-                                        color: score[1]
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .surface
-                                            : null,
-                                      ))),
-                            ])
+                                          ),
+                                        )),
+                                  Container(
+                                      alignment: Alignment.center,
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                          color: display && isFull
+                                              ? RatingUtility.getRatingColor(
+                                                  notationComputing(
+                                                          [dayList[item]],
+                                                          ref)! /
+                                                      2,
+                                                )
+                                              : _selectedDay == dayList[item]
+                                                  ? const Color.fromARGB(
+                                                      255, 51, 51, 51)
+                                                  : Theme.of(context)
+                                                      .colorScheme
+                                                      .surface,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            width: 2,
+                                            color: getCircleColor(
+                                                dayList[item], isFull,
+                                                time: time),
+                                          )),
+                                      child: Text(dayList[item].day.toString(),
+                                          style: TextStyle(
+                                            color: isFull
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .surface
+                                                : null,
+                                          ))),
+                                ])
                           ],
                         ),
                       ),
@@ -185,7 +218,12 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
               },
             ),
           ),
-          ScoreCard(_selectedDay, score)
+          ScoreCard(
+            _selectedDay,
+            score,
+            full: ratio == 100,
+            time: time,
+          )
         ],
       ),
     );

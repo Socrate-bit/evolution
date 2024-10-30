@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker_v1/models/utilities/rating_utility.dart';
+import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
 
 class CustomSlider extends StatefulWidget {
   const CustomSlider(

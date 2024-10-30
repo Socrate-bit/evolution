@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_launcher/cli_commands.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/new_habit/additional_metrics.dart';
 import 'package:tracker_v1/widgets/new_habit/date_picker.dart';
@@ -14,6 +15,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
+import 'package:tracker_v1/widgets/weekly/weekly_table.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
   const NewHabitScreen({this.habit, super.key});
@@ -40,7 +42,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   TimeOfDay? _enteredTimeOfTheDay;
   List<String> _enteredAdditionalMetrics = [];
   int _enteredPonderation = 3;
-  Color _color = Color.fromARGB(255, 52, 52, 52);
+  Color _color = Colors.grey;
 
   @override
   void initState() {
@@ -129,6 +131,13 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<HabitType> habitTypeList = List.from(HabitType.values);
+    if (ref
+        .read(habitProvider)
+        .firstWhereOrNull((h) => h.validationType == HabitType.recapDay) !=null) {
+      habitTypeList.remove(HabitType.recapDay);
+    }
+
     return CustomModalBottomSheet(
       title: widget.habit != null ? 'Edit Item' : 'New Item',
       formKey: formKey,
@@ -270,7 +279,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                         isDense: true,
                         dropdownColor:
                             Theme.of(context).colorScheme.surfaceBright,
-                        items: HabitType.values
+                        items: habitTypeList
                             .map(
                               (item) => DropdownMenuItem(
                                 value: item,

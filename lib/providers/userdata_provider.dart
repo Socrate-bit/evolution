@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -39,7 +40,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
     // Add user stats (assuming userStatsProvider handles user stats)
     ref
         .read(userStatsProvider.notifier)
-        .addUserStats(UserStats(userId: userdata.userId!));
+        .addUserStats(UserStats(userId: userdata.userId!, dateSync: today));
   }
 
   // Load user data from Firestore and set local state
@@ -58,6 +59,22 @@ class AuthNotifier extends StateNotifier<UserData?> {
 
     // Update local state
     state = userData;
+  }
+
+  Future<UserData?> loadTargetUserData(String uuid) async {
+    final docSnapshot = await firestore
+        .collection('user_data')
+        .doc(uuid)
+        .get();
+
+    if (!docSnapshot.exists) {
+      return null;
+    }
+
+    // Use the fromJson method to create UserData from Firestore document data
+    final userData = UserData.fromJson(docSnapshot.data()!);
+
+    return userData;
   }
 
   // Clear the state when needed

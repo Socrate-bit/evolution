@@ -35,24 +35,22 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     'Improvements': null,
     'What am I grateful for?': null,
     'What am I proud of?': null,
+    'Emotions': null,
   };
   bool _newHabit = false;
 
   // List of slider metadata (titles and tooltip contents)
   final sliderData = [
-    {'title': 'Sleep Quality', 'tooltip': 'Rate your sleep quality'},
     {'title': 'Well-being', 'tooltip': 'Rate your well-being'},
+    {'title': 'Sleep', 'tooltip': 'Rate your sleep quality'},
     {'title': 'Energy', 'tooltip': 'Rate your energy level'},
-    {'title': 'Drive / Motivation', 'tooltip': 'Rate your motivation'},
+    {'title': 'Motivation', 'tooltip': 'Rate your motivation'},
     {'title': 'Stress', 'tooltip': 'Rate your stress level'},
-    {'title': 'Focus / Mental Clarity', 'tooltip': 'Rate your focus'},
-    {
-      'title': 'Intelligence / Mental Power',
-      'tooltip': 'Rate your mental power'
-    },
+    {'title': 'Focus & Clarity', 'tooltip': 'Rate your focus'},
+    {'title': 'Mental performance', 'tooltip': 'Rate your mental power'},
     {'title': 'Frustrations', 'tooltip': 'Rate your frustrations'},
     {'title': 'Satisfaction', 'tooltip': 'Rate your satisfaction'},
-    {'title': 'Self-Esteem / Proudness', 'tooltip': 'Rate your self-esteem'},
+    {'title': 'Self-Esteem', 'tooltip': 'Rate your self-esteem'},
     {
       'title': 'Looking forward to wake-up tomorrow',
       'tooltip': 'Rate your eagerness to wake up tomorrow'
@@ -81,8 +79,8 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   void initState() {
     super.initState();
     if (widget.oldDailyRecap != null) {
-      values[0] = widget.oldDailyRecap!.sleepQuality;
-      values[1] = widget.oldDailyRecap!.wellBeing;
+      values[0] = widget.oldDailyRecap!.wellBeing;
+      values[1] = widget.oldDailyRecap!.sleepQuality;
       values[2] = widget.oldDailyRecap!.energy;
       values[3] = widget.oldDailyRecap!.driveMotivation;
       values[4] = widget.oldDailyRecap!.stress;
@@ -95,6 +93,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       _newHabit = widget.oldDailyRecap!.newHabit;
       textFieldValues['Recap'] = widget.oldDailyRecap!.recap;
       textFieldValues['Improvements'] = widget.oldDailyRecap!.improvements;
+      textFieldValues['Emotions'] = widget.oldDailyRecap!.emotionalRecap;
       textFieldValues['What am I grateful for?'] =
           widget.oldDailyRecap!.gratefulness;
       textFieldValues['What am I proud of?'] = widget.oldDailyRecap!.proudness;
@@ -121,8 +120,8 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     RecapDay newRecapDay = RecapDay(
         recapId: widget.oldDailyRecap?.recapId,
         userId: FirebaseAuth.instance.currentUser!.uid,
-        sleepQuality: values[0],
-        wellBeing: values[1],
+        wellBeing: values[0],
+        sleepQuality: values[1],
         energy: values[2],
         driveMotivation: values[3],
         stress: values[4],
@@ -135,6 +134,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         date: widget.date,
         recap: textFieldValues['Recap'],
         improvements: textFieldValues['Improvements'],
+        emotionalRecap: textFieldValues['Emotions'],
         gratefulness: textFieldValues['What am I grateful for?'],
         proudness: textFieldValues['What am I proud of?'],
         altruism: textFieldValues['Who did I help?'],
@@ -178,7 +178,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       }),
 
       ListTile(
-        title: Text('New Habit / Focus / Goal',
+        title: Text('Focus of the week',
             style: Theme.of(context).textTheme.titleSmall!),
         trailing: Checkbox(
           value: _newHabit,
@@ -231,6 +231,16 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       }),
 
       const SizedBox(height: 32),
+
+      BigTextFormField(
+        controlledValue: textFieldValues['Emotions'] ?? '',
+        onSaved: (value) {
+          textFieldValues['Emotions'] = value;
+        },
+        toolTipTitle: 'Emotions',
+        tooltipContent: 'Recap your emotions',
+        maxLine: 2,
+      ),
 
       // Generate BigTextFields dynamically
       ...textFieldData2.map((fieldInfo) {

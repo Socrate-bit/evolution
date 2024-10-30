@@ -12,7 +12,6 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
 
   Future<void> addTrackedDay(TrackedDay newTrackedDay) async {
     state = [...state, newTrackedDay];
-
     await _firestore
         .collection('TrackedDay')
         .doc(newTrackedDay.trackedDayId)
@@ -21,12 +20,11 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
       'habitId': newTrackedDay.habitId,
       'date': newTrackedDay.date.toIso8601String(),
       'done': newTrackedDay.done == Validated.yes ? true : false,
-      'notation_showUp': newTrackedDay.notation?.showUp,
-      'notation_investment': newTrackedDay.notation?.investment,
-      'notation_method': newTrackedDay.notation?.method,
+      'notation_showUp': newTrackedDay.notation?.quantity,
+      'notation_investment': newTrackedDay.notation?.quality,
       'notation_result': newTrackedDay.notation?.result,
-      'notation_goal': newTrackedDay.notation?.goal,
-      'notation_extra': newTrackedDay.notation?.extra,
+      'notation_goal': newTrackedDay.notation?.weeklyFocus,
+      'notation_extra': newTrackedDay.notation?.dailyGoal,
       'recap': newTrackedDay.recap,
       'improvements': newTrackedDay.improvements,
       'additionalMetrics': newTrackedDay.additionalMetrics != null
@@ -34,6 +32,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
           : null,
       'synced': newTrackedDay.synced ? true : false,
     });
+
   }
 
   Future<void> deleteTrackedDay(TrackedDay targetTrackedDay) async {
@@ -45,6 +44,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
         .collection('TrackedDay')
         .doc(targetTrackedDay.trackedDayId)
         .delete();
+
   }
 
   Future<void> deleteHabitTrackedDays(Habit habit) async {
@@ -90,12 +90,11 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
         notation: row['notation_showUp'] == null
             ? null
             : Rating(
-                showUp: row['notation_showUp'] as double,
-                investment: row['notation_investment'] as double,
-                method: row['notation_method'] as double,
+                quantity: row['notation_showUp'] as double,
+                quality: row['notation_investment'] as double,
                 result: row['notation_result'] as double,
-                goal: row['notation_goal'] as double,
-                extra: row['notation_extra'] as double,
+                weeklyFocus: row['notation_goal'] as double,
+                dailyGoal: row['notation_extra'] as double,
               ),
         recap: row['recap'] as String?,
         improvements: row['improvements'] as String?,

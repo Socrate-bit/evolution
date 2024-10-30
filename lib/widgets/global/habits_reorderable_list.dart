@@ -22,7 +22,7 @@ class HabitsReorderableList extends ConsumerStatefulWidget {
   final bool dailyHabits;
   final DateTime? date;
   final userId = FirebaseAuth.instance.currentUser!.uid;
-  Map<String, (TimeOfDay?, int)>? habitOrder;
+  final Map<String, (TimeOfDay?, int)>? habitOrder;
 
   @override
   ConsumerState<HabitsReorderableList> createState() =>
@@ -30,7 +30,7 @@ class HabitsReorderableList extends ConsumerStatefulWidget {
 }
 
 class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
-  late dynamic habitsNotifier;
+  late HabitNotifier habitsNotifier;
   // late List<Habit> habitListCopy;
   final ScrollController listViewScrollController = ScrollController();
   bool viewTimeCursor = false;
@@ -47,7 +47,8 @@ class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
     if (widget.dailyHabits) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {});
+          _timer =
+              Timer.periodic(const Duration(seconds: 10), (Timer timer) {});
         });
       });
     }
@@ -55,13 +56,8 @@ class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
     habitsNotifier = ref.read(habitProvider.notifier);
   }
 
-  Future<void> databaseOrderChange() async {
-    await habitsNotifier.databaseOrderChange();
-  }
-
   @override
   void dispose() {
-    databaseOrderChange();
     listViewScrollController.dispose();
     _timer?.cancel();
     super.dispose();
@@ -110,7 +106,16 @@ class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
     int cursorIndexPosition = cursorPosition ~/ itemHeight;
 
     if (cursorIndexPosition < 0) return startOfTheDay;
-    if (cursorIndexPosition >= habitsList.length) return endOfTheDay;
+
+    if (cursorIndexPosition + 1 >= habitsList.length) {
+      return endOfTheDay;
+    }
+
+    if (habitsList[cursorIndexPosition + 1].timeOfTheDay == null &&
+        habitsList[cursorIndexPosition].timeOfTheDay == null) {
+      draggedTime = null;
+      return null;
+    }
 
     if (cursorPosition < 0) {
       rangeInBound = startOfTheDay.toMinutes();
@@ -141,20 +146,28 @@ class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
 
   void onReorderEnd() {
     if (widget.dailyHabits) {
-      widget.habitOrder ??= <String, (TimeOfDay?, int)>{};
-      widget.habitOrder![widget.habitsList[draggedItemIndex!].habitId] =
-          (draggedTime, newIndex!);
+      widget.habitsList[draggedItemIndex!].timeOfTheDay = draggedTime;
+
+      List<Habit> reorderedList = HabitNotifier.orderChange(
+          widget.habitsList, draggedItemIndex!, newIndex!);
+
+      Map<String, (TimeOfDay?, int)> habitOrder =
+          Map.fromEntries(reorderedList.map(
+        (e) => MapEntry(e.habitId, (e.timeOfTheDay, e.orderIndex)),
+      ));
+
       ReorderedDay newReorder = ReorderedDay(
-          userId: widget.userId,
-          date: widget.date!,
-          habitOrder: widget.habitOrder!);
-      ref.read(ReorderedDayProvider.notifier).addReorderedDay(newReorder);
+          userId: widget.userId, date: widget.date!, habitOrder: habitOrder);
+
+      if (widget.habitOrder != null) {
+        ref.read(ReorderedDayProvider.notifier).updateReorderedDay(newReorder);
+      } else {ref.read(ReorderedDayProvider.notifier).addReorderedDay(newReorder);}
     } else {
-      habitsNotifier.stateOrderChange(draggedItemIndex!, newIndex);
       ref.read(habitProvider.notifier).updateHabit(
           widget.habitsList[draggedItemIndex!],
           widget.habitsList[draggedItemIndex!].copy()
             ..timeOfTheDay = draggedTime);
+      habitsNotifier.databaseOrderChange(draggedItemIndex!, newIndex!);
     }
   }
 
@@ -162,7 +175,9 @@ class _HabitsReorderableListState extends ConsumerState<HabitsReorderableList> {
   Widget build(BuildContext context) {
     List<Habit> habitList = widget.habitsList;
 
-    habitList.sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
+    habitList.sort((a, b) => (a.timeOfTheDay == null && b.timeOfTheDay == null)
+        ? (a.orderIndex.compareTo(b.orderIndex))
+        : compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
     return Container(
       margin: const EdgeInsets.all(8),

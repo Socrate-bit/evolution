@@ -48,7 +48,6 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print( Color.fromARGB(255, 52, 52, 52).value);
     final habitsList = ref.watch(habitProvider);
     final List<Habit> todayHabitsList =
         ref.watch(habitProvider.notifier).getTodayHabit(date);
@@ -81,7 +80,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
       );
     } else {
       content = SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             const SizedBox(
               height: 200,
