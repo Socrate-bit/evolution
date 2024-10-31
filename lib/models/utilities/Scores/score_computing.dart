@@ -59,7 +59,7 @@ double? notationComputing(
       Habit habit = todayHabitList.firstWhere((h) => h.habitId == t.habitId);
       if (habit.validationType == HabitType.recap) {
         actualScore += (importancePonderation[habit.ponderation - 1] *
-            t.totalRating()! /
+            (t.totalRating() ?? 10) /
             10);
       } else {
         actualScore += importancePonderation[habit.ponderation - 1];

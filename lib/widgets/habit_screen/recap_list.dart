@@ -7,6 +7,7 @@ import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/screens/recaps/basic_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 
@@ -20,7 +21,13 @@ class RecapList extends ConsumerWidget {
     DateTime date = oldTrackedDay.date;
 
     if (habit.validationType == HabitType.simple) {
-      return;
+       showModalBottomSheet(
+        useSafeArea: true,
+        isScrollControlled: true,
+        context: context,
+        builder: (ctx) =>
+            BasicRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
+      );
     } else if (habit.validationType == HabitType.recap) {
       showModalBottomSheet(
         useSafeArea: true,

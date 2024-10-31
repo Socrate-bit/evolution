@@ -28,7 +28,9 @@ class HabitScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Habit habit = ref.watch(habitProvider).firstWhere((h) => h.habitId == initialHabit.habitId);
+    Habit habit = ref
+        .watch(habitProvider)
+        .firstWhere((h) => h.habitId == initialHabit.habitId);
 
     void resetData() {
       ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
@@ -283,8 +285,10 @@ class HabitScreen extends ConsumerWidget {
                 CustomOutlinedButton(
                   submit: () {
                     showConfirmationDialog(context, ref, () {
-                      ref.read(habitProvider.notifier).deleteHabit(habit);
                       Navigator.of(context).pop();
+                      Future.microtask(() {
+                        ref.read(habitProvider.notifier).deleteHabit(habit);
+                      });
                       Navigator.of(context).pop();
                     }, 'Yes I want to delete this habit and its data');
                   },

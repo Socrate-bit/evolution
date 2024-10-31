@@ -6,6 +6,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
+import 'package:tracker_v1/screens/recaps/basic_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 
@@ -35,16 +36,7 @@ class ContainerController {
         case HabitType.recapDay:
           return ActionHandlers(DailyRecapScreen(date, habit), null);
         case HabitType.simple || HabitType.unique:
-          final TrackedDay newTrackedDay = TrackedDay(
-              userId: FirebaseAuth.instance.currentUser!.uid,
-              habitId: habit.habitId,
-              date: date,
-              done: Validated.yes);
-          return ActionHandlers(() async {
-            await ref
-                .read(trackedDayProvider.notifier)
-                .updateTrackedDay(newTrackedDay);
-          }, null);
+          return ActionHandlers(BasicRecapScreen(habit, date), null);
       }
     } else {
       final TrackedDay trackedDay = trackedDays.firstWhere((td) {
@@ -82,7 +74,13 @@ class ContainerController {
                 oldDailyRecap: recapDay, oldTrackedDay: trackedDay),
           );
         case HabitType.simple || HabitType.unique:
-          return ActionHandlers(onLongPress, null);
+          return ActionHandlers(
+              onLongPress,
+              BasicRecapScreen(
+                habit,
+                date,
+                oldTrackedDay: trackedDay,
+              ));
       }
     }
   }
@@ -97,9 +95,10 @@ class ContainerController {
       final TrackedDay trackedDay = trackedDays.firstWhere((td) {
         return td.habitId == habit.habitId && td.date == date;
       });
-      return (trackedDay
-          .getStatusAppearance(colorScheme)
-          .backgroundColor , trackedDay.totalRating()); 
+      return (
+        trackedDay.getStatusAppearance(colorScheme).backgroundColor,
+        trackedDay.totalRating()
+      );
     }
   }
 

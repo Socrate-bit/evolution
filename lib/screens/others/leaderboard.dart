@@ -14,26 +14,28 @@ class LeaderboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.invalidate(allUserStatsProvider);
     AsyncValue usersStat = ref.read(allUserStatsProvider);
-  
+
     return usersStat.when(
-        data: (data) => SingleChildScrollView(
-                child: Container(
-              alignment: Alignment.topCenter,
-              height: MediaQuery.of(context).size.height * 1.25,
+        data: (data) => Container(
               color: Theme.of(context).colorScheme.surface,
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 120,
-                  ),
-                  LeaderboardPodium(data),
-                  const SizedBox(
-                    height: 32,
-                  ),
-                  Expanded(child: LeaderboardList(data.$1, data.$2))
-                ],
-              ),
-            )),
+              child: SingleChildScrollView(
+                  child: Container(
+                alignment: Alignment.topCenter,
+                height: MediaQuery.of(context).size.height * 1.25,
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 120,
+                    ),
+                    LeaderboardPodium(data),
+                    const SizedBox(
+                      height: 32,
+                    ),
+                    Expanded(child: LeaderboardList(data.$1, data.$2))
+                  ],
+                ),
+              )),
+            ),
         error: (error, stackTrace) => const Center(
               child: CircularProgressIndicator(),
             ),
@@ -289,6 +291,9 @@ class LeaderboardList extends StatelessWidget {
     final UserData currentUserData = usersData.firstWhereOrNull(
         (item) => item.userId == FirebaseAuth.instance.currentUser!.uid);
 
+    final style =
+        Theme.of(context).textTheme.labelLarge!.copyWith(color: Colors.grey);
+
     return Container(
       decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceBright,
@@ -296,6 +301,16 @@ class LeaderboardList extends StatelessWidget {
               topLeft: Radius.circular(40), topRight: Radius.circular(40))),
       child: Column(
         children: [
+          const SizedBox(
+            height: 12,
+          ),
+          SizedBox(
+              width: double.infinity,
+              height: 30,
+              child: ListTile(
+                  leading: Text('#', style: style),
+                  title: Text('NAME', style: style),
+                  trailing: Text('STREAKS', style: style))),
           const SizedBox(
             height: 20,
           ),

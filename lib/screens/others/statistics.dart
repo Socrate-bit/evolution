@@ -26,7 +26,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   }
 
   List<(DateTime, double?)> getData(ref) {
-    int pastShift = 12;
+    int pastShift = 11;
     List<(DateTime, double?)> notation = [];
 
     for (int shift = 0; shift <= pastShift; shift++) {

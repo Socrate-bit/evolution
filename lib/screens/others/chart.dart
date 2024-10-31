@@ -1,10 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker_v1/models/utilities/round_num.dart';
 
-final _formater = DateFormat('MMM');
+final _formater = DateFormat('MM/dd');
 
 class LineChartSample2 extends StatefulWidget {
   const LineChartSample2(this.data, this.pageIndex, {super.key});
@@ -17,6 +16,7 @@ class LineChartSample2 extends StatefulWidget {
 
 class _LineChartSample2State extends State<LineChartSample2> {
   late List<FlSpot> spots;
+  late double maxX;
   List<Color> gradientColors = [
     Color(0xFF50E4FF),
     Colors.blue,
@@ -26,6 +26,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
   void initState() {
     // TODO: implement initState
     spots = createSpot();
+    maxX = spots.fold(0, (tot, b) => tot > b.x ? tot : b.x);
   }
 
   @override
@@ -34,6 +35,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
 
     setState(() {
       spots = createSpot();
+      maxX = spots.fold(0, (tot, b) => tot > b.x ? tot : b.x);
       switch (widget.pageIndex) {
         case 0:
           gradientColors = [
@@ -58,11 +60,11 @@ class _LineChartSample2State extends State<LineChartSample2> {
   }
 
   bool showAvg = false;
-  int indexShift = 0;
 
   List<FlSpot> createSpot() {
     List<FlSpot> spots = [];
     bool dataStart = false;
+    int indexShift = 0;
 
     for (int index = 0; index < widget.data.length; index++) {
       if (widget.data[index].$2 == null) {
@@ -76,6 +78,12 @@ class _LineChartSample2State extends State<LineChartSample2> {
             widget.data[index].$2!.customRound(1)));
       }
     }
+
+    if (spots.length == 1) {
+      double y = spots[0].y;
+      spots[0] = FlSpot(1, y);
+    }
+
     return spots;
   }
 
@@ -88,8 +96,8 @@ class _LineChartSample2State extends State<LineChartSample2> {
         maxY = 100;
       case 2:
         maxY = widget.data.map((e) => e.$2).reduce(
-                (a, b) => (a ?? 12) > (b ?? 12) ? (a ?? 12) : (b ?? 12))! +
-            20;
+                (a, b) => (a ?? 12) > (b ?? 12) ? (a ?? 12) : (b ?? 12))!;
+        maxY *= 1.5;
       default:
         maxY = 10;
     }
@@ -146,53 +154,65 @@ class _LineChartSample2State extends State<LineChartSample2> {
   }
 
   Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-        fontWeight: FontWeight.bold, fontSize: 18, color: Colors.grey);
+    double fontSize = 18;
+    if (maxX == 1) {
+      fontSize = 18;
+    } else if (maxX < 3) {
+      fontSize = 16;
+    } else if (maxX < 6) {
+      fontSize = 14;
+    } else if (maxX < 9) {
+      fontSize = 14;
+    } else if (maxX < 12) {
+      fontSize = 14;
+    }
+
+    final style = TextStyle(
+        fontWeight: FontWeight.bold, fontSize: fontSize, color: Colors.grey);
     String? text;
     List<DateTime> dates =
         widget.data.where((e) => e.$2 != null).map((e) => e.$1).toList();
     switch (value) {
+      case 0:
+        text = spots.length == 1 ? '' : _formater.format(dates[0]);
+        break;
       case 1:
-        text = _formater.format(dates[1]);
+        text = spots.length >7 ? '' : spots.length == 1
+            ? _formater.format(dates[0])
+            : _formater.format(dates[1]);
+        break;
+      case 2:
+        text = spots.length == 1 ? '' : _formater.format(dates[2]);
         break;
       case 3:
-        text =
-            dates[1].month != dates[3].month ? _formater.format(dates[3]) : '';
+        text = spots.length >7 ? '' : _formater.format(dates[3]);
         break;
       case 4:
-        text =
-            dates[3].month != dates[4].month ? _formater.format(dates[4]) : '';
+        text = _formater.format(dates[4]);
         break;
       case 5:
-        text =
-            dates[4].month != dates[5].month ? _formater.format(dates[5]) : '';
+        text = spots.length >7 ? '' : _formater.format(dates[5]);
         break;
       case 6:
-        text =
-            dates[5].month != dates[6].month ? _formater.format(dates[6]) : '';
+        text = _formater.format(dates[6]);
         break;
       case 7:
-        text =
-            dates[6].month != dates[7].month ? _formater.format(dates[7]) : '';
+        text = spots.length >7 ? '' :_formater.format(dates[7]);
         break;
       case 8:
-        text =
-            dates[7].month != dates[8].month ? _formater.format(dates[8]) : '';
+        text = _formater.format(dates[8]);
         break;
       case 9:
-        text =
-            dates[8].month != dates[9].month ? _formater.format(dates[9]) : '';
+        text = spots.length >7 ? '' :_formater.format(dates[9]);
         break;
       case 10:
-        text = dates[9].month != dates[10].month
-            ? _formater.format(dates[10])
-            : '';
+        text = _formater.format(dates[10]);
         break;
       case 11:
-        text = dates[10].month != dates[11].month
-            ? _formater.format(dates[11])
-            : '';
+        text = spots.length >7 ? '' : _formater.format(dates[11]);
         break;
+      default:
+        text = 'Invalid index';
     }
 
     return text == null
@@ -211,10 +231,6 @@ class _LineChartSample2State extends State<LineChartSample2> {
       text = (maxY * 0.5).toInt().toString();
     } else if (value == (maxY * 0.8).round()) {
       text = (maxY * 0.8).toInt().toString();
-    }
-
-    if (widget.pageIndex == 1 && text != null) {
-      text += '%';
     }
 
     return text == null
@@ -282,7 +298,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
         border: Border.all(color: const Color(0xff37434d)),
       ),
       minX: 0,
-      maxX: spots.fold(0, (tot, b) => tot! > b.x ? tot : b.x),
+      maxX: spots.length == 1 ? 2 : maxX,
       minY: 0,
       maxY: getMaxY(),
       lineBarsData: [

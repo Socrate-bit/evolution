@@ -10,6 +10,7 @@ import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/screens/habits/habit_screen.dart';
+import 'package:tracker_v1/screens/recaps/basic_recap.dart';
 import 'package:tracker_v1/screens/recaps/daily_recap.dart';
 import 'package:tracker_v1/screens/recaps/habit_recap.dart';
 
@@ -29,8 +30,7 @@ class HabitWidget extends ConsumerWidget {
   final bool habitList;
 
   void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
-    if (habit.validationType == HabitType.simple ||
-        habit.validationType == HabitType.unique) {
+    if (habit.validationType == HabitType.unique) {
       TrackedDay? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
         (td) {
           return td.habitId == habit.habitId && td.date == date;
@@ -50,6 +50,18 @@ class HabitWidget extends ConsumerWidget {
       );
 
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
+    } else if (habit.validationType == HabitType.simple) {
+      TrackedDay? oldTrackedDay =
+          ref.read(trackedDayProvider).firstWhereOrNull((td) {
+        return td.habitId == habit.habitId && td.date == date;
+      });
+      showModalBottomSheet(
+        useSafeArea: true,
+        isScrollControlled: true,
+        context: context,
+        builder: (ctx) =>
+            BasicRecapScreen(habit, date!, oldTrackedDay: oldTrackedDay),
+      );
     } else if (habit.validationType == HabitType.recap) {
       TrackedDay? oldTrackedDay =
           ref.read(trackedDayProvider).firstWhereOrNull((td) {
@@ -110,13 +122,13 @@ class HabitWidget extends ConsumerWidget {
     });
 
     DateTime start = date!;
-    
+
     for (TrackedDay trackeDay in habitTrackedDays) {
       start = DateTime(start.year, start.month, start.day);
       if (!habitTrackedDays.map((e) => e.date).contains(start)) {
         break;
       }
-      
+
       if (trackeDay.date != start) continue;
       streak += 1;
       start = trackeDay.date.subtract(const Duration(days: 1));

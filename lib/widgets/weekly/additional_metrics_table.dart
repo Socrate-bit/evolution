@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
+import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 
@@ -47,17 +49,33 @@ class AdditionalMetricsTable extends ConsumerWidget {
     );
   }
 
-  List<dynamic> _getDayTrackingStatus((Habit, String) metric,
-      List<DateTime> offsetWeekDays, List<TrackedDay> trackedDays) {
+  List<dynamic> _getDayTrackingStatus(
+      (Habit, String) metric,
+      List<DateTime> offsetWeekDays,
+      List<TrackedDay> trackedDays,
+      List<RecapDay> recapDays) {
+    List<dynamic> result;
     List<bool> isTrackedFilter = range.map((index) {
-      return HabitNotifier.getHabitTrackingStatus(metric.$1, offsetWeekDays[index]);
+      return HabitNotifier.getHabitTrackingStatus(
+          metric.$1, offsetWeekDays[index]);
     }).toList();
 
-    List<dynamic> result = range.map((index) {
-      final trackedDay = trackedDays.firstWhereOrNull((td) =>
-          td.habitId == metric.$1.habitId && td.date == offsetWeekDays[index]);
-      return trackedDay?.additionalMetrics?[metric.$2] ?? isTrackedFilter[index];
-    }).toList();
+    if (metric.$1.validationType == HabitType.recapDay) {
+      result = range.map((index) {
+        final recapDay = recapDays
+            .firstWhereOrNull((td) => td.date == offsetWeekDays[index]);
+        return recapDay?.additionalMetrics?[metric.$2] ??
+            isTrackedFilter[index];
+      }).toList();
+    } else {
+      result = range.map((index) {
+        final trackedDay = trackedDays.firstWhereOrNull((td) =>
+            td.habitId == metric.$1.habitId &&
+            td.date == offsetWeekDays[index]);
+        return trackedDay?.additionalMetrics?[metric.$2] ??
+            isTrackedFilter[index];
+      }).toList();
+    }
 
     return result;
   }
@@ -71,7 +89,10 @@ class AdditionalMetricsTable extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(width: 8),
-              Icon(entry.$1.icon, color: entry.$1.color.withOpacity(0.25),),
+              Icon(
+                entry.$1.icon,
+                color: entry.$1.color.withOpacity(0.25),
+              ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -88,11 +109,15 @@ class AdditionalMetricsTable extends ConsumerWidget {
             height: 43,
             width: 43,
             child: Center(
-              child: Text(index == true || index == ''
+                child: Text(
+              index == true || index == ''
                   ? 'N/A'
                   : index == false
-                      ? '' : index, softWrap: true, overflow: TextOverflow.ellipsis, )
-            ),
+                      ? ''
+                      : index,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+            )),
           );
         }),
       ],
@@ -101,10 +126,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allHabits = ref
-        .watch(habitProvider)
-        .where((habit) => habit.validationType != HabitType.unique)
-        .toList();
+    final allHabits = ref.watch(habitProvider).toList();
     final activeHabits = allHabits
         .where((habit) =>
             _isInTheWeek(habit.startDate, date2: habit.endDate) &&
@@ -114,6 +136,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
       ..sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
     final trackedDays = ref.watch(trackedDayProvider);
+    final recapDays = ref.watch(recapDayProvider);
 
     final List<(Habit, String)> additionalMetrics = [];
     for (Habit habit in activeHabits) {
@@ -140,7 +163,10 @@ class AdditionalMetricsTable extends ConsumerWidget {
             children: [
               _buildTableHeader(),
               ...additionalMetrics.map((entry) => _buildHabitRow(
-                  entry, context, _getDayTrackingStatus(entry, offsetWeekDays, trackedDays))),
+                  entry,
+                  context,
+                  _getDayTrackingStatus(
+                      entry, offsetWeekDays, trackedDays, recapDays))),
             ],
           ),
           if (additionalMetrics.isEmpty)

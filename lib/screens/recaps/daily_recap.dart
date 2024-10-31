@@ -178,7 +178,14 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       }),
 
       ListTile(
-        title: Text('Focus of the week',
+        subtitle: widget.habit.newHabit == null ||
+                widget.habit.newHabit!.trim().isEmpty
+            ? null
+            : Text(
+                widget.habit.newHabit!,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(),
+              ),
+        title: Text('Weekly focus',
             style: Theme.of(context).textTheme.titleSmall!),
         trailing: Checkbox(
           value: _newHabit,

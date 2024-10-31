@@ -15,7 +15,6 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
 import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
-import 'package:tracker_v1/widgets/weekly/weekly_table.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
   const NewHabitScreen({this.habit, super.key});
@@ -132,9 +131,11 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   @override
   Widget build(BuildContext context) {
     List<HabitType> habitTypeList = List.from(HabitType.values);
-    if (ref
-        .read(habitProvider)
-        .firstWhereOrNull((h) => h.validationType == HabitType.recapDay) !=null) {
+    if (ref.read(habitProvider).firstWhereOrNull(
+                (h) => h.validationType == HabitType.recapDay) !=
+            null &&
+        widget.habit != null &&
+        widget.habit!.validationType != HabitType.recapDay) {
       habitTypeList.remove(HabitType.recapDay);
     }
 
@@ -299,7 +300,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             ],
           ),
           const SizedBox(height: 32),
-          if (_enteredValidationType == HabitType.recap)
+          if (_enteredValidationType == HabitType.recap ||
+              _enteredValidationType == HabitType.recapDay)
             BigTextFormField(
               maxLenght: 100,
               maxLine: 1,
@@ -311,8 +313,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               tooltipContent: 'Main improvement',
             ),
           const SizedBox(height: 32),
-          if (_enteredValidationType == HabitType.recap)
-            AdditionalMetrics(_enteredAdditionalMetrics),
+          AdditionalMetrics(_enteredAdditionalMetrics),
           if (_enteredValidationType == HabitType.recap)
             const SizedBox(height: 32),
           DatePickerWidget(

@@ -8,6 +8,7 @@ import 'package:tracker_v1/providers/reordered_day.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/user_stats_provider.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
+import 'package:tracker_v1/providers/users_stats_provider.dart';
 
 final dataManagerProvider = Provider((ref) => DataManager(ref));
 
@@ -21,6 +22,7 @@ class DataManager {
     ref.read(habitProvider.notifier).cleanState();
     ref.read(trackedDayProvider.notifier).cleanState();
     ref.read(recapDayProvider.notifier).cleanState();
+    ref.read(ReorderedDayProvider.notifier).cleanState();
   }
 
   Future<void> signOut() async {
@@ -81,6 +83,15 @@ class DataManager {
       batch.delete(doc.reference);
     }
 
+    // Delete user data from 'user_data' collection
+    final userStatsQuery = await firestore
+        .collection('user_stats')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in userStatsQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
     // Commit the batch deletion
     await batch.commit();
 
@@ -96,6 +107,7 @@ class DataManager {
 
     // Delete FirebaseAuth account
     await FirebaseAuth.instance.currentUser!.delete();
+    await FirebaseAuth.instance.signOut();
   }
 
   Future<void> loadData() async {
@@ -111,8 +123,10 @@ class DataManager {
         ref.read(trackedDayProvider.notifier).loadData(),
         ref.read(recapDayProvider.notifier).loadData(),
         ref.read(ReorderedDayProvider.notifier).loadData(),
-        ref.read(userStatsProvider.notifier).loadUserStats()
+        ref.read(userStatsProvider.notifier).loadUserStats(),
       ]);
+
+      ref.read(allUserStatsProvider);
     } catch (error) {
       print(error);
       signOut();

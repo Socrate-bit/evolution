@@ -19,13 +19,14 @@ class CustomHeatMap extends ConsumerWidget {
 
     // Find the end of the current week (Sunday)
     DateTime endOfWeek = now.add(Duration(days: DateTime.sunday - now.weekday));
+    endOfWeek = DateTime(endOfWeek.year, endOfWeek.month, endOfWeek.day);
 
     List<DateTime> dateList = [];
     DateTime currentDate = startDate;
 
     while (currentDate.isBefore(endOfWeek) ||
         currentDate.isAtSameMomentAs(endOfWeek)) {
-      dateList.add(currentDate);
+      dateList.add(DateTime(currentDate.year, currentDate.month, currentDate.day));
       currentDate = currentDate.add(const Duration(days: 1));
     }
 

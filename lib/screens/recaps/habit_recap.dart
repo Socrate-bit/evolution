@@ -48,7 +48,8 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
   void initState() {
     super.initState();
 
-    if (widget.oldTrackedDay != null) {
+    if (widget.oldTrackedDay != null &&
+        widget.oldTrackedDay!.notation != null) {
       _showUpRating = widget.oldTrackedDay!.notation!.quantity!;
       _investmentRating = widget.oldTrackedDay!.notation!.quality;
       _resultRating = widget.oldTrackedDay!.notation!.result;
@@ -59,9 +60,15 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       _additionalInputs = widget.oldTrackedDay!.additionalMetrics;
     }
 
+    if (widget.oldTrackedDay != null &&
+        widget.oldTrackedDay!.notation == null) {
+      _enteredRecap = widget.oldTrackedDay!.recap;
+      _additionalInputs = widget.oldTrackedDay!.additionalMetrics;
+    }
+
     values = [
       _showUpRating,
-    _investmentRating,
+      _investmentRating,
       _resultRating,
     ];
     _additionalMetrics = widget.habit.additionalMetrics;
@@ -135,10 +142,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
               ? null
               : Text(
                   widget.habit.newHabit!,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(),
                 ),
           title: Text('Weekly focus',
               style: Theme.of(context).textTheme.titleSmall!),
@@ -153,7 +157,8 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         ),
         // Extra checkbox field
         ListTile(
-          title: Text('Daily goal', style: Theme.of(context).textTheme.titleSmall!),
+          title: Text('Daily goal',
+              style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _extra,
             onChanged: (value) {

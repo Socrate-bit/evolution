@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/data_manager.dart';
@@ -6,13 +7,14 @@ import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/widgets/auth/picture_avatar.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
+import 'package:tracker_v1/widgets/global/waiting.dart';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
 
   void logOut(ref, context) async {
+    Navigator.of(context).pop();
     try {
-      Navigator.of(context).pop();
       await ref.read(dataManagerProvider).signOut();
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -23,13 +25,13 @@ class ProfilScreen extends ConsumerWidget {
 
   void deleteAccount(ref, context) async {
     try {
-      Navigator.of(context).pop();
       await ref.read(dataManagerProvider).deleteAccount();
     } catch (error) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.toString())));
     }
+    Navigator.of(context).pop();
   }
 
   void showConfirmationDigalog(context, ref, Function() function, String text) {
