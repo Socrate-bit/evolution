@@ -22,8 +22,8 @@ jobs:
       - run: pod repo update
         working-directory: ios
 
-      - name: Show Installed Pod Versions
-        run: cat Podfile.lock
+      - name: Show CocoaPods Versions
+        run: pod list
         working-directory: ios
 
       - name: Show Xcode Version
