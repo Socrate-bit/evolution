@@ -22,9 +22,15 @@ jobs:
       - run: pod repo update
         working-directory: ios
 
-      - name: Show CocoaPods Versions
-        run: pod list
+      - name: Show Installed Pod Versions
+        run: cat Podfile.lock
         working-directory: ios
+
+      - name: Show Xcode Version
+        run: xcodebuild -version
+
+      - name: Show Flutter Version
+        run: flutter --version
 
       - run: flutter build ios --release --no-codesign --no-tree-shake-icons
 
