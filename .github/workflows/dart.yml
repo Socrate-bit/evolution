@@ -22,6 +22,10 @@ jobs:
       - run: pod repo update
         working-directory: ios
 
+      - name: Show CocoaPods Versions
+        run: pod list
+        working-directory: ios
+
       - run: flutter build ios --release --no-codesign --no-tree-shake-icons
 
       - run: mkdir Payload
