@@ -30,7 +30,9 @@ class MyApp extends ConsumerWidget {
     bool uploadingFlag = ref.watch(firestoreUploadProvider);
 
     return MaterialApp(
-      theme: themeData,
+      darkTheme: darkThemeData,
+      themeMode: ThemeMode.dark,
+      theme: lightThemeData,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (ctx, snapshot) {

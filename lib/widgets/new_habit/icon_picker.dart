@@ -36,7 +36,7 @@ class _IconPickerWidgetState extends State<IconPickerWidget> {
             onPressed: () async {
               IconPickerIcon? iconPicker = await showIconPicker(context,
                   configuration: SinglePickerConfiguration(
-                      iconPackModes: [IconPack.allMaterial],
+                      iconPackModes: [ IconPack.roundedMaterial],
                       backgroundColor: Theme.of(context)
                           .colorScheme
                           .surfaceBright

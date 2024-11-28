@@ -10,11 +10,12 @@ import 'package:tracker_v1/widgets/recaps/big_text_form_field.dart';
 
 class BasicRecapScreen extends ConsumerStatefulWidget {
   const BasicRecapScreen(this.habit, this.date,
-      {super.key, this.oldTrackedDay});
+      {super.key, this.oldTrackedDay, required this.validated});
 
   final Habit habit;
   final DateTime date;
   final TrackedDay? oldTrackedDay;
+  final Validated validated;
 
   @override
   ConsumerState<BasicRecapScreen> createState() => _HabitRecapScreenState();
@@ -26,6 +27,7 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
   String? _enteredRecap;
   List<String>? _additionalMetrics;
   Map<String, dynamic>? _additionalInputs;
+  bool _isSubmitted = false;
 
   List<double> values = [];
 
@@ -47,7 +49,7 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
     }
   }
 
-  void submit() {
+  void submit({Validated? validated}) {
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -58,13 +60,13 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
       trackedDayId: widget.oldTrackedDay?.trackedDayId,
       userId: FirebaseAuth.instance.currentUser!.uid,
       habitId: widget.habit.habitId,
-      date: widget.date,
-      done: Validated.yes,
+      date: widget.oldTrackedDay?.date ?? widget.date,
+      done: validated ?? widget.validated,
       additionalMetrics: _additionalInputs,
       recap: _enteredRecap,
+      dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
     );
 
-    Navigator.of(context).pop();
     if (widget.oldTrackedDay == null) {
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
     } else {
@@ -74,48 +76,62 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Column(
-      children: [
-        // Recap and Improvements fields
-        BigTextFormField(
-          controlledValue: _enteredRecap ?? '',
-          onSaved: (value) {
-            _enteredRecap = value;
-          },
-          toolTipTitle: 'Comment',
-          tooltipContent: 'Provide a recap of your activity',
-        ),
-        if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
+    Widget content = PopScope(
+      onPopInvokedWithResult: (dipop, result) {
+        if (!_isSubmitted &&
+            (widget.oldTrackedDay == null ||
+                widget.oldTrackedDay!.done == Validated.notYet)) {
+          submit(validated: Validated.notYet);
+        }
+      },
+      child: Column(
+        children: [
+          // Recap and Improvements fields
+          BigTextFormField(
+            controlledValue: _enteredRecap ?? '',
+            onSaved: (value) {
+              _enteredRecap = value;
+            },
+            toolTipTitle: 'Comment',
+            tooltipContent: 'Provide a recap of your activity',
+          ),
+          if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
+            const SizedBox(height: 32),
+
+          if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
+            ..._additionalMetrics!.map((item) {
+              return ListTile(
+                title:
+                    Text(item, style: Theme.of(context).textTheme.titleSmall!),
+                trailing: SizedBox(
+                    width: 64,
+                    child: TextFormField(
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        initialValue: _additionalInputs?[item],
+                        onSaved: (newValue) {
+                          _additionalInputs![item] = newValue;
+                        },
+                        decoration: InputDecoration(
+                          filled: true,
+                          counterText: '',
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceBright
+                              .withOpacity(0.75),
+                        ))),
+              );
+            }),
+
           const SizedBox(height: 32),
 
-        if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
-          ..._additionalMetrics!.map((item) {
-            return ListTile(
-              title: Text(item, style: Theme.of(context).textTheme.titleSmall!),
-              trailing: SizedBox(
-                  width: 64,
-                  child: TextFormField(
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      initialValue: _additionalInputs?[item],
-                      onSaved: (newValue) {
-                        _additionalInputs![item] = newValue;
-                      },
-                      decoration: InputDecoration(
-                        filled: true,
-                        counterText: '',
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceBright
-                            .withOpacity(0.75),
-                      ))),
-            );
+          // Submit Button
+          CustomElevatedButton(submit: () {
+            _isSubmitted = true;
+            submit(validated: widget.validated);
+            Navigator.of(context).pop();
           }),
-
-        const SizedBox(height: 32),
-
-        // Submit Button
-        CustomElevatedButton(submit: submit),
-      ],
+        ],
+      ),
     );
 
     return CustomModalBottomSheet(

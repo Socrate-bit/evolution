@@ -2,6 +2,34 @@ import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
 
+enum Emotion {
+  wellBeing,
+  sleepQuality,
+  energy,
+  driveMotivation,
+  stress,
+  focusMentalClarity,
+  intelligenceMentalPower,
+  frustrations,
+  satisfaction,
+  selfEsteemProudness,
+  lookingForwardToWakeUpTomorrow,
+}
+
+const Map<Emotion, String> emotionDescriptions = {
+  Emotion.wellBeing: 'Well-being',
+  Emotion.sleepQuality: 'Sleep',
+  Emotion.energy: 'Energy',
+  Emotion.driveMotivation: 'Motivation',
+  Emotion.stress: 'Stress',
+  Emotion.focusMentalClarity: 'Focus & Clarity',
+  Emotion.intelligenceMentalPower: 'Mental performance',
+  Emotion.frustrations: 'Frustrations',
+  Emotion.satisfaction: 'Satisfaction',
+  Emotion.selfEsteemProudness: 'Self-Esteem',
+  Emotion.lookingForwardToWakeUpTomorrow: 'Looking forward tomorrow',
+};
+
 class RecapDay {
   RecapDay({
     recapId,
@@ -53,7 +81,7 @@ class RecapDay {
   Map<String, dynamic>? additionalMetrics;
   bool synced;
 
- dynamic getProperty(String propertyName) {
+  dynamic getProperty(String propertyName) {
     var properties = {
       'recapId': recapId,
       'userId': userId,
@@ -81,5 +109,4 @@ class RecapDay {
     };
     return properties[propertyName];
   }
-
 }

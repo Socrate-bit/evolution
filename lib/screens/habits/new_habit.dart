@@ -140,7 +140,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     }
 
     return CustomModalBottomSheet(
-      title: widget.habit != null ? 'Edit Item' : 'New Item',
+      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
       formKey: formKey,
       content: Column(
         children: [
@@ -173,11 +173,23 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          InkWell(
-            child: CircleAvatar(
-              backgroundColor: _color,
-            ),
-            onTap: showColorPicker,
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              const CustomToolTipTitle(
+                  title: 'Color:', content: 'Select the color of the stat'),
+              Spacer(),
+              Center(
+                child: InkWell(
+                  onTap: showColorPicker,
+                  child: CircleAvatar(
+                    backgroundColor: _color,
+                    radius: 24,
+                  ),
+                ),
+              ),
+              Spacer(),
+            ],
           ),
           const SizedBox(height: 16),
           BigTextFormField(
@@ -191,7 +203,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           Row(
             children: [
               const CustomToolTipTitle(
-                  title: 'Importance:', content: 'Importance'),
+                  title: 'Priority:', content: 'Importance'),
               Expanded(
                 child: Center(
                   child: Container(
@@ -233,7 +245,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           ),
           const SizedBox(height: 16),
           Row(children: [
-            const CustomToolTipTitle(title: 'Time:', content: 'Time'),
+            const CustomToolTipTitle(
+                title: 'Time of the day:', content: 'Time'),
             Expanded(
               child: Center(
                 child: ElevatedButton(
@@ -254,7 +267,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                           Theme.of(context).colorScheme.surfaceBright),
                   child: Text(
                     _enteredTimeOfTheDay == null
-                        ? 'No time picked'
+                        ? 'Whenever'
                         : _enteredTimeOfTheDay!.format(context),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
@@ -266,7 +279,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           Row(
             children: [
               const CustomToolTipTitle(
-                  title: 'Item type:', content: 'Item type'),
+                  title: 'Habit type:', content: 'Item type'),
               Expanded(
                 child: Center(
                   child: Container(
@@ -284,7 +297,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                             .map(
                               (item) => DropdownMenuItem(
                                 value: item,
-                                child: Text(item.name.toString().capitalize()),
+                                child: Text(habitTypeDescriptions[item] ?? ''),
                               ),
                             )
                             .toList(),
@@ -309,7 +322,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               onSaved: (value) {
                 _mainImprovement = value;
               },
-              toolTipTitle: 'Main improvement',
+              toolTipTitle: 'Weekly focus',
               tooltipContent: 'Main improvement',
             ),
           const SizedBox(height: 32),

@@ -12,11 +12,12 @@ import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class HabitRecapScreen extends ConsumerStatefulWidget {
   const HabitRecapScreen(this.habit, this.date,
-      {super.key, this.oldTrackedDay});
+      {super.key, this.oldTrackedDay, required this.validated});
 
   final Habit habit;
   final DateTime date;
   final TrackedDay? oldTrackedDay;
+  final Validated validated;
 
   @override
   ConsumerState<HabitRecapScreen> createState() => _HabitRecapScreenState();
@@ -24,6 +25,7 @@ class HabitRecapScreen extends ConsumerStatefulWidget {
 
 class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
   final formKey = GlobalKey<FormState>();
+  bool _isSubmitted = false;
 
   double _showUpRating = 0;
   double _investmentRating = 0;
@@ -37,9 +39,9 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
 
   // Prepare slider data for dynamic generation
   final List<Map<String, String>> sliderData = [
-    {'title': 'Quantity', 'tooltip': 'Rate how well you showed up.'},
-    {'title': 'Quality', 'tooltip': 'Rate your level of investment.'},
-    {'title': 'Result', 'tooltip': 'Rate the result of your effort.'},
+    {'title': 'Practice quantity', 'tooltip': 'Rate how well you showed up.'},
+    {'title': 'Practice quality', 'tooltip': 'Rate your level of investment.'},
+    {'title': 'Result obtained', 'tooltip': 'Rate the result of your effort.'},
   ];
 
   List<double> values = [];
@@ -80,7 +82,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
     }
   }
 
-  void submit() {
+  void submit({Validated? validated}) {
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -91,8 +93,8 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       trackedDayId: widget.oldTrackedDay?.trackedDayId,
       userId: FirebaseAuth.instance.currentUser!.uid,
       habitId: widget.habit.habitId,
-      date: widget.date,
-      done: Validated.yes,
+      date: widget.oldTrackedDay?.date ?? widget.date,
+      done: validated ?? widget.validated,
       notation: Rating(
         quantity: values[0],
         quality: values[1],
@@ -103,9 +105,9 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       additionalMetrics: _additionalInputs,
       recap: _enteredRecap,
       improvements: _enteredImprovement,
+      dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
     );
 
-    Navigator.of(context).pop();
     if (widget.oldTrackedDay == null) {
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
     } else {
@@ -118,7 +120,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
     Widget content = Column(
       children: [
         const CustomToolTipTitle(
-          title: 'Rating',
+          title: 'Rate your activity',
           content: 'Rate your daily activities',
         ),
         // Generate sliders dynamically
@@ -136,6 +138,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           );
         }),
 
+        const SizedBox(height: 32),
         ListTile(
           subtitle: widget.habit.newHabit == null ||
                   widget.habit.newHabit!.trim().isEmpty
@@ -144,7 +147,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
                   widget.habit.newHabit!,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(),
                 ),
-          title: Text('Weekly focus',
+          title: Text('Did you reach your weekly focus?',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _goal,
@@ -157,7 +160,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         ),
         // Extra checkbox field
         ListTile(
-          title: Text('Daily goal',
+          title: Text('Did you reach your daily goal?',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
             value: _extra,
@@ -198,7 +201,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           onSaved: (value) {
             _enteredRecap = value;
           },
-          toolTipTitle: 'Recap',
+          toolTipTitle: 'How did it go?',
           tooltipContent: 'Provide a recap of your activity',
         ),
 
@@ -209,20 +212,32 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           onSaved: (value) {
             _enteredImprovement = value;
           },
-          toolTipTitle: 'Improvements',
+          toolTipTitle: 'How can you improve?',
           tooltipContent: 'Suggest improvements for tomorrow',
         ),
 
         const SizedBox(height: 32),
 
         // Submit Button
-        CustomElevatedButton(submit: submit),
+        CustomElevatedButton(submit: () {
+          _isSubmitted = true;
+          submit();
+          Navigator.of(context).pop();
+        }),
       ],
     );
 
     return CustomModalBottomSheet(
       title: 'Activity Evaluation',
-      content: content,
+      content: PopScope(
+          onPopInvokedWithResult: (dipop, result) {
+            if (!_isSubmitted &&
+                (widget.oldTrackedDay == null ||
+                    widget.oldTrackedDay!.done == Validated.notYet)) {
+              submit(validated: Validated.notYet);
+            }
+          },
+          child: content),
       formKey: formKey,
     );
   }

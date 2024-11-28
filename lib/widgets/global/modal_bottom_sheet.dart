@@ -4,12 +4,14 @@ class CustomModalBottomSheet extends StatelessWidget {
   const CustomModalBottomSheet(
       {required this.title,
       required this.content,
-      required this.formKey,
+      this.formKey,
+      this.function,
       super.key});
 
   final String title;
   final Widget content;
-  final GlobalKey<FormState> formKey;
+  final GlobalKey<FormState>? formKey;
+  final Function()? function;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +42,7 @@ class CustomModalBottomSheet extends StatelessWidget {
                         iconSize: 30,
                         onPressed: () {
                           Navigator.of(context).pop();
+                          function;
                         },
                         icon: const Icon(
                           Icons.close_rounded,

@@ -4,7 +4,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 
-String displayedScore(double? score, {bool elloge = false}) {
+String getDisplayedScore(double? score, {bool elloge = false}) {
   String displayedScore = '-';
 
   if (score == null || score.isNaN) {
@@ -32,6 +32,28 @@ String displayedScore(double? score, {bool elloge = false}) {
   return displayedScore;
 }
 
+Color getScoreCardColor(WidgetRef ref, bool isFull, TimeOfDay? time,
+    DateTime selectedDay, double? score) {
+  // Compute the last habit time
+  DateTime selectedDayNight = DateTime(
+      today.year, today.month, today.day, time?.hour ?? 0, time?.minute ?? 0);
+
+  bool habitListIsEmpty =
+      ref.watch(habitProvider.notifier).getTodayHabit(selectedDay).isEmpty;
+  bool todayAndNotEnded = DateTime.now().isBefore(selectedDayNight) &&
+      selectedDay == today &&
+      !isFull;
+
+  if (habitListIsEmpty ||
+      selectedDay.isAfter(today) ||
+      todayAndNotEnded ||
+      score == null) {
+    return const Color.fromARGB(255, 51, 51, 51);
+  } else {
+    return RatingUtility.getRatingColor(score / 2).withOpacity(0.5);
+  }
+}
+
 class ScoreCard extends ConsumerWidget {
   ScoreCard(this._selectedDay, this._score,
       {super.key, this.weekly = false, this.full = false, this.time});
@@ -45,9 +67,6 @@ class ScoreCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    DateTime selectedDayNight = DateTime(_selectedDay.year, _selectedDay.month,
-        _selectedDay.day, time?.hour ?? 20, time?.minute ?? 0);
-
     return Expanded(
       child: Center(
         child: Container(
@@ -55,21 +74,11 @@ class ScoreCard extends ConsumerWidget {
           width: 88,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: _selectedDay.isAfter(_today) || (!full && now.isBefore(selectedDayNight)) ||
-                      (!weekly &&
-                          ref
-                              .watch(habitProvider.notifier)
-                              .getTodayHabit(_selectedDay)
-                              .isEmpty)
-                  ? const Color.fromARGB(255, 51, 51, 51)
-                  : _score == null
-                      ? const Color.fromARGB(255, 51, 51, 51)
-                      : RatingUtility.getRatingColor(_score / 2)
-                          .withOpacity(0.5)),
+              color: getScoreCardColor(ref, full, time, _selectedDay, _score)),
           alignment: Alignment.center,
           child: Text(
             !_selectedDay.isAfter(_today)
-                ? displayedScore(_score, elloge: true)
+                ? getDisplayedScore(_score, elloge: true)
                 : '-',
             style: Theme.of(context)
                 .textTheme
@@ -81,4 +90,3 @@ class ScoreCard extends ConsumerWidget {
     );
   }
 }
-

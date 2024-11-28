@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/reordered_day.dart';
+import 'package:tracker_v1/statistic_screen/statistics_data.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 import 'package:tracker_v1/providers/user_stats_provider.dart';
 import 'package:tracker_v1/providers/userdata_provider.dart';
@@ -124,6 +125,7 @@ class DataManager {
         ref.read(recapDayProvider.notifier).loadData(),
         ref.read(ReorderedDayProvider.notifier).loadData(),
         ref.read(userStatsProvider.notifier).loadUserStats(),
+        ref.read(statNotiferProvider.notifier).loadData(),  
       ]);
 
       ref.read(allUserStatsProvider);

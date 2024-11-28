@@ -2,12 +2,26 @@ class UserStats {
   UserStats({
     required this.userId,
     required this.dateSync,
-    this.streaks = 0, // Default total gems is 0
+    this.streaks = 0,
+    this.scoreWeek = 0,
+    this.scoreMonth = 0,
+    this.scoreAllTime = 0,
+    this.completion = 0.0,
+    this.evaluation = 0.0, // Changed to double for numeric evaluation
+    this.validated = 0,    // Changed to int
+    this.message = '',
   });
 
   String userId;
   DateTime dateSync;
-  int streaks; // Total gems earned by the user
+  int streaks;
+  int scoreWeek;
+  int scoreMonth;
+  int scoreAllTime;
+  double completion;
+  double evaluation;
+  int validated;
+  String message;
 
   // Convert UserStats to JSON for Firestore
   Map<String, dynamic> toJson() {
@@ -15,6 +29,13 @@ class UserStats {
       'userId': userId,
       'dateSync': dateSync.toIso8601String(),
       'streaks': streaks,
+      'scoreWeek': scoreWeek,
+      'scoreMonth': scoreMonth,
+      'scoreAllTime': scoreAllTime,
+      'completion': completion,
+      'evaluation': evaluation,
+      'validated': validated,
+      'message': message,
     };
   }
 
@@ -23,20 +44,40 @@ class UserStats {
     return UserStats(
       userId: json['userId'],
       dateSync: DateTime.parse(json['dateSync']),
-      streaks: json['streaks'] as int,
+      streaks: json['streaks'] as int? ?? 0,
+      scoreWeek: json['scoreWeek'] as int? ?? 0,
+      scoreMonth: json['scoreMonth'] as int? ?? 0,
+      scoreAllTime: json['scoreAllTime'] as int? ?? 0,
+      completion: (json['completion'] as num?)?.toDouble() ?? 0.0,
+      evaluation: (json['evaluation'] as num?)?.toDouble() ?? 0.0, // Parsing as double
+      validated: json['validated'] as int? ?? 0, // Parsing as int
+      message: json['message'] as String? ?? '',
     );
   }
 
   UserStats copyWith({
     String? userId,
     int? streaks,
-    DateTime? dateSync
-    
+    DateTime? dateSync,
+    int? scoreWeek,
+    int? scoreMonth,
+    int? scoreAllTime,
+    double? completion,
+    double? evaluation,
+    int? validated,
+    String? message,
   }) {
     return UserStats(
       userId: userId ?? this.userId,
       streaks: streaks ?? this.streaks,
       dateSync: dateSync ?? this.dateSync,
+      scoreWeek: scoreWeek ?? this.scoreWeek,
+      scoreMonth: scoreMonth ?? this.scoreMonth,
+      scoreAllTime: scoreAllTime ?? this.scoreAllTime,
+      completion: completion ?? this.completion,
+      evaluation: evaluation ?? this.evaluation,
+      validated: validated ?? this.validated,
+      message: message ?? this.message,
     );
   }
 }

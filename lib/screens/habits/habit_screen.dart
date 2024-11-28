@@ -28,9 +28,10 @@ class HabitScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Habit habit = ref
+    Habit? habit = ref
         .watch(habitProvider)
         .firstWhere((h) => h.habitId == initialHabit.habitId);
+
 
     void resetData() {
       ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
@@ -83,6 +84,7 @@ class HabitScreen extends ConsumerWidget {
                 Icon(
                   habit.icon,
                   size: 50,
+                  color: habit.color,
                 ),
                 const SizedBox(height: 12),
                 Text(currentHabit.name,
@@ -277,7 +279,7 @@ class HabitScreen extends ConsumerWidget {
                       Navigator.of(context).pop();
                     }, 'Yes I want to reset data for this habit');
                   },
-                  text: 'Reset data',
+                  text: 'Reset all data',
                 ),
                 const SizedBox(
                   height: 8,
@@ -286,10 +288,10 @@ class HabitScreen extends ConsumerWidget {
                   submit: () {
                     showConfirmationDialog(context, ref, () {
                       Navigator.of(context).pop();
-                      Future.microtask(() {
+                      Navigator.of(context).pop();
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
                         ref.read(habitProvider.notifier).deleteHabit(habit);
                       });
-                      Navigator.of(context).pop();
                     }, 'Yes I want to delete this habit and its data');
                   },
                   text: 'Delete habit',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
-import 'package:tracker_v1/widgets/daily/score.dart';
+import 'package:tracker_v1/widgets/daily/scoreCard.dart';
 import 'package:uuid/uuid.dart';
 
 const idGenerator = Uuid();
@@ -20,6 +20,7 @@ class TrackedDay {
     this.improvements,
     this.additionalMetrics,
     this.synced = false,
+    this.dateOnValidation,
   }) : trackedDayId = trackedDayId ?? idGenerator.v4();
 
   String trackedDayId;
@@ -32,6 +33,7 @@ class TrackedDay {
   String? improvements;
   Map<String, dynamic>? additionalMetrics;
   bool synced;
+  DateTime? dateOnValidation;
 
   double? totalRating() {
     if (notation == null) return null;
@@ -46,6 +48,14 @@ class TrackedDay {
     double? rating = totalRating();
 
     switch (done) {
+      case Validated.no:
+        return StatusAppearance(
+            backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+            elementsColor: Colors.white.withOpacity(0.45),
+            lineThroughCond: true,
+            icon: Icon(Icons.close,
+                size: 30, weight: 200, color: Colors.white.withOpacity(0.45)));
+
       case Validated.notYet:
         return StatusAppearance(
             backgroundColor: const Color.fromARGB(255, 51, 51, 51),
@@ -71,9 +81,10 @@ class TrackedDay {
             lineThroughCond: true,
             elementsColor: Colors.white.withOpacity(0.45),
             icon: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 30), // Set minimum width
+              constraints:
+                  const BoxConstraints(minWidth: 30), // Set minimum width
               child: Text(
-                displayedScore(totalRating()),
+                getDisplayedScore(totalRating()),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: Colors.white.withOpacity(0.55),

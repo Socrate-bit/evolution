@@ -14,18 +14,25 @@ import 'package:tracker_v1/widgets/recaps/custom_tool_tip_title.dart';
 
 class DailyRecapScreen extends ConsumerStatefulWidget {
   const DailyRecapScreen(this.date, this.habit,
-      {super.key, this.oldDailyRecap, this.oldTrackedDay});
+      {super.key,
+      this.oldDailyRecap,
+      this.oldTrackedDay,
+      required this.validated});
 
   final DateTime date;
   final Habit habit;
   final TrackedDay? oldTrackedDay;
   final RecapDay? oldDailyRecap;
+  final Validated validated;
+
   @override
   ConsumerState<DailyRecapScreen> createState() => _HabitRecapScreenState();
 }
 
 class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
   final formKey = GlobalKey<FormState>();
+  bool _isSubmitted = false;
+
   List<String>? _additionalMetrics;
   Map<String, dynamic>? _additionalInputs;
 
@@ -41,36 +48,42 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
 
   // List of slider metadata (titles and tooltip contents)
   final sliderData = [
-    {'title': 'Well-being', 'tooltip': 'Rate your well-being'},
-    {'title': 'Sleep', 'tooltip': 'Rate your sleep quality'},
-    {'title': 'Energy', 'tooltip': 'Rate your energy level'},
-    {'title': 'Motivation', 'tooltip': 'Rate your motivation'},
-    {'title': 'Stress', 'tooltip': 'Rate your stress level'},
-    {'title': 'Focus & Clarity', 'tooltip': 'Rate your focus'},
-    {'title': 'Mental performance', 'tooltip': 'Rate your mental power'},
-    {'title': 'Frustrations', 'tooltip': 'Rate your frustrations'},
-    {'title': 'Satisfaction', 'tooltip': 'Rate your satisfaction'},
-    {'title': 'Self-Esteem', 'tooltip': 'Rate your self-esteem'},
+    {'title': 'Did you feel good?', 'tooltip': 'Rate your well-being'},
+     {'title': 'Did you sleep well?', 'tooltip': 'Rate your energy level'},
+      {'title': 'Did you have energy?', 'tooltip': 'Rate your energy level'},
+
+    {'title': 'Were you motivated?', 'tooltip': 'Rate your motivation'},
+
+     {'title': 'Were you stressed?', 'tooltip': 'Rate your stress level'},
+
+      {'title': 'Were you focused?', 'tooltip': 'Rate your focus'},
+
+       {'title': 'Was your mental performance good?', 'tooltip': 'Rate your mental power'},
+
+        {'title': 'Were you frustrated?', 'tooltip': 'Rate your frustrations'},
+
+      {'title': 'Were you satisfied?', 'tooltip': 'Rate your satisfaction'},
+
+     {'title': 'Did you have good self-esteem?', 'tooltip': 'Rate your self-esteem'},
     {
-      'title': 'Looking forward to wake-up tomorrow',
+      'title': 'Do you look forward to wake-up tomorrow?',
       'tooltip': 'Rate your eagerness to wake up tomorrow'
     },
   ];
 
   // List of BigTextField metadata (titles and tooltips)
   final textFieldData1 = [
-    {'title': 'Recap', 'tooltip': 'Provide a summary of your day'},
-    {'title': 'Improvements', 'tooltip': 'Provide suggestions for improvement'},
+    {'title': 'How was your day?', 'tooltip': 'Provide a summary of your day'},
   ];
 
   final textFieldData2 = [
     {
-      'title': 'What am I grateful for?',
+      'title': 'What is the one thing you are grateful for?',
       'tooltip': 'Write what you\'re grateful for'
     },
-    {'title': 'What am I proud of?', 'tooltip': 'Write what you\'re proud of'},
+    {'title': 'What is the one thing you are proud of?', 'tooltip': 'Write what you\'re proud of'},
     {
-      'title': 'Who did I help?',
+      'title': 'Who did you help today?',
       'tooltip': 'Write what good actions you\'ve done'
     },
   ];
@@ -110,7 +123,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     }
   }
 
-  void _submit() {
+  void _submit({Validated? validated}) {
     if (!formKey.currentState!.validate()) {
       return;
     }
@@ -141,16 +154,16 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         newHabit: _newHabit,
         additionalMetrics: _additionalInputs);
 
-    Navigator.of(context).pop();
+    TrackedDay trackedDay = TrackedDay(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      habitId: widget.habit.habitId,
+      date: widget.oldTrackedDay?.date ?? widget.date,
+      done: validated ?? widget.validated,
+      dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
+    );
 
     if (widget.oldDailyRecap == null) {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
-      TrackedDay trackedDay = TrackedDay(
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        habitId: widget.habit.habitId,
-        date: widget.date,
-        done: Validated.yes,
-      );
 
       ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
     } else {
@@ -177,25 +190,6 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         );
       }),
 
-      ListTile(
-        subtitle: widget.habit.newHabit == null ||
-                widget.habit.newHabit!.trim().isEmpty
-            ? null
-            : Text(
-                widget.habit.newHabit!,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(),
-              ),
-        title: Text('Weekly focus',
-            style: Theme.of(context).textTheme.titleSmall!),
-        trailing: Checkbox(
-          value: _newHabit,
-          onChanged: (value) {
-            setState(() {
-              _newHabit = value!;
-            });
-          },
-        ),
-      ),
 
       if (_additionalMetrics != null && _additionalMetrics!.isNotEmpty)
         ..._additionalMetrics!.map((item) {
@@ -219,9 +213,9 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
                     ))),
           );
         }),
-      const SizedBox(height: 64),
+      const SizedBox(height: 16),
       const CustomToolTipTitle(
-          title: 'Emotional checking', content: 'Emotional checking'),
+          title: 'How do you feel?', content: 'Emotional checking'),
       // Generate sliders dynamically
       ...sliderData.asMap().entries.map((entry) {
         int index = entry.key;
@@ -244,7 +238,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         onSaved: (value) {
           textFieldValues['Emotions'] = value;
         },
-        toolTipTitle: 'Emotions',
+        toolTipTitle: 'Describe what you feel',
         tooltipContent: 'Recap your emotions',
         maxLine: 2,
       ),
@@ -265,12 +259,24 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       const SizedBox(height: 64),
 
       // Submit Button
-      CustomElevatedButton(
-        submit: _submit,
-      ),
+      CustomElevatedButton(submit: () {
+        _isSubmitted = true;
+        _submit();
+        Navigator.of(context).pop();
+      }),
     ]);
 
     return CustomModalBottomSheet(
-        title: 'Daily Evaluation', content: content, formKey: formKey);
+        title: 'Journaling & Emotions',
+        content: PopScope(
+            onPopInvokedWithResult: (dipop, result) {
+              if (!_isSubmitted &&
+                  (widget.oldTrackedDay == null ||
+                      widget.oldTrackedDay!.done == Validated.notYet)) {
+                _submit(validated: Validated.notYet);
+              }
+            },
+            child: content),
+        formKey: formKey);
   }
 }

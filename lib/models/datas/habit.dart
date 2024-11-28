@@ -5,6 +5,13 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 const idGenerator = Uuid();
 
 enum HabitType { simple, recap, unique, recapDay }
+const Map<HabitType, String> habitTypeDescriptions = {
+  HabitType.simple: 'Simple habit',
+  HabitType.recap: 'Activity evaluation',
+  HabitType.unique: 'Unique task',
+  HabitType.recapDay: 'Journaling & Emotions',
+};
+
 
 enum Ponderation { negligible, additional, valuable, significant, critical }
 

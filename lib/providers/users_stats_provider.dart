@@ -18,8 +18,6 @@ final allUserStatsProvider = FutureProvider<(List<UserStats>, List<UserData>)>((
     return UserData.fromJson(data);
   }).toList();
 
-  // Sort the users by total gems
-  userStats.sort((a, b) => b.streaks.compareTo(a.streaks));
 
   return (userStats, userDatas);
 });

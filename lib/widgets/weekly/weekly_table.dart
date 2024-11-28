@@ -8,12 +8,12 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
-import 'package:tracker_v1/models/utilities/Scores/score_computing.dart';
+import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
 import 'package:tracker_v1/models/utilities/is_in_the_week.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
-import 'package:tracker_v1/widgets/daily/score.dart';
+import 'package:tracker_v1/widgets/daily/scoreCard.dart';
 import 'package:tracker_v1/widgets/weekly/day_container.dart';
 
 class WeeklyTable extends ConsumerWidget {
@@ -94,7 +94,9 @@ class WeeklyTable extends ConsumerWidget {
           final containerInit = containerController.initController(ref);
           return Center(
             child: DayContainer(
-                fillColor: containerInit[0],
+                color: containerInit[0].$1,
+                displayedScore: containerInit[0].$3,
+                element: containerInit[0].$2,
                 onLongPress: containerInit[1].onLongPress is Widget
                     ? () {
                         showModalBottomSheet(
@@ -119,14 +121,15 @@ class WeeklyTable extends ConsumerWidget {
     );
   }
 
-  TableRow buildDailyRow(ref, double? ratioValidated) {
-    List<(double?, bool, Color, DateTime)> scores = offsetWeekDays.map((d) {
-      double? score = notationComputing([d], ref);
-      double? ratio = ratioComputing([d], ref);
-      Color color = score == null
-          ? const Color.fromARGB(255, 37, 37, 38)
-          : RatingUtility.getRatingColor(score / 2).withOpacity(0.5);
-      return (score, ratio == 100, color, d);
+  TableRow _buildDailyRow(WidgetRef ref, double? ratioValidated) {
+    List<(double?, bool, Color, DateTime)> scores =
+        offsetWeekDays.map((DateTime date) {
+      double? score = evalutationComputing([date], ref);
+      double? ratio = completionComputing([date], ref);
+      TimeOfDay? time =
+          ref.read(habitProvider.notifier).getLastTimeOfTheDay(date);
+      Color color = getScoreCardColor(ref, ratio == 100, time, date, score);
+      return (score, ratio == 100, color, date);
     }).toList();
     return TableRow(
       decoration: BoxDecoration(border: Border.all(color: Colors.black)),
@@ -134,7 +137,7 @@ class WeeklyTable extends ConsumerWidget {
         TableCell(
             child: Container(
           alignment: Alignment.center,
-          width: 200,
+          width: 220,
           child: Text(
             ratioValidated == null ? '-' : '${ratioValidated.toInt()}%',
             style: const TextStyle(
@@ -143,12 +146,12 @@ class WeeklyTable extends ConsumerWidget {
         )),
         ...scores.map((entry) {
           return Container(
-            color: !entry.$4.isAfter(today) 
+            color: !entry.$4.isAfter(today)
                 ? entry.$3
                 : const Color.fromARGB(255, 37, 37, 38),
             alignment: Alignment.center,
             child: Text(
-              !entry.$4.isAfter(today) ? displayedScore(entry.$1) : '-',
+              !entry.$4.isAfter(today) ? getDisplayedScore(entry.$1) : '-',
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           );
@@ -174,7 +177,8 @@ class WeeklyTable extends ConsumerWidget {
     final trackedDays = ref.watch(trackedDayProvider);
     final recapList = ref.watch(recapDayProvider);
 
-    double? ratioValidated = ratioComputing(offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
+    double? ratioValidated = completionComputing(
+        offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -192,7 +196,7 @@ class WeeklyTable extends ConsumerWidget {
                     topRight: Radius.circular(20))),
             children: [
               _buildTableHeader(),
-              if (activeHabits.isNotEmpty) buildDailyRow(ref, ratioValidated),
+              if (activeHabits.isNotEmpty) _buildDailyRow(ref, ratioValidated),
               if (activeHabits.isNotEmpty)
                 ...activeHabits.map((habit) => _buildHabitRow(
                     habit, context, ref, trackedDays, recapList)),

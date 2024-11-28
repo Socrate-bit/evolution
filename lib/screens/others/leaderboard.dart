@@ -6,36 +6,81 @@ import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/models/datas/user_stats.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/users_stats_provider.dart';
+import 'package:tracker_v1/theme.dart';
+import 'package:tracker_v1/widgets/global/modal_bottom_sheet.dart';
+import 'package:tracker_v1/widgets/leaderboard/people_page.dart';
 
-class LeaderboardScreen extends ConsumerWidget {
+class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
+}
+
+class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
+    with TickerProviderStateMixin {
+  static const List<String> _pageNames1 = ['Weekly', 'Monthly', 'All Time'];
+  static const List<String> _pageNames2 = ['All', 'Friends'];
+  late TabController tabController;
+  int _selectedPage1 = 0;
+
+  @override
+  void initState() {
+    tabController = TabController(length: 3, vsync: this);
+    tabController.addListener(() {
+      setState(() {
+        _selectedPage1 = tabController.index;
+      });
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.invalidate(allUserStatsProvider);
     AsyncValue usersStat = ref.read(allUserStatsProvider);
 
     return usersStat.when(
-        data: (data) => Container(
-              color: Theme.of(context).colorScheme.surface,
-              child: SingleChildScrollView(
-                  child: Container(
-                alignment: Alignment.topCenter,
-                height: MediaQuery.of(context).size.height * 1.25,
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 120,
-                    ),
-                    LeaderboardPodium(data),
-                    const SizedBox(
-                      height: 32,
-                    ),
-                    Expanded(child: LeaderboardList(data.$1, data.$2))
-                  ],
-                ),
-              )),
-            ),
+        data: (data) {
+          // Sort users by score relative to the time period
+          List<UserStats> userStats = data.$1;
+          List<UserData> usersData = data.$2;
+          if (_selectedPage1 == 0) {
+            userStats.sort((a, b) => b.scoreWeek.compareTo(a.scoreWeek));
+          } else if (_selectedPage1 == 1) {
+            userStats.sort((a, b) => b.scoreMonth.compareTo(a.scoreMonth));
+          } else {
+            userStats.sort((a, b) => b.scoreAllTime.compareTo(a.scoreAllTime));
+          }
+
+          return Container(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            color: Theme.of(context).colorScheme.surface,
+            child: SingleChildScrollView(
+                child: Container(
+              alignment: Alignment.topCenter,
+              height: MediaQuery.of(context).size.height * 1.25,
+              child: Column(
+                children: [
+                  TabBar(
+                    tabs: <Widget>[..._pageNames1.map((e) => Text(e))],
+                    controller: tabController,
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+                  LeaderboardPodium(userStats, usersData, _selectedPage1),
+                  const SizedBox(
+                    height: 32,
+                  ),
+                  Expanded(
+                      child:
+                          LeaderboardList(userStats, usersData, _selectedPage1))
+                ],
+              ),
+            )),
+          );
+        },
         error: (error, stackTrace) => const Center(
               child: CircularProgressIndicator(),
             ),
@@ -45,9 +90,22 @@ class LeaderboardScreen extends ConsumerWidget {
   }
 }
 
+String getPeopleScore(selectedPage, UserStats userStats) {
+  if (selectedPage == 0) {
+    return userStats.scoreWeek.toString();
+  } else if (selectedPage == 1) {
+    return userStats.scoreMonth.toString();
+  } else {
+    return userStats.scoreAllTime.toString();
+  }
+}
+
 class LeaderboardPodium extends StatelessWidget {
-  const LeaderboardPodium(this.data, {super.key});
-  final (List<UserStats>, List<UserData>) data;
+  const LeaderboardPodium(this.usersStats, this.usersData, this._selectedPage,
+      {super.key});
+  final List<UserStats> usersStats;
+  final List<UserData> usersData;
+  final int _selectedPage;
 
   // Colors for the podium
   final List<Color> podiumColor = const [
@@ -61,32 +119,29 @@ class LeaderboardPodium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<UserStats> usersStats = data.$1;
-    List<UserData> usersData = data.$2;
-
     // Get the top 3 user stats and data
     if (usersStats.length < 4) {
       usersStats.addAll(
           List.generate(4 - usersStats.length, (index) => usersStats[0]));
     }
     final UserStats? firstStats = usersStats.isNotEmpty ? usersStats[0] : null;
-    final UserStats? secondStats =
+    final UserStats secondStats =
         usersStats.length > 1 ? usersStats[1] : usersStats[0];
-    final UserStats? thirdStats =
+    final UserStats thirdStats =
         usersStats.length > 2 ? usersStats[2] : usersStats[0];
     final UserData? firstData =
         usersData.firstWhereOrNull((data) => data.userId == firstStats?.userId);
-    final UserData? secondData = usersData
-        .firstWhereOrNull((data) => data.userId == secondStats?.userId);
+    final UserData? secondData =
+        usersData.firstWhereOrNull((data) => data.userId == secondStats.userId);
     final UserData? thirdData =
-        usersData.firstWhereOrNull((data) => data.userId == thirdStats?.userId);
+        usersData.firstWhereOrNull((data) => data.userId == thirdStats.userId);
 
     double ratioFirstOther = 0.75;
     double firstContainerHeight = 160;
     double firstAvatarRadius = 100;
     double otherContainerHeight = firstContainerHeight * ratioFirstOther;
     double otherAvatarRadius = firstAvatarRadius * ratioFirstOther;
-    double shiftCircle = 0.25;
+    double shiftCircle = 0.325;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -99,6 +154,7 @@ class LeaderboardPodium extends StatelessWidget {
           Expanded(
             flex: 1,
             child: PodiumColumn(
+              selectedPage: _selectedPage,
               containerHeight: otherContainerHeight,
               shiftCircle: shiftCircle,
               userData: secondData!,
@@ -112,6 +168,7 @@ class LeaderboardPodium extends StatelessWidget {
           Expanded(
             flex: 1,
             child: PodiumColumn(
+              selectedPage: _selectedPage,
               containerHeight: firstContainerHeight,
               shiftCircle: shiftCircle,
               userData: firstData!,
@@ -125,10 +182,11 @@ class LeaderboardPodium extends StatelessWidget {
           Expanded(
             flex: 1,
             child: PodiumColumn(
+              selectedPage: _selectedPage,
               containerHeight: otherContainerHeight - 24, // Slightly smaller
               shiftCircle: shiftCircle,
               userData: thirdData!,
-              userStats: thirdStats!,
+              userStats: thirdStats,
               avatarRadius: otherAvatarRadius,
               podiumColor: [podiumColor[0], podiumColor[1]],
               number: 3,
@@ -148,6 +206,7 @@ class PodiumColumn extends StatelessWidget {
   final double avatarRadius;
   final List<Color> podiumColor;
   final int number;
+  final int selectedPage;
   final Radius radius = const Radius.circular(20);
 
   const PodiumColumn(
@@ -158,94 +217,199 @@ class PodiumColumn extends StatelessWidget {
       required this.userStats,
       required this.avatarRadius,
       required this.podiumColor,
-      required this.number});
+      required this.number,
+      required this.selectedPage});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: containerHeight,
-      decoration: BoxDecoration(
-        color: number == 1
-            ? Theme.of(context).colorScheme.surfaceBright
-            : Theme.of(context).colorScheme.surfaceBright.withOpacity(0.5),
-        borderRadius: BorderRadius.only(
-          topRight: number != 2 ? radius : Radius.zero,
-          bottomLeft: number == 2 ? radius : Radius.zero,
-          bottomRight: number == 3 ? radius : Radius.zero,
-          topLeft: number != 3 ? radius : Radius.zero,
-        ),
-      ),
+    return SizedBox(
+      height:
+          containerHeight + (avatarRadius - (avatarRadius * shiftCircle) + 40),
       child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 32),
-              Text(userData.name,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      fontSize: avatarRadius / 6, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(
-                userStats.streaks.toString(),
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: podiumColor[1],
-                      fontSize: avatarRadius / 5,
-                    ),
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: InkWell(
+                  onTap: () {
+                    goToPeoplePage(context, userStats, userData, number);
+                  },
+                  child: Container(
+                      height: containerHeight,
+                      decoration: BoxDecoration(
+                        color: number == 1
+                            ? Theme.of(context).colorScheme.surfaceBright
+                            : Theme.of(context)
+                                .colorScheme
+                                .surfaceBright
+                                .withOpacity(0.5),
+                        borderRadius: BorderRadius.only(
+                          topRight: number != 2 ? radius : Radius.zero,
+                          bottomLeft: number == 2 ? radius : Radius.zero,
+                          bottomRight: number == 3 ? radius : Radius.zero,
+                          topLeft: number != 3 ? radius : Radius.zero,
+                        ),
+                      ))),
+            ),
+            if (number == 1)
+              Positioned(
+                bottom:
+                    (containerHeight) - (avatarRadius) * (shiftCircle - 1) - 3,
+                child: Image.asset(
+                  'assets/crown.png',
+                  width: 40,
+                ),
               ),
+            Positioned(
+                bottom: (containerHeight) - (avatarRadius) * shiftCircle,
+                child: InkWell(
+                  onTap: () {
+                    goToPeoplePage(context, userStats, userData, number);
+                  },
+                  child: PodiumPictureAvatar(
+                    podiumColor[0],
+                    podiumColor[1],
+                    userData.profilPicture,
+                    avatarRadius,
+                    first: true,
+                  ),
+                )),
+            Positioned(
+                bottom: containerHeight -
+                    (avatarRadius * shiftCircle) -
+                    (avatarRadius / 9) +
+                    1,
+                child: Transform.rotate(
+                    angle: math.pi / 4, // Rotate by 45 degrees (π/4 radians)
+                    child: Container(
+                      width: avatarRadius / 4.5,
+                      height: avatarRadius / 4.5,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.circular(4),
+                          gradient: LinearGradient(
+                            colors: [podiumColor[0], podiumColor[1]],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )),
+                    ))),
+            Positioned(
+              bottom: containerHeight -
+                  (avatarRadius * shiftCircle) -
+                  (avatarRadius / 9) +
+                  1,
+              child: Text(
+                '$number',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
+                    .copyWith(fontSize: avatarRadius / 6),
+              ),
+            ),
+            Positioned(
+              bottom:
+                  number == 3 ? containerHeight * 0.1 : containerHeight * 0.2,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(userData.name,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontSize: avatarRadius / 6,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(
+                    getPeopleScore(selectedPage, userStats),
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          color: podiumColor[1],
+                          fontSize: avatarRadius / 5,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            if (userStats.message.isNotEmpty)
+              MessageBubble(
+                  avatarRadius + (number == 1 ? -8 : -5),
+                  (containerHeight) -
+                      (avatarRadius) * (shiftCircle - 1) -
+                      30 +
+                      (number == 1 ? -24 : 0),
+                  userStats,
+                  userData,
+                  number),
+          ]),
+    );
+  }
+}
+
+class MessageBubble extends StatelessWidget {
+  const MessageBubble(
+      this.left, this.bottom, this.userStats, this.userData, this.number,
+      {super.key});
+  final double left;
+  final double bottom;
+  final UserStats userStats;
+  final UserData userData;
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = Theme.of(context).colorScheme.surfaceBright.withOpacity(0.75);
+
+    return Positioned(
+        left: left,
+        bottom: bottom,
+        child: Container(
+          width: 60,
+          height: 60,
+          alignment: Alignment.center,
+          child: Stack(
+            alignment: Alignment.bottomLeft,
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: -3,
+                bottom: -6,
+                child: Container(
+                    height: 6,
+                    width: 6,
+                    decoration:
+                        BoxDecoration(shape: BoxShape.circle, color: color)),
+              ),
+              Positioned(
+                left: 4,
+                bottom: -3,
+                child: Container(
+                    height: 14,
+                    width: 14,
+                    decoration:
+                        BoxDecoration(shape: BoxShape.circle, color: color)),
+              ),
+              InkWell(
+                  onTap: () {
+                    goToPeoplePage(context, userStats, userData, number);
+                  },
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 60, minWidth: 30),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: color),
+                      child: Text(
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        userStats.message,
+                        style: TextStyle(fontSize: 11),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 3,
+                      ),
+                    ),
+                  )),
             ],
           ),
-          if (number == 1)
-            Positioned(
-              top: -(containerHeight + avatarRadius + 8) * shiftCircle - 40,
-              child: const Icon(
-                Icons.emoji_events,
-                size: 40,
-                color: Color.fromARGB(255, 252, 191, 44),
-              ),
-            ),
-          Positioned(
-            top: -(containerHeight + avatarRadius + 8) * shiftCircle,
-            child: PodiumPictureAvatar(
-              podiumColor[0],
-              podiumColor[1],
-              userData.profilPicture,
-              avatarRadius,
-              first: true,
-            ),
-          ),
-          Positioned(
-              top: -(containerHeight - avatarRadius * 2 + 8) * shiftCircle +
-                  avatarRadius / 4.5 / 2,
-              child: Transform.rotate(
-                  angle: math.pi / 4, // Rotate by 45 degrees (π/4 radians)
-                  child: Container(
-                    width: avatarRadius / 4.5,
-                    height: avatarRadius / 4.5,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(4),
-                        gradient: LinearGradient(
-                          colors: [podiumColor[0], podiumColor[1]],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )),
-                  ))),
-          Positioned(
-            top: -(containerHeight - avatarRadius * 2 + 8) * shiftCircle +
-                avatarRadius / 4.5 / 2,
-            child: Text(
-              '$number',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall!
-                  .copyWith(fontSize: avatarRadius / 6),
-            ),
-          )
-        ],
-      ),
-    );
+        ));
   }
 }
 
@@ -280,9 +444,11 @@ class PodiumPictureAvatar extends StatelessWidget {
 }
 
 class LeaderboardList extends StatelessWidget {
-  const LeaderboardList(this.usersStats, this.usersData, {super.key});
+  const LeaderboardList(this.usersStats, this.usersData, this.selectedPage,
+      {super.key});
   final List<UserStats> usersStats;
   final List<UserData> usersData;
+  final int selectedPage;
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +485,7 @@ class LeaderboardList extends StatelessWidget {
             currentUserData,
             usersStats.indexOf(currentUserStats) + 1,
             gradient: true,
+            selectedPage: selectedPage,
             currentUser: true,
           ),
           Container(
@@ -331,10 +498,15 @@ class LeaderboardList extends StatelessWidget {
               child: ListView.builder(
             itemCount: usersStats.length - 3,
             itemBuilder: (context, index) {
-              final UserStats userStats = usersStats[index + 2];
+              final UserStats userStats = usersStats[index + 3];
               final UserData userData = usersData
                   .firstWhereOrNull((item) => item.userId == userStats.userId);
-              return LeaderboardCard(userStats, userData, index + 4);
+              return LeaderboardCard(
+                userStats,
+                userData,
+                index + 4,
+                selectedPage: selectedPage,
+              );
             },
           )),
         ],
@@ -345,20 +517,29 @@ class LeaderboardList extends StatelessWidget {
 
 class LeaderboardCard extends StatelessWidget {
   const LeaderboardCard(this.userStats, this.userData, this.number,
-      {super.key, this.gradient = false, this.currentUser = false});
+      {super.key,
+      this.gradient = false,
+      this.currentUser = false,
+      required this.selectedPage});
 
   final UserStats userStats;
   final UserData userData;
   final bool gradient;
   final int number;
   final bool currentUser;
+  final int selectedPage;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      onTap: () {
+        goToPeoplePage(context, userStats, userData, number);
+      },
+      child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: gradient ? null : Theme.of(context).colorScheme.surface,
+          boxShadow: [basicShadow],
           gradient: gradient
               ? const LinearGradient(
                   colors: [Colors.purple, Color.fromARGB(255, 83, 13, 95)],
@@ -368,29 +549,45 @@ class LeaderboardCard extends StatelessWidget {
               : null,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: ListTile(
-          title: Text(currentUser ? 'You' : userData.name,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge!
-                  .copyWith(fontWeight: currentUser ? FontWeight.bold : null)),
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('#$number', style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(
-                width: 32,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ListTile(
+              title: Text(currentUser ? 'You' : userData.name,
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      fontWeight: currentUser ? FontWeight.bold : null)),
+              leading: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('#$number',
+                      style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(
+                    width: 32,
+                  ),
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(userData.profilPicture),
+                    radius: 20,
+                  ),
+                ],
               ),
-              CircleAvatar(
-                backgroundImage: NetworkImage(userData.profilPicture),
-                radius: 20,
+              trailing: Text(
+                getPeopleScore(selectedPage, userStats),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-            ],
-          ),
-          trailing: Text(
-            userStats.streaks.toString(),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ));
+            ),
+            if (userStats.message.isNotEmpty)
+              MessageBubble(180, 40, userStats, userData, number)
+          ],
+        ),
+      ),
+    );
   }
+}
+
+void goToPeoplePage(context, UserStats userStats, UserData userData, int rank) {
+  showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      builder: (ctx) => CustomModalBottomSheet(
+          title: 'Test', content: PeoplePage(userStats, userData, rank)));
 }

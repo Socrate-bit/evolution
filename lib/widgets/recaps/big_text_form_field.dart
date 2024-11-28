@@ -30,7 +30,7 @@ class BigTextFormField extends StatelessWidget {
           },
           initialValue: controlledValue,
           minLines: maxLine,
-          maxLines: maxLine,
+          maxLines: maxLine + 20,
           validator: (value) {
             return null;
           },

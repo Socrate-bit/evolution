@@ -13,12 +13,12 @@ class WeeklyScreen extends ConsumerStatefulWidget {
   ConsumerState<WeeklyScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<WeeklyScreen> {
+class _MainScreenState extends ConsumerState<WeeklyScreen>
+    with TickerProviderStateMixin {
+  late TabController tabController;
   static final _dateFormatter = DateFormat.Md();
   int weekIndex = 0;
-  int pageIndex = 0;
-  List<String> pageNames = ['Habits', 'Metrics', 'Emotions'];
- 
+  final List<String> _pageNames = ['Habits', 'Metrics', 'Emotions'];
 
   List<DateTime> get _getOffsetWeekDays {
     DateTime now = DateTime.now();
@@ -30,71 +30,64 @@ class _MainScreenState extends ConsumerState<WeeklyScreen> {
   }
 
   @override
+  void initState() {
+    tabController = TabController(length: 3, vsync: this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final List<DateTime> offsetWeekDays = _getOffsetWeekDays;
-    Widget content;
-    switch (pageIndex) {
-      case 0:
-        content = WeeklyTable(offsetWeekDays: offsetWeekDays);
-        break;
-      case 1:
-        content = AdditionalMetricsTable(offsetWeekDays: offsetWeekDays);
-      default:
-        content = EmotionTable(offsetWeekDays: offsetWeekDays);
-        break;
-    }
 
-    return Column(
-      children: [
-        WeekShifter(
-          dateFormatter: _dateFormatter,
-          offsetWeekDays: offsetWeekDays,
-          updateWeekIndex: (value) {
-            setState(() {
-              weekIndex += value;
-            });
-          },
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+    return Container(
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: Column(
+        children: [
+          WeekShifter(
+            dateFormatter: _dateFormatter,
+            offsetWeekDays: offsetWeekDays,
+            updateWeekIndex: (value) {
+              setState(() {
+                weekIndex += value;
+              });
+            },
+          ),
+          TabBar(
+            tabs: <Widget>[..._pageNames.map((e) => Text(e))],
+            controller: tabController,
+          ),
+          SizedBox(height: 32,),
+          Expanded(
             child: Column(
               children: [
-                ToggleButtons(
-                    constraints: const BoxConstraints(
-                      minHeight: 20, // Minimum height for the buttons
-                      minWidth: 64, // Minimum width for the buttons
+                Expanded(
+                  child: TabBarView(controller: tabController, children: [
+                    SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: WeeklyTable(offsetWeekDays: offsetWeekDays),
                     ),
-                    isSelected: List.generate(3, (index) => index == pageIndex),
-                    fillColor: Colors.grey.withOpacity(0.5),
-                    onPressed: (index) {
-                      setState(() {
-                        pageIndex = index;
-                      });
-                    },
-                    children: List.generate(3, (index) {
-                      return Container(
-                        width: 72,
-                        height: 20,
-                        alignment: Alignment.center,
-                        child: Text(
-                          pageNames[index],
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      );
-                    })),
-                content,
-                const SizedBox(
-                  height: 80,
+                    SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child:
+                          AdditionalMetricsTable(offsetWeekDays: offsetWeekDays),
+                    ),
+                    SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: EmotionTable(offsetWeekDays: offsetWeekDays),
+                    ),
+                  ]),
                 )
               ],
             ),
-          ),
-        )
-      ],
+          )
+        ],
+      ),
     );
   }
 }

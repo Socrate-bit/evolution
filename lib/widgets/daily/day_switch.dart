@@ -4,9 +4,9 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
 import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
-import 'package:tracker_v1/models/utilities/Scores/score_computing.dart';
+import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/widgets/daily/score.dart';
+import 'package:tracker_v1/widgets/daily/scoreCard.dart';
 
 class DaySwitch extends ConsumerStatefulWidget {
   final Function switchDay;
@@ -56,47 +56,36 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
   }
 
   Color getCircleColor(DateTime day, bool isFull, {TimeOfDay? time}) {
-    DateTime selectedDayNight = DateTime(today.year, today.month, today.day,
-        time?.hour ?? 20, time?.minute ?? 0);
+    // Compute the last habit time
+    DateTime selectedDayNight = DateTime(
+        today.year, today.month, today.day, time?.hour ?? 0, time?.minute ?? 0);
 
-    if (day.isAfter(_now) ||
-        (now.isBefore(selectedDayNight) &&
-            !isFull &&
-            day.isAtSameMomentAs(today)) ||
-        ref.watch(habitProvider.notifier).getTodayHabit(day).isEmpty) {
-      if (now.isBefore(selectedDayNight) && day.isAtSameMomentAs(today)) {
-        return Colors.white;
-      }
+    // Empty case or future case
+    if (ref.watch(habitProvider.notifier).getTodayHabit(day).isEmpty ||
+        day.isAfter(today)) {
       return _selectedDay == day
           ? const Color.fromARGB(255, 51, 51, 51)
           : Theme.of(context).colorScheme.surface;
-    } else {
-      return RatingUtility.getRatingColor(
-        notationComputing([day], ref)! / 2,
-      );
     }
+
+    // Today case or past case
+    if (DateTime.now().isBefore(selectedDayNight) && day == today && !isFull) {
+      return _selectedDay == day
+          ? const Color.fromARGB(255, 51, 51, 51)
+          : Theme.of(context).colorScheme.surface;
+    }
+    return RatingUtility.getRatingColor(
+      evalutationComputing([day], ref)! / 2,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    double? score = notationComputing([_selectedDay], ref);
-    double? ratio = ratioComputing([_selectedDay], ref);
+    double? score = evalutationComputing([_selectedDay], ref);
+    double? ratio = completionComputing([_selectedDay], ref);
     TimeOfDay? time;
 
-    if (_selectedDay == today) {
-      List<Habit> todayHabit = ref
-          .watch(habitProvider.notifier)
-          .getTodayHabit(_selectedDay)
-          .where((h) => h.timeOfTheDay != null)
-          .toList();
-      List<TimeOfDay?> timeOfDay = todayHabit
-          .map((h) => h.timeOfTheDay)
-          .toList()
-        ..sort((a, b) => compareTimeOfDay(a, b));
-      if (todayHabit.isNotEmpty) {
-        time = timeOfDay.last;
-      }
-    }
+    time = ref.watch(habitProvider.notifier).getLastTimeOfTheDay(today);
 
     return Container(
       alignment: Alignment.center,
@@ -127,7 +116,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
 
                     bool accessedPreviousScore = previousFull;
                     if (display) {
-                      isFull = ratioComputing([dayList[item]], ref) == 100;
+                      isFull = completionComputing([dayList[item]], ref) == 100;
                       previousFull = isFull;
                     }
 
@@ -149,9 +138,9 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                 DaysUtility
                                     .NumberToSign[dayList[item].weekday]!,
                                 style: TextStyle(
-                                    // fontWeight: _today == dayList[item]
-                                    //     ? FontWeight.bold
-                                    //     : null,
+                                    fontWeight: _today == dayList[item]
+                                        ? FontWeight.bold
+                                        : null,
                                     fontSize: 14,
                                     color: _today.compareTo(dayList[item]) >= 0
                                         ? Colors.white
@@ -170,7 +159,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                           width: 20,
                                           height: 4,
                                           color: RatingUtility.getRatingColor(
-                                            notationComputing(
+                                            evalutationComputing(
                                                     [dayList[item]], ref)! /
                                                 2,
                                           ),
@@ -182,7 +171,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                       decoration: BoxDecoration(
                                           color: display && isFull
                                               ? RatingUtility.getRatingColor(
-                                                  notationComputing(
+                                                  evalutationComputing(
                                                           [dayList[item]],
                                                           ref)! /
                                                       2,
@@ -200,14 +189,22 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
                                                 dayList[item], isFull,
                                                 time: time),
                                           )),
-                                      child: Text(dayList[item].day.toString(),
-                                          style: TextStyle(
+                                      child: Text(
+                                        dayList[item].day.toString(),
+                                        style: TextStyle(
+                                            fontWeight: _today == dayList[item]
+                                                ? FontWeight.bold
+                                                : null,
                                             color: isFull
                                                 ? Theme.of(context)
                                                     .colorScheme
                                                     .surface
-                                                : null,
-                                          ))),
+                                                : _today.compareTo(
+                                                            dayList[item]) >=
+                                                        0
+                                                    ? Colors.white
+                                                    : Colors.grey),
+                                      )),
                                 ])
                           ],
                         ),
@@ -222,7 +219,7 @@ class _DaySwitchState extends ConsumerState<DaySwitch> {
             _selectedDay,
             score,
             full: ratio == 100,
-            time: time,
+            time: _selectedDay == today ? time : null,
           )
         ],
       ),

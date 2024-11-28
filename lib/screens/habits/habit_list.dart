@@ -4,14 +4,14 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/widgets/global/habits_reorderable_list.dart';
 
-class HabitList extends ConsumerStatefulWidget {
-  const HabitList({super.key});
+class AllHabitsPage extends ConsumerStatefulWidget {
+  const AllHabitsPage({super.key});
 
   @override
-  ConsumerState<HabitList> createState() => _MyWidgetState();
+  ConsumerState<AllHabitsPage> createState() => _MyWidgetState();
 }
 
-class _MyWidgetState extends ConsumerState<HabitList> {
+class _MyWidgetState extends ConsumerState<AllHabitsPage> {
   @override
   Widget build(BuildContext context) {
     final habitsList = ref
@@ -21,7 +21,7 @@ class _MyWidgetState extends ConsumerState<HabitList> {
     Widget content;
 
     if (habitsList.isNotEmpty) {
-      content = HabitsReorderableList(habitsList: habitsList);
+      content = HabitList(displayedHabitList: habitsList);
     } else {
       content = const Align(child: Text('No habits yet, create one!'));
     }

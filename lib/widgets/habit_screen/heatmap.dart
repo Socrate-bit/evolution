@@ -26,7 +26,8 @@ class CustomHeatMap extends ConsumerWidget {
 
     while (currentDate.isBefore(endOfWeek) ||
         currentDate.isAtSameMomentAs(endOfWeek)) {
-      dateList.add(DateTime(currentDate.year, currentDate.month, currentDate.day));
+      dateList
+          .add(DateTime(currentDate.year, currentDate.month, currentDate.day));
       currentDate = currentDate.add(const Duration(days: 1));
     }
 
@@ -37,7 +38,8 @@ class CustomHeatMap extends ConsumerWidget {
     Map<DateTime, int> heatMapDataSet = {};
     List<TrackedDay> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
-      return trackedDay.habitId == habit.habitId;
+      return trackedDay.habitId == habit.habitId &&
+          trackedDay.done == Validated.yes;
     }).toList();
 
     List<DateTime> dates = generateDateList();

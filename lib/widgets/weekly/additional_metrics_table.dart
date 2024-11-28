@@ -32,7 +32,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
         TableCell(
             child: Container(
           alignment: Alignment.center,
-          width: 200,
+          width: 220,
         )),
         ...range.map(
           (item) => Column(
@@ -88,12 +88,13 @@ class AdditionalMetricsTable extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Icon(
                 entry.$1.icon,
                 color: entry.$1.color.withOpacity(0.25),
+                size: 20,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   entry.$2,
@@ -101,17 +102,21 @@ class AdditionalMetricsTable extends ConsumerWidget {
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
+              const SizedBox(width: 6)
             ],
           ),
         ),
         ...metricList.map((index) {
-          return SizedBox(
-            height: 43,
-            width: 43,
+          return Container(
+            color: index != false 
+                ? Theme.of(context).colorScheme.surfaceBright
+                : Theme.of(context).colorScheme.surface,
+            height: 30,
+            width: double.infinity,
             child: Center(
                 child: Text(
               index == true || index == ''
-                  ? 'N/A'
+                  ? '-'
                   : index == false
                       ? ''
                       : index,
@@ -138,13 +143,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
     final trackedDays = ref.watch(trackedDayProvider);
     final recapDays = ref.watch(recapDayProvider);
 
-    final List<(Habit, String)> additionalMetrics = [];
-    for (Habit habit in activeHabits) {
-      if (habit.additionalMetrics == null) continue;
-      for (String metric in habit.additionalMetrics!) {
-        additionalMetrics.add((habit, metric));
-      }
-    }
+    final List<(Habit, String)> additionalMetrics = ref.read(habitProvider.notifier).getAllAdditionalMetrics();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),

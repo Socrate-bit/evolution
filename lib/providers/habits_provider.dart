@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tracker_v1/models/utilities/compare_time_of_day.dart';
+import 'package:tracker_v1/models/utilities/container_controller.dart';
 import 'dart:convert';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
+import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
@@ -13,42 +15,52 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final Ref ref;
 
+  void updateStateOrder(int oldIndex, int newIndex) async {
+    // 1. Update the state
+    List<Habit> newState = orderChange(state, oldIndex, newIndex);
+
+    // 2. Update Firebase
+    try {
+      await _updateFirebaseOrder(newState);
+    } catch (e) {
+      print('Failed to update Firebase: $e');
+      return;
+    }
+    state = newState;
+  }
+
   static List<Habit> orderChange(
-      List<Habit> habitList, int oldIndex, int newIndex,
+      List<Habit> oldHabitList, int oldIndex, int newIndex,
       {update = false}) {
-
-    List<Habit> newState = List.from(habitList);
-
+    // 1. Change the item index
+    List<Habit> newHabitList = List.from(oldHabitList);
 
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
+    Habit removedItem = newHabitList.removeAt(oldIndex);
+    newHabitList.insert(newIndex, removedItem);
 
-    Habit removedItem = newState.removeAt(oldIndex);
-    newState.insert(newIndex, removedItem);
+    // 2. Sort in the right order (In case time of the day doesn't match the drag index)
+    newHabitList
+        .sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
-    newState.sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
-
-    newState.asMap().forEach((int index, Habit habit) {
+    // 3. Update all the index properties with new list order
+    newHabitList.asMap().forEach((int index, Habit habit) {
       habit.orderIndex = index;
     });
 
-    return newState;
+    return newHabitList;
   }
 
-  // Change the order of the habits in the state
-  void databaseOrderChange(int oldIndex, int newIndex) async {
+  Future<void> _updateFirebaseOrder(List<Habit> habits) async {
     WriteBatch batch = _firestore.batch();
-    List<Habit> newState = orderChange(state, oldIndex, newIndex);
-
-    newState.asMap().forEach((int index, Habit habit) {
+    habits.asMap().forEach((int index, Habit habit) {
       batch.update(
         _firestore.collection('habits').doc(habit.habitId),
         {'orderIndex': index},
       );
     });
-
-    state = newState;
     await batch.commit();
   }
 
@@ -270,6 +282,38 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     final bool isTracked =
         habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
     return isStarted && !isEnded && isTracked && !paused;
+  }
+
+  TimeOfDay? getLastTimeOfTheDay(DateTime date) {
+    List<Habit> todayHabit =
+        getTodayHabit(date).where((h) => h.timeOfTheDay != null).toList();
+    List<TimeOfDay?> timeOfDay = todayHabit.map((h) => h.timeOfTheDay).toList()
+      ..sort((a, b) => compareTimeOfDay(a, b));
+    if (todayHabit.isNotEmpty) {
+      return timeOfDay.last!;
+    }
+    return null;
+  }
+
+  // Helper function to get the additional metrics of a set of habits
+  static List<(Habit, String)> getAdditionalMetrics(List<Habit> targetHabits) {
+    final List<(Habit, String)> additionalMetrics = [];
+    for (Habit habit in targetHabits) {
+      if (habit.additionalMetrics == null) continue;
+      for (String metric in habit.additionalMetrics!) {
+        additionalMetrics.add((habit, metric));
+      }
+    }
+    return additionalMetrics;
+  }
+
+  // Helper function to get the additional metrics of all habit
+  List<(Habit, String)> getAllAdditionalMetrics() {
+    return getAdditionalMetrics(state);
+  }
+
+  Habit? getHabitById(String habitId) {
+    return state.firstWhereOrNull((habit) => habit.habitId == habitId);
   }
 }
 

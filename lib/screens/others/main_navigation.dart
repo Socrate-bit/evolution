@@ -9,7 +9,7 @@ import 'package:tracker_v1/screens/others/leaderboard.dart';
 import 'package:tracker_v1/screens/others/profil.dart';
 import 'package:tracker_v1/screens/habits/weekly.dart';
 import 'package:tracker_v1/screens/habits/new_habit.dart';
-import 'package:tracker_v1/screens/others/statistics.dart';
+import 'package:tracker_v1/statistic_screen/statistics_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -20,7 +20,12 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   String _pageTitle = 'Today';
-  final List<String> _titlesList = ['Today', 'Week', 'Statistics', 'Leaderboard'];
+  final List<String> _titlesList = [
+    'Today',
+    'Week',
+    'Statistics',
+    'Leaderboard'
+  ];
   int _selectedIndex = 0;
   late Widget _selectedPage;
   late List<Widget> _pagesList;
@@ -61,9 +66,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Color selectedIcon = Theme.of(context).colorScheme.secondary;
+    final Color selectedIconColor = Theme.of(context).colorScheme.secondary;
     final userData = ref.watch(userDataProvider);
-    ref.listen(trackedDayProvider, (t1, t2) {ref.read(userStatsProvider.notifier).updateStreaks();});
+    ref.listen(trackedDayProvider, (t1, t2) {
+      ref.read(userStatsProvider.notifier).updateStreaks();
+    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
@@ -71,8 +78,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (ctx) => const HabitList()));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (ctx) => const AllHabitsPage()));
           },
           icon: const Icon(
             Icons.list,
@@ -106,40 +113,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       bottomNavigationBar: BottomAppBar(
         height: 70,
         shape: _selectedIndex == 0 ? const CircularNotchedRectangle() : null,
-        notchMargin: 8.0 ,
+        notchMargin: 8.0,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Expanded(
-              child: IconButton(
-                  icon: Icon(Icons.check_box_outlined,
-                      color: _selectedIndex == 0 ? selectedIcon : null),
-                  iconSize: 30,
-                  onPressed: () => _onItemTapped(0)),
-            ),
-            Expanded(
-                child: IconButton(
-                    icon: Icon(Icons.event_note_rounded,
-                        color: _selectedIndex == 1 ? selectedIcon : null),
-                    iconSize: 30,
-                    onPressed: () => _onItemTapped(1))),
+            IconBar(0,
+                selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
+            IconBar(1,
+                selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
             AnimatedContainer(
                 duration: _selectedIndex != 0
                     ? const Duration(milliseconds: 600)
                     : const Duration(milliseconds: 300),
                 width: _selectedIndex == 0 ? 80 : 0),
-            Expanded(
-                child: IconButton(
-                    icon: Icon(Icons.bar_chart_rounded,
-                        color: _selectedIndex == 2 ? selectedIcon : null),
-                    iconSize: 30,
-                    onPressed: () => _onItemTapped(2))),
-            Expanded(
-                child: IconButton(
-                    icon: Icon(Icons.people_alt_outlined,
-                        color: _selectedIndex == 3 ? selectedIcon : null),
-                    iconSize: 30,
-                    onPressed: () => _onItemTapped(3))),
+            IconBar(2,
+                selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
+            IconBar(3,
+                selectedIndex: _selectedIndex, onItemTapped: _onItemTapped),
           ],
         ),
       ),
@@ -160,6 +150,60 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+}
+
+class IconBar extends StatelessWidget {
+  final int selectedIndex;
+  final int identityIndex;
+  final Function(int) onItemTapped;
+
+  const IconBar(this.identityIndex,
+      {super.key, required this.selectedIndex, required this.onItemTapped});
+
+  static const List<String> titleIconBar = [
+    'Today',
+    'Week',
+    'Stats',
+    'Friends'
+  ];
+  static const List<IconData> iconIconBar = [
+    Icons.check_box_outlined,
+    Icons.event_note_rounded,
+    Icons.bar_chart_rounded,
+    Icons.people_alt_outlined
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            bottom: 10,
+            child: IconButton(
+              icon: Icon(iconIconBar[identityIndex],
+                  color: selectedIndex == identityIndex
+                      ? Theme.of(context).colorScheme.secondary
+                      : null),
+              iconSize: 30,
+              onPressed: () => onItemTapped(identityIndex),
+            ),
+          ),
+          Positioned(
+              bottom: -2,
+              child: Text(
+                textAlign: TextAlign.center,
+                titleIconBar[identityIndex],
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: selectedIndex == identityIndex
+                        ? Theme.of(context).colorScheme.secondary
+                        : Colors.grey),
+              ))
+        ],
+      ),
     );
   }
 }

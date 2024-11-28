@@ -21,12 +21,16 @@ class RecapList extends ConsumerWidget {
     DateTime date = oldTrackedDay.date;
 
     if (habit.validationType == HabitType.simple) {
-       showModalBottomSheet(
+      showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) =>
-            BasicRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
+        builder: (ctx) => BasicRecapScreen(
+          habit,
+          date,
+          oldTrackedDay: oldTrackedDay,
+          validated: oldTrackedDay.done,
+        ),
       );
     } else if (habit.validationType == HabitType.recap) {
       showModalBottomSheet(
@@ -34,7 +38,7 @@ class RecapList extends ConsumerWidget {
         isScrollControlled: true,
         context: context,
         builder: (ctx) =>
-            HabitRecapScreen(habit, date, oldTrackedDay: oldTrackedDay),
+            HabitRecapScreen(habit, date, oldTrackedDay: oldTrackedDay, validated: oldTrackedDay.done),
       );
     } else if (habit.validationType == HabitType.recapDay) {
       RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
@@ -45,7 +49,7 @@ class RecapList extends ConsumerWidget {
         isScrollControlled: true,
         context: context,
         builder: (ctx) => DailyRecapScreen(date, habit,
-            oldDailyRecap: oldRecapDay, oldTrackedDay: oldTrackedDay),
+            oldDailyRecap: oldRecapDay, oldTrackedDay: oldTrackedDay, validated: oldTrackedDay.done),
       );
     }
   }
@@ -55,7 +59,8 @@ class RecapList extends ConsumerWidget {
     List<TrackedDay> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
-    }).toList()..sort((a, b) => a.date.isAfter(b.date) ? -1 : 1);
+    }).toList()
+          ..sort((a, b) => a.date.isAfter(b.date) ? -1 : 1);
 
     return Container(
       decoration: BoxDecoration(
@@ -82,7 +87,7 @@ class RecapList extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                         const SizedBox(
+                        const SizedBox(
                           width: 30,
                         ),
                         Expanded(

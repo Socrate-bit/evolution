@@ -31,10 +31,10 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
           ? jsonEncode(newTrackedDay.additionalMetrics)
           : null,
       'synced': newTrackedDay.synced ? true : false,
+      'dateOnValidation': newTrackedDay.dateOnValidation?.toIso8601String(),
     });
-
   }
-
+  
   Future<void> deleteTrackedDay(TrackedDay targetTrackedDay) async {
     state = state
         .where((td) => td.trackedDayId != targetTrackedDay.trackedDayId)
@@ -44,7 +44,6 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
         .collection('TrackedDay')
         .doc(targetTrackedDay.trackedDayId)
         .delete();
-
   }
 
   Future<void> deleteHabitTrackedDays(Habit habit) async {
@@ -102,6 +101,9 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
             ? jsonDecode(row['additionalMetrics'] as String)
             : null,
         synced: row['synced'] as bool,
+        dateOnValidation: row['dateOnValidation'] != null
+            ? DateTime.parse(row['dateOnValidation'] as String)
+            : DateTime.parse(row['date'] as String),
       );
       loadedData.add(trackedDay);
     }

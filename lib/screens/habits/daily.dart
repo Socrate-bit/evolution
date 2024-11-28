@@ -19,7 +19,7 @@ class DailyScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<DailyScreen> {
-  late DateTime date;
+  late DateTime selectedDate;
   DateTime now = DateTime.now();
   final _formater = DateFormat('d MMM');
 
@@ -28,9 +28,9 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     super.initState();
 
     if (now.hour >= 2) {
-      date = DateTime(now.year, now.month, now.day);
+      selectedDate = DateTime(now.year, now.month, now.day);
     } else {
-      date = DateTime(now.year, now.month, now.day - 1);
+      selectedDate = DateTime(now.year, now.month, now.day - 1);
     }
   }
 
@@ -50,12 +50,12 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
   Widget build(BuildContext context) {
     final habitsList = ref.watch(habitProvider);
     final List<Habit> todayHabitsList =
-        ref.watch(habitProvider.notifier).getTodayHabit(date);
+        ref.watch(habitProvider.notifier).getTodayHabit(selectedDate);
     final ReorderedDay? loadedHabitOrder = ref
         .watch(ReorderedDayProvider)
         .firstWhereOrNull((e) =>
             e.userId == FirebaseAuth.instance.currentUser!.uid &&
-            e.date == date);
+            e.date == selectedDate);
 
     final List<Habit> todayHabitListCopy =
         todayHabitsList.map((habit) => habit.copy()).toList();
@@ -72,11 +72,10 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     Widget content;
 
     if (todayHabitListCopy.isNotEmpty) {
-      content = HabitsReorderableList(
-        habitsList: todayHabitListCopy,
-        date: date,
-        dailyHabits: true,
-        habitOrder: loadedHabitOrder?.habitOrder,
+      content = HabitList(
+        displayedHabitList: todayHabitListCopy,
+        selectedDate: selectedDate,
+        habitsPersonalisedOrder: loadedHabitOrder?.habitOrder,
       );
     } else {
       content = SingleChildScrollView(
@@ -96,11 +95,11 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
         DaySwitch((value) {
           setState(
             () {
-              date = value;
+              selectedDate = value;
               widget.dateDisplay(_displayedDate(value));
             },
           );
-        }, date),
+        }, selectedDate),
         Expanded(child: Center(child: content)),
       ],
     );

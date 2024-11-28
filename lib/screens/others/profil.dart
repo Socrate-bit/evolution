@@ -105,7 +105,7 @@ class ProfilScreen extends ConsumerWidget {
                     Navigator.of(context).pop();
                   }, 'Yes I want to delete my account and all its data');
                 },
-                text: 'Delete account',
+                text: 'Delete your account',
               )
             ],
           ),

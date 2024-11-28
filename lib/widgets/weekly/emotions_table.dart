@@ -8,41 +8,12 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
-import 'package:tracker_v1/widgets/weekly/day_container.dart';
 
 class EmotionTable extends ConsumerWidget {
   const EmotionTable({required this.offsetWeekDays, super.key});
 
   static const List range = [0, 1, 2, 3, 4, 5, 6];
   final List<DateTime> offsetWeekDays;
-
-  static const List<String> emotions = [
-    'Well-being',
-    'Sleep',
-    'Energy',
-    'Motivation',
-    'Stress',
-    'Focus & Clarity',
-    'Mental performance',
-    'Frustrations',
-    'Satisfaction',
-    'Self-Esteem',
-    'Looking forward tomorrow',
-  ];
-
-  static const List<String> dailyRecapKeys = [
-    'wellBeing',
-    'sleepQuality',
-    'energy',
-    'driveMotivation',
-    'stress',
-    'focusMentalClarity',
-    'intelligenceMentalPower',
-    'frustrations',
-    'satisfaction',
-    'selfEsteemProudness',
-    'lookingForwardToWakeUpTomorrow',
-  ];
 
   bool _isInTheWeek(DateTime date1, {DateTime? date2}) {
     final startBeforeEndOfWeek = date1.isBefore(offsetWeekDays.last) ||
@@ -60,7 +31,7 @@ class EmotionTable extends ConsumerWidget {
         TableCell(
             child: Container(
           alignment: Alignment.center,
-          width: 200,
+          width: 220,
         )),
         ...range.map(
           (item) => Column(
@@ -87,7 +58,7 @@ class EmotionTable extends ConsumerWidget {
   }
 
   List<Color> _getStatusColor(String emotion, List<RecapDay> recapDays,
-      List<bool> recapTrackingStatus) {
+      List<bool> recapTrackingStatus, context) {
     List<Color> statusColors = offsetWeekDays.asMap().entries.map((e) {
       double? emotionMark = recapDays
           .firstWhereOrNull((recap) => e.value == recap.date)
@@ -95,9 +66,9 @@ class EmotionTable extends ConsumerWidget {
 
       return recapTrackingStatus[e.key]
           ? emotionMark == null
-              ? const Color.fromARGB(255, 52, 52, 52)
+              ? Theme.of(context).colorScheme.surfaceBright
               : RatingUtility.getRatingColor(emotionMark)
-          : const Color.fromARGB(255, 37, 37, 38);
+          : Theme.of(context).colorScheme.surface;
     }).toList();
 
     return statusColors;
@@ -125,12 +96,12 @@ class EmotionTable extends ConsumerWidget {
           ),
         ),
         ...range.map((index) {
-          return Center(
-            child: DayContainer(
-                fillColor: (emotionStatus[index], null),
-                onLongPress: null,
-                onTap: null),
-          );
+          return TableCell(
+              child: Container(
+            color: emotionStatus[index],
+            height: 30,
+            width: double.infinity,
+          ));
         }),
       ],
     );
@@ -154,8 +125,8 @@ class EmotionTable extends ConsumerWidget {
       recapTrackingStatus = _gethabitTrackingStatus(habitRecap);
     }
 
-    bool trackedThisWeek = habitRecap != null &&
-        !recapTrackingStatus.every((statut) => !statut);
+    bool trackedThisWeek =
+        habitRecap != null && !recapTrackingStatus.every((statut) => !statut);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -174,11 +145,11 @@ class EmotionTable extends ConsumerWidget {
             children: [
               _buildTableHeader(),
               if (trackedThisWeek && habitRecap != null)
-                ...emotions.asMap().entries.map((entry) => _buildHabitRow(
-                    emotions[entry.key],
+                ...Emotion.values.map((element) => _buildHabitRow(
+                    emotionDescriptions[element]!,
                     context,
-                    _getStatusColor(dailyRecapKeys[entry.key], recapDays,
-                        recapTrackingStatus))),
+                    _getStatusColor(element.name, recapDays,
+                        recapTrackingStatus, context))),
             ],
           ),
           if (!trackedThisWeek)

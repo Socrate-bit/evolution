@@ -15,6 +15,7 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
   final formKey = GlobalKey<FormState>();
 
   void _addAdditionalMetrics(context) {
+    FocusNode().unfocus();
     if (widget.enteredAdditionalMetrics.length > 4) {
       showDialog(
           context: context,
@@ -33,6 +34,7 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
       widget.enteredAdditionalMetrics.add(_additionalMetrics!);
       _additionalMetrics = null;
     });
+    formKey.currentState!.reset();
   }
 
   @override
@@ -51,7 +53,7 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
                   onSaved: (value) {
                     _additionalMetrics = value;
                   },
-                  toolTipTitle: 'Additional tracking (Optional)',
+                  toolTipTitle: 'Additional things you want to track',
                   tooltipContent: 'Provide Additional tracking (Optional)',
                 ),
               ),
