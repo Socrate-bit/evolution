@@ -38,7 +38,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   @override
   Widget build(BuildContext context) {
     ref.invalidate(allUserStatsProvider);
-    AsyncValue usersStat = ref.read(allUserStatsProvider);
+    AsyncValue usersStat = ref.watch(allUserStatsProvider);
 
     return usersStat.when(
         data: (data) {
@@ -54,31 +54,36 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           }
 
           return Container(
-            padding: EdgeInsets.symmetric(vertical: 16),
             color: Theme.of(context).colorScheme.surface,
-            child: SingleChildScrollView(
-                child: Container(
-              alignment: Alignment.topCenter,
-              height: MediaQuery.of(context).size.height * 1.25,
-              child: Column(
-                children: [
-                  TabBar(
-                    tabs: <Widget>[..._pageNames1.map((e) => Text(e))],
-                    controller: tabController,
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  LeaderboardPodium(userStats, usersData, _selectedPage1),
-                  const SizedBox(
-                    height: 32,
-                  ),
-                  Expanded(
-                      child:
-                          LeaderboardList(userStats, usersData, _selectedPage1))
-                ],
-              ),
-            )),
+            child: Column(
+              children: [
+                TabBar(
+                  tabs: <Widget>[..._pageNames1.map((e) => Text(e))],
+                  controller: tabController,
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                      child: Container(
+                    alignment: Alignment.topCenter,
+                    height: MediaQuery.of(context).size.height * 1.25,
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 24,
+                        ),
+                        LeaderboardPodium(userStats, usersData, _selectedPage1),
+                        const SizedBox(
+                          height: 32,
+                        ),
+                        Expanded(
+                            child: LeaderboardList(
+                                userStats, usersData, _selectedPage1))
+                      ],
+                    ),
+                  )),
+                ),
+              ],
+            ),
           );
         },
         error: (error, stackTrace) => const Center(
@@ -355,7 +360,8 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = Theme.of(context).colorScheme.surfaceBright.withOpacity(0.75);
+    final Color color =
+        Theme.of(context).colorScheme.surfaceBright.withOpacity(0.75);
 
     return Positioned(
         left: left,

@@ -137,5 +137,5 @@ final List<Stat> _basicStats = [
       name: 'SumStreaks',
       formulaType: BasicHabitSubtype.bsumStreaks,
       color: Color.fromARGB(255, 20, 20, 20),
-      maxY: null)
+      maxY: null),
 ];

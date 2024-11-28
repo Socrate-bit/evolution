@@ -84,7 +84,7 @@ class ProfilCard extends StatelessWidget {
   }
 }
 
-class MessageCard extends ConsumerWidget {
+class MessageCard extends ConsumerStatefulWidget {
   const MessageCard({
     required this.userStats,
     required this.userData,
@@ -97,24 +97,35 @@ class MessageCard extends ConsumerWidget {
   final int rank;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    TextEditingController? textController;
-    String? currentUserMessage;
-    bool currentUserCard =
-        FirebaseAuth.instance.currentUser!.uid == userData.userId;
+  ConsumerState<MessageCard> createState() => _MessageCardState();
+}
 
+class _MessageCardState extends ConsumerState<MessageCard> {
+  late bool currentUserCard;
+  TextEditingController? textController;
+  String? userMessage;
+
+  @override
+  void initState() {
+    currentUserCard =
+        FirebaseAuth.instance.currentUser!.uid == widget.userData.userId;
+      if (currentUserCard)
+     {userMessage = ref.read(userStatsProvider).message;
+      textController = TextEditingController(text: userMessage);}
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     Widget content = Text(
-      userStats.message.isEmpty
-          ? '${userData.name} has no message'
-          : userStats.message,
+      widget.userStats.message.isEmpty
+          ? '${widget.userData.name} has no message'
+          : widget.userStats.message,
       style: Theme.of(context).textTheme.bodyMedium!,
       textAlign: TextAlign.center,
     );
 
     if (currentUserCard) {
-      currentUserMessage = ref.watch(userStatsProvider).message;
-      textController = TextEditingController(
-          text: currentUserMessage.isEmpty ? null : currentUserMessage);
       content = TextField(
         controller: textController,
         minLines: 1,
@@ -130,10 +141,11 @@ class MessageCard extends ConsumerWidget {
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
-        if (currentUserCard && textController!.text != currentUserMessage) {
+        if (currentUserCard &&
+            (textController!.text != userMessage)) {
           ref
               .read(userStatsProvider.notifier)
-              .updateMessage(textController.text);
+              .updateMessage(textController!.text);
         }
       },
       child: Container(

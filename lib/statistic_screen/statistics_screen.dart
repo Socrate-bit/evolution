@@ -44,7 +44,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   }
 
   @override
-  void dispose() {// Remove the listener
+  void dispose() {
+    // Remove the listener
     tabController.dispose();
     super.dispose();
   }
@@ -53,38 +54,43 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   Widget build(BuildContext context) {
     final statisticsState = ref.watch(statisticsStateProvider);
 
-    return SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-            constraints:
-                BoxConstraints(minHeight: MediaQuery.of(context).size.height),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              decoration:
-                  BoxDecoration(color: Theme.of(context).colorScheme.surface),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: Column(
+        children: [
+          TabBar(
+            tabs: const <Widget>[
+              Text('Daily'),
+              Text('Weekly'),
+              Text('Monthly')
+            ],
+            controller: tabController,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(children: [
-                TabBar(
-                  tabs: const <Widget>[
-                    Text('Daily'),
-                    Text('Weekly'),
-                    Text('Monthly')
-                  ],
-                  controller: tabController,
-                ),
                 SizedBox(
                   height: 16,
                 ),
                 CustomContainer(
                   title: 'Chart',
                   child: LineChartDisplay(
-                    getGraphData(
-                        ref,
-                        statisticsState.allStats[statisticsState.selectedStat],
-                        statisticsState.pickedStartDate,
-                        statisticsState.pickedEndDate,
-                        statisticsState.offset,
-                        statisticsState.selectedPeriod),
-                    statisticsState.allStats[statisticsState.selectedStat].maxY,
+                    statisticsState.allStats.isNotEmpty
+                        ? getGraphData(
+                            ref,
+                            statisticsState
+                                .allStats[statisticsState.selectedStat],
+                            statisticsState.pickedStartDate,
+                            statisticsState.pickedEndDate,
+                            statisticsState.offset,
+                            statisticsState.selectedPeriod)
+                        : null,
+                    statisticsState.allStats.isNotEmpty
+                        ? statisticsState
+                            .allStats[statisticsState.selectedStat].maxY
+                        : null,
                     data2: statisticsState.selectedStat2 != null
                         ? getGraphData(
                             ref,
@@ -111,7 +117,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
                   ),
                 ),
               ]),
-            )));
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -167,6 +177,7 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
         text: 'EDIT');
     dynamic action2 = CustomOutlinedButton(
         submit: () {
+          ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
           ref.read(statNotiferProvider.notifier).deleteStat(stat);
           Navigator.of(context).pop();
         },

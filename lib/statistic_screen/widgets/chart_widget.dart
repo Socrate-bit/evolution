@@ -8,7 +8,7 @@ import 'package:tracker_v1/statistic_screen/logics/correlation_utility.dart';
 class LineChartDisplay extends StatefulWidget {
   const LineChartDisplay(this.data, this.maxAxe,
       {super.key, this.data2, this.pageName});
-  final List<(DateTime, double?)> data;
+  final List<(DateTime, double?)>? data;
   final List<(DateTime, double?)>? data2;
   final double? maxAxe;
   final String? pageName;
@@ -32,9 +32,15 @@ class _LineChartDisplayState extends State<LineChartDisplay> {
 
   @override
   void initState() {
-    _chartData = ChartData(
-        data: widget.data, data2: widget.data2, maxAxe: widget.maxAxe);
-    _lenghtX = _chartData.getXLenght()!;
+    if (widget.data != null) {
+      _chartData = ChartData(
+          data: widget.data!, data2: widget.data2, maxAxe: widget.maxAxe);
+      _lenghtX = _chartData.getXLenght()!;
+    } else {
+      _chartData = ChartData(data: [], data2: [], maxAxe: 0);
+      _lenghtX = 0;
+    }
+
     super.initState();
   }
 
@@ -42,11 +48,13 @@ class _LineChartDisplayState extends State<LineChartDisplay> {
   void didUpdateWidget(covariant LineChartDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.data != widget.data || oldWidget.data2 != widget.data2) {
-      setState(() {
-        _chartData = ChartData(
-            data: widget.data, data2: widget.data2, maxAxe: widget.maxAxe);
-        _lenghtX = _chartData.getXLenght()!;
-      });
+      if (widget.data != null) {
+        setState(() {
+          _chartData = ChartData(
+              data: widget.data!, data2: widget.data2, maxAxe: widget.maxAxe);
+          _lenghtX = _chartData.getXLenght()!;
+        });
+      }
     }
   }
 
@@ -59,10 +67,12 @@ class _LineChartDisplayState extends State<LineChartDisplay> {
           fontWeight: FontWeight.bold);
     } else if (correlation < -0.75) {
       return TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold);
-      } else if (correlation > 0.5) {
-        return TextStyle(color: Colors.green, fontWeight: FontWeight.bold);
-      } else if (correlation < -0.5) {
-        return TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold);
+    } else if (correlation > 0.5) {
+      return TextStyle(color: Colors.green, fontWeight: FontWeight.bold);
+    } else if (correlation < -0.5) {
+      return TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold);
     } else {
       return TextStyle(color: Colors.white);
     }
@@ -73,12 +83,12 @@ class _LineChartDisplayState extends State<LineChartDisplay> {
     double? correlation;
 
     // Compute correlation
-    if (widget.data2 != null) {
-      correlation = computeCorrelation(widget.data.map((e) => e.$2).toList(),
+    if (widget.data2 != null && widget.data != null) {
+      correlation = computeCorrelation(widget.data!.map((e) => e.$2).toList(),
           widget.data2!.map((e) => e.$2).toList());
     }
 
-    return _chartData.mainCurveSpots.isNotEmpty
+    return _chartData.mainCurveSpots.isNotEmpty && widget.data != null
         ? Stack(
             children: <Widget>[
               SizedBox(
@@ -151,7 +161,7 @@ class _LineChartDisplayState extends State<LineChartDisplay> {
   Widget _generateXLabel(double value, TitleMeta meta) {
     double fontSize = 18;
     String? text;
-    List<DateTime> dates = widget.data.map((e) => e.$1).toList();
+    List<DateTime> dates = widget.data!.map((e) => e.$1).toList();
     bool onlyOnePoint = _chartData.mainCurveSpots.length == 1;
 
     // Compute font size

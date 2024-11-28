@@ -62,7 +62,6 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
             tabs: <Widget>[..._pageNames.map((e) => Text(e))],
             controller: tabController,
           ),
-          SizedBox(height: 32,),
           Expanded(
             child: Column(
               children: [

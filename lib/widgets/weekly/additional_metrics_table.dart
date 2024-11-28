@@ -146,7 +146,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
     final List<(Habit, String)> additionalMetrics = ref.read(habitProvider.notifier).getAllAdditionalMetrics();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
       child: Column(
         children: [
           Table(

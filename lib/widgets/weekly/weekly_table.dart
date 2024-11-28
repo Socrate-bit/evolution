@@ -181,7 +181,7 @@ class WeeklyTable extends ConsumerWidget {
         offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
       child: Column(
         children: [
           Table(

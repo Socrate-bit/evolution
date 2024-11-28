@@ -111,7 +111,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ),
       body: _selectedPage,
       bottomNavigationBar: BottomAppBar(
-        height: 70,
+        height: 60,
         shape: _selectedIndex == 0 ? const CircularNotchedRectangle() : null,
         notchMargin: 8.0,
         child: Row(
@@ -179,11 +179,14 @@ class IconBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           Positioned(
-            bottom: 10,
+            bottom: 1,
             child: IconButton(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
               icon: Icon(iconIconBar[identityIndex],
                   color: selectedIndex == identityIndex
                       ? Theme.of(context).colorScheme.secondary
@@ -193,7 +196,7 @@ class IconBar extends StatelessWidget {
             ),
           ),
           Positioned(
-              bottom: -2,
+              bottom: -9,
               child: Text(
                 textAlign: TextAlign.center,
                 titleIconBar[identityIndex],

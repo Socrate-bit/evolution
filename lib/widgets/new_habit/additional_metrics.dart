@@ -15,7 +15,7 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
   final formKey = GlobalKey<FormState>();
 
   void _addAdditionalMetrics(context) {
-    FocusNode().unfocus();
+    FocusScope.of(context).unfocus();
     if (widget.enteredAdditionalMetrics.length > 4) {
       showDialog(
           context: context,
