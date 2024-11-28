@@ -595,5 +595,5 @@ void goToPeoplePage(context, UserStats userStats, UserData userData, int rank) {
       isScrollControlled: true,
       context: context,
       builder: (ctx) => CustomModalBottomSheet(
-          title: 'Test', content: PeoplePage(userStats, userData, rank)));
+          title: '', content: PeoplePage(userStats, userData, rank)));
 }

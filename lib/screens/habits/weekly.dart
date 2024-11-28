@@ -18,7 +18,7 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
   late TabController tabController;
   static final _dateFormatter = DateFormat.Md();
   int weekIndex = 0;
-  final List<String> _pageNames = ['Habits', 'Metrics', 'Emotions'];
+  final List<String> _pageNames = ['Habits', 'Tracking', 'Emotions'];
 
   List<DateTime> get _getOffsetWeekDays {
     DateTime now = DateTime.now();

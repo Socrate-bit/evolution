@@ -23,13 +23,8 @@ class DayContainer extends StatelessWidget {
       onTap: onTap,
       child: Container(
         alignment: Alignment.center,
-        width: 25,
-        height: 25,
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(6),
-            boxShadow: [basicShadow]),
+        height: 30,
+        color: color,
         child: displayedScore != null
             ? Text(
                 displayedScore.toString(),
