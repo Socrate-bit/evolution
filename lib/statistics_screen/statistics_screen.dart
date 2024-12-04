@@ -9,7 +9,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/statistics_screen/datas/statistics_model.dart';
 import 'package:tracker_v1/statistics_screen/datas/statistics_state.dart';
 import 'package:tracker_v1/statistics_screen/widgets/chart_widget.dart';
-import 'package:tracker_v1/statistics_screen/widgets/new_stats_bottom.dart';
+import 'package:tracker_v1/statistics_screen/widgets/new_stats_screen.dart';
 import 'package:tracker_v1/statistics_screen/logics/statistics_service.dart';
 import 'package:tracker_v1/statistics_screen/datas/statistics_provider.dart';
 import 'package:tracker_v1/theme.dart';

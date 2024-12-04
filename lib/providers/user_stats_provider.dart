@@ -5,7 +5,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/datas/user_stats.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
-import 'package:tracker_v1/statistics_screen/logics/service_score_computing.dart';
+import 'package:tracker_v1/statistics_screen/logics/score_computing_service.dart';
 import 'package:tracker_v1/models/utilities/offset_days.dart';
 
 class UserStatsNotifier extends StateNotifier<UserStats> {
