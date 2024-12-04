@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/user.dart';
 import 'package:tracker_v1/models/datas/user_stats.dart';
+import 'package:tracker_v1/models/utilities/Scores/num_extent.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/users_stats_provider.dart';
 import 'package:tracker_v1/theme.dart';
@@ -97,11 +98,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
 
 String getPeopleScore(selectedPage, UserStats userStats) {
   if (selectedPage == 0) {
-    return userStats.scoreWeek.toString();
+    return userStats.scoreWeek.roundNum();
   } else if (selectedPage == 1) {
-    return userStats.scoreMonth.toString();
+    return userStats.scoreMonth.roundNum();
   } else {
-    return userStats.scoreAllTime.toString();
+    return userStats.scoreAllTime.roundNum();
   }
 }
 
@@ -482,7 +483,7 @@ class LeaderboardList extends StatelessWidget {
               child: ListTile(
                   leading: Text('#', style: style),
                   title: Text('NAME', style: style),
-                  trailing: Text('STREAKS', style: style))),
+                  trailing: Text('SCORE', style: style))),
           const SizedBox(
             height: 20,
           ),

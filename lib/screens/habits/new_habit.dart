@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_launcher/cli_commands.dart';
+import 'package:tracker_v1/models/utilities/capitalise.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
+import 'package:tracker_v1/screens/habits/habit_screen.dart';
 import 'package:tracker_v1/widgets/new_habit/additional_metrics.dart';
 import 'package:tracker_v1/widgets/new_habit/date_picker.dart';
 import 'package:tracker_v1/widgets/new_habit/frequency_picker.dart';
@@ -221,7 +223,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                             .map(
                               (item) => DropdownMenuItem(
                                 value: item.index + 1,
-                                child: Text(item.name.toString().capitalize()),
+                                child: Text(item.name.toString().capitalizeEmptyCase()),
                               ),
                             )
                             .toList(),

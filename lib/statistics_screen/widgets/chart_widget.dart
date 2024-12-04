@@ -2,8 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker_v1/models/utilities/round_num.dart';
-import 'package:tracker_v1/statistic_screen/logics/chart_service.dart';
-import 'package:tracker_v1/statistic_screen/logics/correlation_utility.dart';
+import 'package:tracker_v1/statistics_screen/logics/chart_service.dart';
+import 'package:tracker_v1/statistics_screen/logics/correlation_utility.dart';
 
 class LineChartDisplay extends StatefulWidget {
   const LineChartDisplay(this.data, this.maxAxe,

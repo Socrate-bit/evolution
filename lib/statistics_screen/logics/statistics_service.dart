@@ -1,7 +1,7 @@
-import 'package:tracker_v1/statistic_screen/statistics_model.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_model.dart';
 import 'package:tracker_v1/models/utilities/offset_days.dart';
-import 'package:tracker_v1/statistic_screen/logics/date_utility.dart';
-import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
+import 'package:tracker_v1/statistics_screen/logics/date_utility.dart';
+import 'package:tracker_v1/statistics_screen/logics/service_score_computing.dart';
 
 List<String> getContainerStats(
     ref,

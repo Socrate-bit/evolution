@@ -8,16 +8,16 @@ class UserStats {
     this.scoreAllTime = 0,
     this.completion = 0.0,
     this.evaluation = 0.0, // Changed to double for numeric evaluation
-    this.validated = 0,    // Changed to int
+    this.validated = 0, // Changed to int
     this.message = '',
   });
 
   String userId;
   DateTime dateSync;
   int streaks;
-  int scoreWeek;
-  int scoreMonth;
-  int scoreAllTime;
+  double scoreWeek;
+  double scoreMonth;
+  double scoreAllTime;
   double completion;
   double evaluation;
   int validated;
@@ -45,11 +45,12 @@ class UserStats {
       userId: json['userId'],
       dateSync: DateTime.parse(json['dateSync']),
       streaks: json['streaks'] as int? ?? 0,
-      scoreWeek: json['scoreWeek'] as int? ?? 0,
-      scoreMonth: json['scoreMonth'] as int? ?? 0,
-      scoreAllTime: json['scoreAllTime'] as int? ?? 0,
+      scoreWeek: json['scoreWeek'] as double? ?? 0,
+      scoreMonth: json['scoreMonth'] as double? ?? 0,
+      scoreAllTime: json['scoreAllTime'] as double? ?? 0,
       completion: (json['completion'] as num?)?.toDouble() ?? 0.0,
-      evaluation: (json['evaluation'] as num?)?.toDouble() ?? 0.0, // Parsing as double
+      evaluation:
+          (json['evaluation'] as num?)?.toDouble() ?? 0.0, // Parsing as double
       validated: json['validated'] as int? ?? 0, // Parsing as int
       message: json['message'] as String? ?? '',
     );
@@ -59,9 +60,9 @@ class UserStats {
     String? userId,
     int? streaks,
     DateTime? dateSync,
-    int? scoreWeek,
-    int? scoreMonth,
-    int? scoreAllTime,
+    double? scoreWeek,
+    double? scoreMonth,
+    double? scoreAllTime,
     double? completion,
     double? evaluation,
     int? validated,

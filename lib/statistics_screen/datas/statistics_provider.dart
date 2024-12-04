@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tracker_v1/statistic_screen/statistics_model.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_model.dart';
 
 class StatNotifier extends StateNotifier<List<Stat>> {
   StatNotifier(this.ref) : super([]);

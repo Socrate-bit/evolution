@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
-import 'package:tracker_v1/statistic_screen/statistics_model.dart';
-import 'package:tracker_v1/statistic_screen/statistics_state.dart';
-import 'package:tracker_v1/statistic_screen/widgets/chart_widget.dart';
-import 'package:tracker_v1/statistic_screen/widgets/new_stats_bottom.dart';
-import 'package:tracker_v1/statistic_screen/logics/statistics_service.dart';
-import 'package:tracker_v1/statistic_screen/statistics_data.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_model.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_state.dart';
+import 'package:tracker_v1/statistics_screen/widgets/chart_widget.dart';
+import 'package:tracker_v1/statistics_screen/widgets/new_stats_bottom.dart';
+import 'package:tracker_v1/statistics_screen/logics/statistics_service.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_provider.dart';
 import 'package:tracker_v1/theme.dart';
 import 'package:tracker_v1/widgets/global/elevated_button.dart';
 import 'package:tracker_v1/widgets/global/outlined_button.dart';
@@ -170,7 +170,7 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
           showModalBottomSheet(
               isScrollControlled: true,
               context: context,
-              builder: (ctx) => NewStatFrame(
+              builder: (ctx) => NewStatScreen(
                     stat: stat,
                   ));
         },
@@ -256,7 +256,7 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
               showModalBottomSheet(
                   isScrollControlled: true,
                   context: context,
-                  builder: (ctx) => NewStatFrame());
+                  builder: (ctx) => NewStatScreen());
             },
             child: AddStatContainer(title: 'Add new stat')),
       ],

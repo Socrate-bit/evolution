@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/statistic_screen/statistics_model.dart';
-import 'package:tracker_v1/statistic_screen/statistics_data.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_model.dart';
+import 'package:tracker_v1/statistics_screen/datas/statistics_provider.dart';
 
 class StatisticsState {
   final int selectedPeriod;

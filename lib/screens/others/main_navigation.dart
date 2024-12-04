@@ -9,7 +9,7 @@ import 'package:tracker_v1/screens/others/leaderboard.dart';
 import 'package:tracker_v1/screens/others/profil.dart';
 import 'package:tracker_v1/screens/habits/weekly.dart';
 import 'package:tracker_v1/screens/habits/new_habit.dart';
-import 'package:tracker_v1/statistic_screen/statistics_screen.dart';
+import 'package:tracker_v1/statistics_screen/statistics_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});

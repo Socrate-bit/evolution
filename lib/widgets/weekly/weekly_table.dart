@@ -8,7 +8,7 @@ import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/models/utilities/Scores/rating_utility.dart';
-import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
+import 'package:tracker_v1/statistics_screen/logics/service_score_computing.dart';
 import 'package:tracker_v1/models/utilities/is_in_the_week.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';

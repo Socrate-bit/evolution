@@ -30,9 +30,9 @@ class DayContainer extends StatelessWidget {
                 displayedScore.toString(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.75),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12),
+                  color: Colors.white.withOpacity(0.75),
+                  fontWeight: FontWeight.w900,
+                ),
               )
             : element != null
                 ? Icon(element,

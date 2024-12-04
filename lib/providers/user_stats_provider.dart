@@ -5,7 +5,7 @@ import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
 import 'package:tracker_v1/models/datas/user_stats.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
-import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
+import 'package:tracker_v1/statistics_screen/logics/service_score_computing.dart';
 import 'package:tracker_v1/models/utilities/offset_days.dart';
 
 class UserStatsNotifier extends StateNotifier<UserStats> {
@@ -27,11 +27,11 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
   Future<void> updateStreaks() async {
     // Compute the score
     List<DateTime> weekDays = OffsetDays.getWeekDaysFromOffset(0);
-    int scoreWeek =
+    double scoreWeek =
         productivityScoreComputing(weekDays, ref, endDate: weekDays.first) ?? 0;
 
     List<DateTime> monthDays = OffsetDays.getOffsetMonthDays(0);
-    int scoreMonth =
+    double scoreMonth =
         productivityScoreComputing(monthDays, ref, endDate: monthDays.first) ??
             0;
 
@@ -40,7 +40,7 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
     DateTime startDate = trackedDays.first.date;
 
     List<DateTime> allTimeDays = OffsetDays.getOffsetDays(startDate, today);
-    int scoreAllTime = productivityScoreComputing(allTimeDays, ref,
+    double scoreAllTime = productivityScoreComputing(allTimeDays, ref,
             endDate: allTimeDays.first) ??
         0;
 

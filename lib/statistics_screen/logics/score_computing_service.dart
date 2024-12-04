@@ -102,18 +102,22 @@ String evalutationComputingFormatted(List<DateTime> dates, ref,
   return notation != null ? '${notation.roundNum()}/10' : '-';
 }
 
-int getCurrentStreak(DateTime date, Habit habit, ref, {DateTime? endDate, bool onDateValidation = false}) {
-  int streak = -1;
+int getCurrentStreak(DateTime date, Habit habit, ref,
+    {DateTime? endDate, bool score = false}) {
+  int streak = score ? 0 : -1;
 
   List<TrackedDay> habitPastTrackedDays = ref
       .read(trackedDayProvider)
-      .where((t) =>
+      .where((TrackedDay t) =>
           t.habitId == habit.habitId &&
-          (onDateValidation ? t.date == t.dateOnValidation : true) &&
+          (score
+              ? t.dateOnValidation!.isBefore(t.date.add(Duration(days: 7)))
+              : true) &&
           t.done == Validated.yes &&
           (endDate != null
               ? (t.date.isAfter(endDate) || t.date.isAtSameMomentAs(endDate))
-              : true) && (t.date.isBefore(date) || t.date.isAtSameMomentAs(date)))
+              : true) &&
+          (t.date.isBefore(date) || t.date.isAtSameMomentAs(date)))
       .toList();
 
   habitPastTrackedDays.sort((a, b) {
@@ -192,7 +196,7 @@ String totalHabitCompletedComputingFormatted(List<DateTime> dates, ref,
   return totalCompleted != null ? totalCompleted.toString() : '-';
 }
 
-int? productivityScoreComputing(List<DateTime> dates, ref,
+double? productivityScoreComputing(List<DateTime> dates, ref,
     {String? reference, DateTime? endDate}) {
   double totalScore = 0;
   int totalHabit = 0;
@@ -201,26 +205,27 @@ int? productivityScoreComputing(List<DateTime> dates, ref,
   for (DateTime date in dates) {
     double ponderation = 1;
     double dailyScore = 0;
-    List<Habit> targetHabits =
-        _fetchTargetHabits(date, ref);
+    List<Habit> targetHabits = _fetchTargetHabits(date, ref);
 
     targetHabits.sort((a, b) => b.ponderation.compareTo(a.ponderation));
     for (Habit h in targetHabits) {
-      dailyScore +=
-          getCurrentStreak(date, h, ref, endDate: endDate, onDateValidation: true) * ponderation;
+      dailyScore += getCurrentStreak(date, h, ref,
+              endDate: endDate, score: true) *
+          ponderation;
       ponderation *= 0.75;
     }
     totalScore += dailyScore;
     totalHabit += targetHabits.length;
   }
 
-  return totalHabit != 0 ? totalScore.toInt() : null;
+  return totalHabit != 0 ? totalScore : null;
 }
 
 String productivityScoreComputingFormatted(List<DateTime> dates, ref,
     {String? reference, DateTime? endDate}) {
-  int? score = productivityScoreComputing(dates, ref, reference: reference, endDate: endDate);
-  return score != null ? score.toString() : '-';
+ double? score = productivityScoreComputing(dates, ref,
+      reference: reference, endDate: endDate);
+  return score != null ? score.roundNum().toString() : '-';
 }
 
 // Custom stats

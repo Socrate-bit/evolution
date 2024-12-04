@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_launcher/cli_commands.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
+import 'package:tracker_v1/models/utilities/capitalise.dart';
 import 'package:tracker_v1/models/utilities/days_utility.dart';
 import 'package:tracker_v1/providers/habits_provider.dart';
 import 'package:tracker_v1/providers/tracked_day.dart';
@@ -117,7 +118,7 @@ class HabitScreen extends ConsumerWidget {
                                 text: Ponderation.values
                                     .toList()[habit.ponderation - 1]
                                     .name
-                                    .capitalize(), // Second part (italic style)
+                                    .capitalizeEmptyCase(), // Second part (italic style)
                                 style: const TextStyle(
                                     fontStyle: FontStyle.italic),
                               ),
@@ -180,7 +181,7 @@ class HabitScreen extends ConsumerWidget {
                               ),
                               TextSpan(
                                 text:
-                                    '${habit.validationType.name.capitalize()}', // Second part (italic style)
+                                    habit.validationType.name.capitalizeEmptyCase(), // Second part (italic style)
                                 style: TextStyle(fontStyle: FontStyle.italic),
                               ),
                             ],

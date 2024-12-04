@@ -37,11 +37,11 @@ class TrackedDay {
 
   double? totalRating() {
     if (notation == null) return null;
-    return (notation!.quantity! * 2 / 5) +
-        (notation!.quality * 2 / 5) +
-        (notation!.result * 2 / 5) +
-        (notation!.weeklyFocus == 0 ? 0 : notation!.weeklyFocus * 2) +
-        (notation!.dailyGoal == 0 ? 0 : notation!.dailyGoal * 2);
+    return (notation!.quantity! * 2 / 4) +
+        (notation!.quality * 2 / 4) +
+        (notation!.result * 2 / 4) +
+        (notation!.weeklyFocus == 0 ? 0 : notation!.weeklyFocus * 1.25) +
+        (notation!.dailyGoal == 0 ? 0 : notation!.dailyGoal * 1.25);
   }
 
   StatusAppearance getStatusAppearance(colorScheme) {

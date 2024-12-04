@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/models/datas/daily_recap.dart';
 import 'package:tracker_v1/models/datas/habit.dart';
 import 'package:tracker_v1/models/datas/tracked_day.dart';
-import 'package:tracker_v1/statistic_screen/logics/service_score_computing.dart';
+import 'package:tracker_v1/statistics_screen/logics/service_score_computing.dart';
 import 'package:tracker_v1/models/utilities/appearance.dart';
 import 'package:tracker_v1/models/utilities/first_where_or_null.dart';
 import 'package:tracker_v1/providers/daily_recap.dart';
