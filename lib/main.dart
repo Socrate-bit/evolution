@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/providers/data_manager.dart';
+import 'package:tracker_v1/authentification/data/alldata_manager.dart';
 import 'package:tracker_v1/theme.dart';
-import 'package:tracker_v1/screens/others/auth.dart';
-import 'package:tracker_v1/screens/others/main_navigation.dart';
+import 'package:tracker_v1/authentification/auth_screen.dart';
+import 'package:tracker_v1/navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
