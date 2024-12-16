@@ -16,7 +16,7 @@ class HabitRecapScreen extends ConsumerStatefulWidget {
 
   final Habit habit;
   final DateTime date;
-  final TrackedDay? oldTrackedDay;
+  final HabitRecap? oldTrackedDay;
   final Validated validated;
 
   @override
@@ -89,7 +89,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
 
     formKey.currentState!.save();
 
-    TrackedDay newTrackedDay = TrackedDay(
+    HabitRecap newTrackedDay = HabitRecap(
       trackedDayId: widget.oldTrackedDay?.trackedDayId,
       userId: FirebaseAuth.instance.currentUser!.uid,
       habitId: widget.habit.habitId,

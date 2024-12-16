@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/daily/data/daily_screen_state.dart';
+import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
 import 'package:tracker_v1/authentification/data/userdata_provider.dart';
@@ -33,19 +35,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedPage = DailyScreen(_displayDate);
+    _selectedPage = DailyScreen();
     _pagesList = [
-      DailyScreen(_displayDate),
+      DailyScreen(),
       const WeeklyScreen(),
       const StatisticsScreen(),
       const LeaderboardScreen(),
     ];
-  }
-
-  void _displayDate(value) {
-    setState(() {
-      _pageTitle = value;
-    });
   }
 
   void _onItemTapped(int index) {
@@ -61,13 +57,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
-        builder: (ctx) => const NewHabitScreen());
+        builder: (ctx) => NewHabitScreen(
+              dateOpened: ref.read(dailyScreenStateProvider).selectedDate,
+            ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color selectedIconColor = Theme.of(context).colorScheme.secondary;
     final userData = ref.watch(userDataProvider);
+    if (_selectedIndex == 0) {
+      ref.watch(dailyScreenStateProvider);
+      _pageTitle = ref.watch(dailyScreenStateProvider.notifier).displayedDate();
+    }
+
     ref.listen(trackedDayProvider, (t1, t2) {
       ref.read(userStatsProvider.notifier).updateStreaks();
     });

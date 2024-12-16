@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/statistics/data/user_stats.dart';
-import 'package:tracker_v1/statistics/logic/date_utility.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 
 List<UserStats> _correctedUserStats(List<UserStats> userStats) {
   DateTime startOfCurrentMonth = DateTime(today.year, today.month, 1);

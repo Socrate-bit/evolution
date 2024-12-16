@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/logic/convert_habitV1.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/daily/data/reorderedday_provider.dart';
@@ -23,7 +25,7 @@ class DataManager {
     ref.read(habitProvider.notifier).cleanState();
     ref.read(trackedDayProvider.notifier).cleanState();
     ref.read(recapDayProvider.notifier).cleanState();
-    ref.read(ReorderedDayProvider.notifier).cleanState();
+    ref.read(reorderedDayProvider.notifier).cleanState();
   }
 
   Future<void> signOut() async {
@@ -93,6 +95,15 @@ class DataManager {
       batch.delete(doc.reference);
     }
 
+    // Delete user data from 'user_data' collection
+    final scheduleQuery = await firestore
+        .collection('schedules')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in scheduleQuery.docs) {
+      batch.delete(doc.reference);
+    }
+
     // Commit the batch deletion
     await batch.commit();
 
@@ -123,14 +134,17 @@ class DataManager {
         ref.read(habitProvider.notifier).loadData(),
         ref.read(trackedDayProvider.notifier).loadData(),
         ref.read(recapDayProvider.notifier).loadData(),
-        ref.read(ReorderedDayProvider.notifier).loadData(),
+        ref.read(reorderedDayProvider.notifier).loadData(),
         ref.read(userStatsProvider.notifier).loadUserStats(),
-        ref.read(statNotiferProvider.notifier).loadData(),  
+        ref.read(statNotiferProvider.notifier).loadData(),
+        ref.read(habitProvider.notifier).loadData(),
+        ref.read(scheduledProvider.notifier).loadData(),
       ]);
+
+      await v1Converter(ref.read(habitProvider), ref);
 
       ref.read(allUserStatsProvider);
     } catch (error) {
-      print(error);
       signOut();
     }
   }

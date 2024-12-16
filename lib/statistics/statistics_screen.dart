@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:tracker_v1/global/display/custom_surface_container.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_state.dart';
@@ -125,35 +126,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   }
 }
 
-class CustomContainer extends StatelessWidget {
-  final String? title;
-  final Widget? child;
 
-  const CustomContainer({super.key, this.title, this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: const EdgeInsets.all(16),
-        width: double.infinity,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: Theme.of(context).colorScheme.surfaceBright),
-        child: Column(
-          children: [
-            if (title != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  title!,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            if (child != null) child!
-          ],
-        ));
-  }
-}
 
 class StatsGrid extends ConsumerStatefulWidget {
   const StatsGrid({super.key});

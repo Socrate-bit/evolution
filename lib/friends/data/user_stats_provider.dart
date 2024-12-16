@@ -25,6 +25,8 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
   }
 
   Future<void> updateStreaks() async {
+    DateTime startDate;
+    double scoreAllTime = 0;
     // Compute the score
     List<DateTime> weekDays = OffsetDays.getWeekDaysFromOffset(0);
     double scoreWeek =
@@ -35,14 +37,18 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
         productivityScoreComputing(monthDays, ref, endDate: monthDays.first) ??
             0;
 
-    List<TrackedDay> trackedDays = ref.watch(trackedDayProvider)
-      ..sort((TrackedDay a, TrackedDay b) => a.date.compareTo(b.date));
-    DateTime startDate = trackedDays.first.date;
-
-    List<DateTime> allTimeDays = OffsetDays.getOffsetDays(startDate, today);
-    double scoreAllTime = productivityScoreComputing(allTimeDays, ref,
-            endDate: allTimeDays.first) ??
-        0;
+    List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
+    if (trackedDays.isNotEmpty) {
+      trackedDays
+          .sort((HabitRecap a, HabitRecap b) => a.date.compareTo(b.date));
+      startDate = trackedDays.first.date;
+      if (!startDate.isAfter(today)) {
+        List<DateTime> allTimeDays = OffsetDays.getOffsetDays(startDate, today);
+        scoreAllTime = productivityScoreComputing(allTimeDays, ref,
+                endDate: allTimeDays.first) ??
+            0;
+      }
+    }
 
     // Update the score
     state = state.copyWith(
@@ -77,11 +83,17 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
 
   // Load UserStats data from Firestore
   Future<void> loadUserStats() async {
-    final docSnapshot =
-        await _firestore.collection('user_stats').doc(state.userId).get();
-    if (docSnapshot.exists) {
-      state = UserStats.fromJson(docSnapshot.data()!);
-    } else {
+    try {
+      final docSnapshot =
+          await _firestore.collection('user_stats').doc(state.userId).get();
+      if (docSnapshot.exists) {
+        state = UserStats.fromJson(docSnapshot.data()!);
+      } else {
+        addUserStats(UserStats(
+            userId: FirebaseAuth.instance.currentUser!.uid, dateSync: today));
+      }
+    } catch (e) {
+      deleteUserStats();
       addUserStats(UserStats(
           userId: FirebaseAuth.instance.currentUser!.uid, dateSync: today));
     }

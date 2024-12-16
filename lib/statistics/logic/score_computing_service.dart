@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -17,7 +18,7 @@ double? completionComputing(List<DateTime> dates, ref, {String? reference}) {
   for (DateTime date in dates) {
     List<Habit> targetHabits =
         _fetchTargetHabits(date, ref, reference: reference);
-    List<TrackedDay> todayTrackedDays =
+    List<HabitRecap> todayTrackedDays =
         _fetchTargetTrackedDays(targetHabits, date, ref);
     totalToValidate += targetHabits.length;
     totalValidated += todayTrackedDays.length;
@@ -35,7 +36,9 @@ List<Habit> _fetchTargetHabits(DateTime date, ref, {String? reference}) {
   }
 
   if (reference != null && habit != null) {
-    bool trackingStatus = HabitNotifier.getHabitTrackingStatus(habit, date);
+    bool trackingStatus = ref
+        .read(scheduledProvider.notifier)
+        .getHabitTrackingStatus(habit, date);
     targetHabits = trackingStatus ? [habit] : [];
   } else if (reference != null && habit == null) {
     targetHabits = [];
@@ -46,11 +49,11 @@ List<Habit> _fetchTargetHabits(DateTime date, ref, {String? reference}) {
   return targetHabits;
 }
 
-List<TrackedDay> _fetchTargetTrackedDays(
+List<HabitRecap> _fetchTargetTrackedDays(
     List<Habit> targetHabits, DateTime date, ref) {
   List<String> todayHabitIds = targetHabits.map((h) => h.habitId).toList();
 
-  List<TrackedDay> todayTrackedDays = ref
+  List<HabitRecap> todayTrackedDays = ref
       .watch(trackedDayProvider)
       .where((t) =>
           date == t.date &&
@@ -75,13 +78,13 @@ double? evalutationComputing(List<DateTime> dates, ref, {String? reference}) {
   for (DateTime date in dates) {
     List<Habit> targetHabits =
         _fetchTargetHabits(date, ref, reference: reference);
-    List<TrackedDay> todayTrackedDays =
+    List<HabitRecap> todayTrackedDays =
         _fetchTargetTrackedDays(targetHabits, date, ref);
 
     maximumScore += targetHabits.fold(
         0, (total, habit) => total + scoresMultiplier[habit.ponderation - 1]);
 
-    for (TrackedDay trackedDay in todayTrackedDays) {
+    for (HabitRecap trackedDay in todayTrackedDays) {
       Habit habit =
           targetHabits.firstWhere((h) => h.habitId == trackedDay.habitId);
       actualScore += (scoresMultiplier[habit.ponderation - 1] *
@@ -106,9 +109,9 @@ int getCurrentStreak(DateTime date, Habit habit, ref,
     {DateTime? endDate, bool score = false}) {
   int streak = score ? 0 : -1;
 
-  List<TrackedDay> habitPastTrackedDays = ref
+  List<HabitRecap> habitPastTrackedDays = ref
       .read(trackedDayProvider)
-      .where((TrackedDay t) =>
+      .where((HabitRecap t) =>
           t.habitId == habit.habitId &&
           (score
               ? t.dateOnValidation!.isBefore(t.date.add(Duration(days: 7)))
@@ -125,18 +128,19 @@ int getCurrentStreak(DateTime date, Habit habit, ref,
   });
 
   DateTime start = date;
+  DateTime startDate =
+      ref.read(scheduledProvider.notifier).getHabitStartDateSchedule(habit);
 
-  for (TrackedDay trackeDay in habitPastTrackedDays) {
+  for (HabitRecap trackeDay in habitPastTrackedDays) {
     start = DateTime(start.year, start.month, start.day);
     if (!habitPastTrackedDays.map((e) => e.date).contains(start)) break;
     if (trackeDay.date != start) continue;
     streak += 1;
     start = trackeDay.date.subtract(const Duration(days: 1));
-    while (!habit.weekdays
-        .map(
-          (e) => DaysOfTheWeekUtility.weekDayToNumber[e],
-        )
-        .contains(start.weekday)) {
+    while (!ref
+            .read(scheduledProvider.notifier)
+            .getHabitTrackingStatus(habit, start) &&
+        !start.isBefore(startDate)) {
       start = start.subtract(const Duration(days: 1));
     }
   }
@@ -180,7 +184,7 @@ int? totalHabitCompletedComputing(List<DateTime> dates, ref,
   for (DateTime date in dates) {
     List<Habit> targetHabits =
         _fetchTargetHabits(date, ref, reference: reference);
-    List<TrackedDay> todayTrackedDays =
+    List<HabitRecap> todayTrackedDays =
         _fetchTargetTrackedDays(targetHabits, date, ref);
     totalMaxCompleted += targetHabits.length;
     totalCompleted += todayTrackedDays.length;
@@ -209,9 +213,9 @@ double? productivityScoreComputing(List<DateTime> dates, ref,
 
     targetHabits.sort((a, b) => b.ponderation.compareTo(a.ponderation));
     for (Habit h in targetHabits) {
-      dailyScore += getCurrentStreak(date, h, ref,
-              endDate: endDate, score: true) *
-          ponderation;
+      dailyScore +=
+          getCurrentStreak(date, h, ref, endDate: endDate, score: true) *
+              ponderation;
       ponderation *= 0.75;
     }
     totalScore += dailyScore;
@@ -223,7 +227,7 @@ double? productivityScoreComputing(List<DateTime> dates, ref,
 
 String productivityScoreComputingFormatted(List<DateTime> dates, ref,
     {String? reference, DateTime? endDate}) {
- double? score = productivityScoreComputing(dates, ref,
+  double? score = productivityScoreComputing(dates, ref,
       reference: reference, endDate: endDate);
   return score != null ? score.roundNum().toString() : '-';
 }
@@ -249,9 +253,9 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
       }
     }
   } else {
-    final List<TrackedDay> trackedDays = ref.watch(trackedDayProvider);
+    final List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
     for (DateTime date in dates) {
-      final TrackedDay? trackedDay = trackedDays.firstWhereOrNull(
+      final HabitRecap? trackedDay = trackedDays.firstWhereOrNull(
           (td) => td.habitId == habit.habitId && td.date == date);
       if (trackedDay != null) {
         double? convertedMetric =

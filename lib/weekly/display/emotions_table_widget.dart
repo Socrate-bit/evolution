@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
@@ -48,10 +49,11 @@ class EmotionTable extends ConsumerWidget {
     );
   }
 
-  List<bool> _gethabitTrackingStatus(Habit habitRecap) {
+  List<bool> _gethabitTrackingStatus(Habit habitRecap, WidgetRef ref) {
     List<bool> isTrackedFilter = range.map((index) {
-      return HabitNotifier.getHabitTrackingStatus(
-          habitRecap, offsetWeekDays[index]);
+      return ref
+          .read(scheduledProvider.notifier)
+          .getHabitTrackingStatus(habitRecap, offsetWeekDays[index]);
     }).toList();
 
     return isTrackedFilter;
@@ -122,7 +124,7 @@ class EmotionTable extends ConsumerWidget {
               r.userId == FirebaseAuth.instance.currentUser!.uid &&
               _isInTheWeek(r.date))
           .toList();
-      recapTrackingStatus = _gethabitTrackingStatus(habitRecap);
+      recapTrackingStatus = _gethabitTrackingStatus(habitRecap, ref);
     }
 
     bool trackedThisWeek =

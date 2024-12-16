@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
@@ -36,7 +37,7 @@ class CustomHeatMap extends ConsumerWidget {
 
   Map<DateTime, int> getHeatMapDataSet(WidgetRef ref) {
     Map<DateTime, int> heatMapDataSet = {};
-    List<TrackedDay> trackedDays =
+    List<HabitRecap> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId &&
           trackedDay.done == Validated.yes;
@@ -45,12 +46,12 @@ class CustomHeatMap extends ConsumerWidget {
     List<DateTime> dates = generateDateList();
 
     for (DateTime date in dates) {
-      bool trackingStatus = HabitNotifier.getHabitTrackingStatus(habit, date);
+      bool trackingStatus = ref.read(scheduledProvider.notifier).getHabitTrackingStatus(habit, date);
 
       if (trackingStatus == false || date.isAfter(today)) {
         heatMapDataSet[date] = 0;
       } else {
-        TrackedDay? trackedDay = trackedDays.firstWhereOrNull((td) {
+        HabitRecap? trackedDay = trackedDays.firstWhereOrNull((td) {
           return td.date == date;
         });
 

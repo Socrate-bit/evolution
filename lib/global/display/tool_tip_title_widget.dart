@@ -17,7 +17,7 @@ class CustomToolTipTitle extends StatelessWidget {
         Text(title,
             style: Theme.of(context)
                 .textTheme
-                .titleMedium),
+                .titleMedium!.copyWith(color: Colors.white.withOpacity(0.75))),
         const SizedBox(
           width: 8,
         ),

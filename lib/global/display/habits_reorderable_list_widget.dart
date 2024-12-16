@@ -62,7 +62,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
 
   @override
   Widget build(BuildContext context) {
-    _sortedHabitList = sortHabits(widget.displayedHabitList);
+    _sortedHabitList = sortHabits(widget.displayedHabitList, widget.selectedDate, ref);
 
     return Container(
       margin: const EdgeInsets.all(8),
@@ -245,11 +245,11 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
 
   void _updateReorderState() {
     _updateSortedList();
-    ReorderedDay newReorder = _createReorderedDay();
+    CustomDay newReorder = _createReorderedDay();
     if (widget.habitsPersonalisedOrder != null) {
-      ref.read(ReorderedDayProvider.notifier).updateReorderedDay(newReorder);
+      ref.read(reorderedDayProvider.notifier).updateReorderedDay(newReorder);
     } else {
-      ref.read(ReorderedDayProvider.notifier).addReorderedDay(newReorder);
+      ref.read(reorderedDayProvider.notifier).addReorderedDay(newReorder);
     }
   }
 
@@ -259,13 +259,13 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
         _sortedHabitList, _draggedInitialIndex!, _draggedNewIndex!);
   }
 
-  ReorderedDay _createReorderedDay() {
+  CustomDay _createReorderedDay() {
     Map<String, (TimeOfDay?, int)> habitOrder =
         Map.fromEntries(_sortedHabitList.map(
       (e) => MapEntry(e.habitId, (e.timeOfTheDay, e.orderIndex)),
     ));
 
-    return ReorderedDay(
+    return CustomDay(
         userId: FirebaseAuth.instance.currentUser!.uid,
         date: widget.selectedDate!,
         habitOrder: habitOrder);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tracker_v1/global/logic/num_extent.dart';
 import 'package:tracker_v1/theme.dart';
 
 class DayContainer extends StatelessWidget {
@@ -27,7 +28,7 @@ class DayContainer extends StatelessWidget {
         color: color,
         child: displayedScore != null
             ? Text(
-                displayedScore.toString(),
+                displayedScore!.roundNum(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.75),

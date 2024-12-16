@@ -16,7 +16,7 @@ class RecapList extends ConsumerWidget {
   RecapList(this.habit, {super.key});
   final _formater = DateFormat.yMd();
 
-  void _onTap(Habit habit, BuildContext context, TrackedDay oldTrackedDay,
+  void _onTap(Habit habit, BuildContext context, HabitRecap oldTrackedDay,
       WidgetRef ref) {
     DateTime date = oldTrackedDay.date;
 
@@ -56,7 +56,7 @@ class RecapList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<TrackedDay> trackedDays =
+    List<HabitRecap> trackedDays =
         ref.watch(trackedDayProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
     }).toList()

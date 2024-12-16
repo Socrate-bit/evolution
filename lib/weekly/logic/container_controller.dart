@@ -14,7 +14,7 @@ class ContainerController {
   final Habit habit;
   final DateTime date;
   final dynamic trackingStatus;
-  final List<TrackedDay> trackedDays;
+  final List<HabitRecap> trackedDays;
   final ColorScheme colorScheme;
   final List<RecapDay> dailyRecaps;
 
@@ -29,7 +29,7 @@ class ContainerController {
 
   // Returns the appropriate action based on the habit's validation type
   ActionHandlers getAction(WidgetRef ref) {
-    final TrackedDay? trackedDay = trackedDays.firstWhereOrNull((td) {
+    final HabitRecap? trackedDay = trackedDays.firstWhereOrNull((td) {
       return td.habitId == habit.habitId && td.date == date;
     });
     if (trackingStatus.runtimeType == bool || trackedDay == null) {
@@ -113,7 +113,7 @@ class ContainerController {
     } else if (trackingStatus == true) {
       return (const Color.fromARGB(255, 52, 52, 52), null, null);
     } else {
-      final TrackedDay trackedDay = trackedDays.firstWhere((td) {
+      final HabitRecap trackedDay = trackedDays.firstWhere((td) {
         return td.habitId == habit.habitId && td.date == date;
       });
       return (

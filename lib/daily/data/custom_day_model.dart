@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class ReorderedDay {
+class CustomDay {
   final String userId;
   final DateTime date;
   final Map<String, (TimeOfDay?, int)> habitOrder;
 
-  ReorderedDay({
+  CustomDay({
     required this.userId,
     required this.date,
     required this.habitOrder,
@@ -31,8 +31,8 @@ class ReorderedDay {
   }
 
   // Create from JSON
-  factory ReorderedDay.fromJson(Map<String, dynamic> json) {
-    return ReorderedDay(
+  factory CustomDay.fromJson(Map<String, dynamic> json) {
+    return CustomDay(
       userId: json['userId'],
       date: DateTime.parse(json['date']),
       habitOrder: (json['habitOrder'] as Map<String, dynamic>).map((key, value) {

@@ -1,12 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/logic/convert_habitV1.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tracker_v1/global/logic/compare_time.dart';
 import 'dart:convert';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 
 class HabitNotifier extends StateNotifier<List<Habit>> {
@@ -75,9 +78,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'newHabit': newHabit.newHabit,
       'frequency': newHabit.frequency,
       'weekdays':
-          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+          jsonEncode(newHabit.weekdays?.map((day) => day.toString()).toList()),
       'validationType': newHabit.validationType.toString(),
-      'startDate': newHabit.startDate.toIso8601String(),
+      'startDate': newHabit.startDate?.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
       'timeOfTheDay': newHabit.timeOfTheDay != null
           ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
@@ -89,8 +92,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'ponderation': newHabit.ponderation,
       'color': newHabit.color.value,
       'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-      'synced': newHabit.synced ? true : false,
+          ?.map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+      'synced': newHabit.synced ?? false ? true : false,
     });
   }
 
@@ -101,6 +104,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     await _firestore.collection('habits').doc(targetHabit.habitId).delete();
 
     ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(targetHabit);
+    ref
+        .read(scheduledProvider.notifier)
+        .deleteHabitSchedules(targetHabit.habitId);
   }
 
   // Update a Habit by deleting and re-adding it
@@ -119,9 +125,9 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'newHabit': newHabit.newHabit,
       'frequency': newHabit.frequency,
       'weekdays':
-          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
+          jsonEncode(newHabit.weekdays?.map((day) => day.toString()).toList()),
       'validationType': newHabit.validationType.toString(),
-      'startDate': newHabit.startDate.toIso8601String(),
+      'startDate': newHabit.startDate?.toIso8601String(),
       'endDate': newHabit.endDate?.toIso8601String(),
       'timeOfTheDay': newHabit.timeOfTheDay != null
           ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
@@ -132,55 +138,19 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       'ponderation': newHabit.ponderation,
       'color': newHabit.color.value,
       'orderIndex': newHabit.orderIndex,
-      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
+      'frequencyChanges': jsonEncode(newHabit.frequencyChanges?.map((date, freq) => MapEntry(date.toIso8601String(), freq))),
       'synced': false,
     });
   }
 
-  Future<void> pauseHabit(Habit targetHabit, bool paused) async {
-    int index = state.indexOf(targetHabit);
-    Habit newHabit;
-
+  Future<void> togglePause(Habit targetHabit, bool paused) async {
     if (paused) {
-      int frequency = targetHabit.weekdays.length;
-      newHabit = targetHabit..frequency = frequency;
-      newHabit.frequencyChanges.addAll({today: frequency});
+      ref.read(scheduledProvider.notifier).addSchedule(Schedule(
+          startDate: today, habitId: targetHabit.habitId, paused: false));
     } else {
-      newHabit = targetHabit..frequency = 0;
-      newHabit.frequencyChanges.addAll({today: 0});
+      ref.read(scheduledProvider.notifier).addSchedule(Schedule(
+          startDate: today, habitId: targetHabit.habitId, paused: true));
     }
-
-    List<Habit> newState =
-        state.where((habit) => habit.habitId != targetHabit.habitId).toList();
-    newState.insert(index, newHabit);
-    state = newState;
-
-    await _firestore.collection('habits').doc(newHabit.habitId).set({
-      'userId': newHabit.userId,
-      'icon': newHabit.icon.codePoint.toString(),
-      'name': newHabit.name,
-      'description': newHabit.description,
-      'newHabit': newHabit.newHabit,
-      'frequency': newHabit.frequency,
-      'weekdays':
-          jsonEncode(newHabit.weekdays.map((day) => day.toString()).toList()),
-      'validationType': newHabit.validationType.toString(),
-      'startDate': newHabit.startDate.toIso8601String(),
-      'endDate': newHabit.endDate?.toIso8601String(),
-      'timeOfTheDay': newHabit.timeOfTheDay != null
-          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
-          : null,
-      'additionalMetrics': newHabit.additionalMetrics != null
-          ? jsonEncode(newHabit.additionalMetrics)
-          : null,
-      'ponderation': newHabit.ponderation,
-      'color': newHabit.color.value,
-      'orderIndex': newHabit.orderIndex,
-      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-          .map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-      'synced': false,
-    });
   }
 
   // Load data from Firestore into the state
@@ -242,54 +212,32 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
 
   // Get a list of the habits that are tracked on the target day
   List<Habit> getTodayHabit(DateTime date) {
-    return state.where((habit) => getHabitTrackingStatus(habit, date)).toList();
-  }
-
-  // Helper function to check if the habit is tracked on the target day
-  static bool isPaused(Habit habit, DateTime date1, [DateTime? date2]) {
-    bool paused = false;
-    List<int> values = habit.frequencyChanges.values.toList();
-    List<DateTime> keys = habit.frequencyChanges.keys.toList();
-
-    for (int i = habit.frequencyChanges.length; i > 0; i--) {
-      int index = i - 1;
-
-      if (values[index] == 0) {
-        if ((keys[index].isBefore(date1) ||
-                keys[index].isAtSameMomentAs(date1) ||
-                keys[index] == habit.startDate) &&
-            (habit.frequencyChanges.length <= index + 1
-                ? true
-                : keys[index + 1].isAfter(date2 ?? date1))) {
-          paused = true;
-        }
-      }
-    }
-
-    return paused;
-  }
-
-  // Helper function to check if the habit is tracked on the target day
-  static bool getHabitTrackingStatus(Habit habit, DateTime date) {
-    bool paused = isPaused(habit, date);
-
-    final bool isStarted = habit.startDate.isBefore(date) ||
-        habit.startDate.isAtSameMomentAs(date);
-    final bool isEnded = habit.endDate != null &&
-        (habit.endDate!.isBefore(date) ||
-            habit.endDate!.isAtSameMomentAs(date));
-    final bool isTracked =
-        habit.weekdays.contains(WeekDay.values[date.weekday - 1]);
-    return isStarted && !isEnded && isTracked && !paused;
+    return state
+        .where((habit) => ref
+            .read(scheduledProvider.notifier)
+            .getHabitTrackingStatus(habit, date))
+        .toList();
   }
 
   TimeOfDay? getLastTimeOfTheDay(DateTime date) {
-    List<Habit> todayHabit =
-        getTodayHabit(date).where((h) => h.timeOfTheDay != null).toList();
-    List<TimeOfDay?> timeOfDay = todayHabit.map((h) => h.timeOfTheDay).toList()
-      ..sort((a, b) => compareTimeOfDay(a, b));
-    if (todayHabit.isNotEmpty) {
-      return timeOfDay.last!;
+    List<Habit> todayHabit = getTodayHabit(date);
+    List<TimeOfDay> timeOfDayList = [];
+
+    for (Habit habit in todayHabit) {
+      List<TimeOfDay>? timeOfDays = ref
+          .read(scheduledProvider.notifier)
+          .getHabitTargetDaySchedule(habit, date)
+          .timesOfTheDay;
+
+      if (timeOfDays != null && timeOfDays.isNotEmpty) {
+        timeOfDayList.add(timeOfDays[date.weekday - 1]);
+      }
+    }
+
+    timeOfDayList.sort((a, b) => compareTimeOfDay(a, b));
+
+    if (timeOfDayList.isNotEmpty) {
+      return timeOfDayList.last;
     }
     return null;
   }
@@ -304,6 +252,21 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       }
     }
     return additionalMetrics;
+  }
+
+  bool isHabitCurrentlyPaused(Habit habit) {
+    try {
+      return ref
+              .read(scheduledProvider.notifier)
+              .getSchedulesForHabit(habit)
+              .toList()
+              .reversed
+              .toList()[0]
+              .paused ==
+          true;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Helper function to get the additional metrics of all habit

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
+import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 
-class AdditionalMetrics extends StatefulWidget {
+class AdditionalMetrics extends ConsumerStatefulWidget {
   const AdditionalMetrics(this.enteredAdditionalMetrics, {super.key});
 
   final List<String> enteredAdditionalMetrics;
 
   @override
-  State<AdditionalMetrics> createState() => _AdditionalMetricsState();
+  ConsumerState<AdditionalMetrics> createState() => _AdditionalMetricsState();
 }
 
-class _AdditionalMetricsState extends State<AdditionalMetrics> {
+class _AdditionalMetricsState extends ConsumerState<AdditionalMetrics> {
   String? _additionalMetrics;
   final formKey = GlobalKey<FormState>();
 
@@ -39,6 +42,8 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
 
   @override
   Widget build(BuildContext context) {
+    Habit habitState = ref.watch(newHabitProvider);
+
     return Form(
       key: formKey,
       child: Column(
@@ -47,13 +52,14 @@ class _AdditionalMetricsState extends State<AdditionalMetrics> {
             children: [
               Expanded(
                 child: BigTextFormField(
+                  color: habitState.color,
                   maxLenght: 100,
                   maxLine: 1,
                   controlledValue: _additionalMetrics ?? '',
                   onSaved: (value) {
                     _additionalMetrics = value;
                   },
-                  toolTipTitle: 'Additional things you want to track',
+                  toolTipTitle: 'Additional tracking:',
                   tooltipContent: 'Provide Additional tracking (Optional)',
                 ),
               ),

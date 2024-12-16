@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/habit/data/habits_provider.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -32,7 +35,7 @@ class HabitWidget extends ConsumerWidget {
 
   void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
     if (habit.validationType == HabitType.unique) {
-      TrackedDay? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
+      HabitRecap? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
         (td) {
           return td.habitId == habit.habitId && td.date == date;
         },
@@ -43,7 +46,7 @@ class HabitWidget extends ConsumerWidget {
         return;
       }
 
-      TrackedDay newTrackedDay = TrackedDay(
+      HabitRecap newTrackedDay = HabitRecap(
         userId: FirebaseAuth.instance.currentUser!.uid,
         habitId: habit.habitId,
         date: date!,
@@ -53,7 +56,7 @@ class HabitWidget extends ConsumerWidget {
 
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
     } else if (habit.validationType == HabitType.simple) {
-      TrackedDay? oldTrackedDay =
+      HabitRecap? oldTrackedDay =
           ref.read(trackedDayProvider).firstWhereOrNull((td) {
         return td.habitId == habit.habitId && td.date == date;
       });
@@ -72,7 +75,7 @@ class HabitWidget extends ConsumerWidget {
         ),
       );
     } else if (habit.validationType == HabitType.recap) {
-      TrackedDay? oldTrackedDay =
+      HabitRecap? oldTrackedDay =
           ref.read(trackedDayProvider).firstWhereOrNull((td) {
         return td.habitId == habit.habitId && td.date == date;
       });
@@ -88,7 +91,7 @@ class HabitWidget extends ConsumerWidget {
                 : Validated.yes),
       );
     } else if (habit.validationType == HabitType.recapDay) {
-      TrackedDay? oldTrackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
+      HabitRecap? oldTrackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
         (td) {
           return td.habitId == habit.habitId && td.date == date;
         },
@@ -113,7 +116,7 @@ class HabitWidget extends ConsumerWidget {
   }
 
   void _endToStartSwiping(
-      TrackedDay? trackedDay, Habit habit, WidgetRef ref, context) {
+      HabitRecap? trackedDay, Habit habit, WidgetRef ref, context) {
     if (trackedDay == null || trackedDay.done == Validated.notYet) {
       showModalBottomSheet(
           useSafeArea: true,
@@ -140,7 +143,7 @@ class HabitWidget extends ConsumerWidget {
     }
   }
 
-  String? _displayCurrentStreak(List<TrackedDay> trackedDays, ref) {
+  String? _displayCurrentStreak(List<HabitRecap> trackedDays, ref) {
     int streak = getCurrentStreak(date!, habit, ref);
 
     if (streak < 1) {
@@ -162,21 +165,21 @@ class HabitWidget extends ConsumerWidget {
     }
   }
 
-  bool _isPastCurrentTime(Habit habit) {
-    return habit.timeOfTheDay == null
+  bool _isPastCurrentTime(TimeOfDay? time) {
+    return time == null
         ? DateTime(
               date!.year,
               date!.month,
               date!.day,
             ).compareTo(DateTime.now()) <=
             0
-        : DateTime(date!.year, date!.month, date!.day, habit.timeOfTheDay!.hour,
-                    habit.timeOfTheDay!.minute)
+        : DateTime(date!.year, date!.month, date!.day, time.hour, time.minute)
                 .compareTo(DateTime.now()) <=
             0;
   }
 
-  HabitStatusAppearance _getStatusAppearance(TrackedDay? trackedDay, context) {
+  HabitStatusAppearance _getStatusAppearance(
+      HabitRecap? trackedDay, bool? pastCurrentTime, context, ref) {
     if (!habitList) {
       return trackedDay != null && trackedDay.done != Validated.notYet
           ? trackedDay.getStatusAppearance(Theme.of(context).colorScheme)
@@ -185,7 +188,9 @@ class HabitWidget extends ConsumerWidget {
                   habit.color.value == Color.fromARGB(255, 52, 52, 52).value
                       ? const Color.fromARGB(255, 52, 52, 52)
                       : habit.color.withOpacity(0.1),
-              elementsColor: Colors.white);
+              elementsColor: pastCurrentTime != null && pastCurrentTime!
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.45),);
     } else {
       return HabitStatusAppearance(
           backgroundColor:
@@ -193,7 +198,7 @@ class HabitWidget extends ConsumerWidget {
                   ? const Color.fromARGB(255, 52, 52, 52)
                   : habit.color.withOpacity(0.1),
           elementsColor: Colors.white,
-          icon: habit.frequencyChanges.values.toList().reversed.toList()[0] == 0
+          icon: ref.read(habitProvider.notifier).isHabitCurrentlyPaused(habit)
               ? const Icon(Icons.pause_circle_filled)
               : null);
     }
@@ -204,10 +209,15 @@ class HabitWidget extends ConsumerWidget {
     String? currentStreak;
     bool? pastCurrentTime;
     HabitStatusAppearance? appearance;
-    TrackedDay? trackedDay;
-    List<TrackedDay> trackedDays;
+    HabitRecap? trackedDay;
+    Schedule? schedule;
+    TimeOfDay? time;
+    List<HabitRecap> trackedDays;
 
     if (!habitList) {
+      schedule = ref
+          .watch(scheduledProvider.notifier)
+          .getHabitTargetDaySchedule(habit, date!);
       trackedDays = ref.watch(trackedDayProvider);
       trackedDay = trackedDays.firstWhereOrNull((trackedDay) {
         return trackedDay.habitId == habit.habitId && trackedDay.date == date;
@@ -218,11 +228,17 @@ class HabitWidget extends ConsumerWidget {
         ref,
       );
 
-      pastCurrentTime = _isPastCurrentTime(habit);
+      time = schedule.timesOfTheDay?[date!.weekday - 1];
+      pastCurrentTime = _isPastCurrentTime(time);
+    } else {
+      schedule =
+          ref.watch(scheduledProvider.notifier).getHabitDefaultSchedule(habit);
+      trackedDays = ref.watch(trackedDayProvider);
+      time = schedule.timesOfTheDay?[0];
     }
 
-    appearance = _getStatusAppearance(trackedDay, context);
-
+    appearance = _getStatusAppearance(trackedDay, pastCurrentTime,context, ref);
+    
     return Dismissible(
         direction:
             !habitList ? DismissDirection.horizontal : DismissDirection.none,
@@ -253,14 +269,14 @@ class HabitWidget extends ConsumerWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (ctx) => HabitScreen(habit),
+                  builder: (ctx) => HabitScreen(habit, dateOpened: date),
                 ),
               );
             },
             child: Row(
               children: [
                 TimeFrame(
-                    habit: habit,
+                    time: time,
                     isLastItem: isLastItem,
                     timeMarker: timeMarker,
                     pastCurrentTime: pastCurrentTime,
@@ -282,7 +298,7 @@ class HabitWidget extends ConsumerWidget {
 
 class TimeFrame extends StatelessWidget {
   const TimeFrame({
-    required this.habit,
+    this.time,
     required this.isLastItem,
     required this.timeMarker,
     required this.pastCurrentTime,
@@ -290,7 +306,7 @@ class TimeFrame extends StatelessWidget {
     super.key,
   });
 
-  final Habit habit;
+  final TimeOfDay? time;
   final bool isLastItem;
   final double? timeMarker;
   final bool? pastCurrentTime;
@@ -330,9 +346,9 @@ class TimeFrame extends StatelessWidget {
             alignment: Alignment.center,
             height: 48,
             width: 50,
-            child: habit.timeOfTheDay != null
+            child: time != null
                 ? Text(
-                    '${habit.timeOfTheDay!.hour.toString().padLeft(2, '0')}:${habit.timeOfTheDay!.minute.toString().padLeft(2, '0')}',
+                    '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
                     style: TextStyle(
                         color: pastCurrentTime != null && pastCurrentTime!
                             ? Colors.white

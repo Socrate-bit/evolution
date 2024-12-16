@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomElevatedButton extends StatelessWidget {
   const CustomElevatedButton({
+    this.color,
     required this.submit,
     this.text= 'Submit',
     super.key,
@@ -9,6 +10,7 @@ class CustomElevatedButton extends StatelessWidget {
 
   final void Function() submit;
   final String text;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,10 @@ class CustomElevatedButton extends StatelessWidget {
         width: double.infinity,
         height: 60,
         child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color ?? Theme.of(context).colorScheme.primary,
+
+          ),
           onPressed: submit,
           child: Text(
             text,

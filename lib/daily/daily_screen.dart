@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/daily/data/custom_day_model.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
@@ -10,52 +10,22 @@ import 'package:tracker_v1/daily/display/day_switcher_widget.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 
-class DailyScreen extends ConsumerStatefulWidget {
-  const DailyScreen(this.dateDisplay, {super.key});
-  final Function dateDisplay;
+class DailyScreen extends ConsumerWidget {
+  const DailyScreen({super.key});
 
   @override
-  ConsumerState<DailyScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends ConsumerState<DailyScreen> {
-  late DateTime selectedDate;
-  DateTime now = DateTime.now();
-  final _formater = DateFormat('d MMM');
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (now.hour >= 2) {
-      selectedDate = DateTime(now.year, now.month, now.day);
-    } else {
-      selectedDate = DateTime(now.year, now.month, now.day - 1);
-    }
-  }
-
-  String _displayedDate(DateTime value) {
-    if (DateTime(now.year, now.month, now.day) == value) {
-      return 'Today';
-    } else if (DateTime(now.year, now.month, now.day + 1) == value) {
-      return 'Tomorrow';
-    } else if (DateTime(now.year, now.month, now.day - 1) == value) {
-      return 'Yesterday';
-    } else {
-      return _formater.format(value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    DailyScreenState dailyScreenState = ref.watch(dailyScreenStateProvider);
     final habitsList = ref.watch(habitProvider);
-    final List<Habit> todayHabitsList =
-        ref.watch(habitProvider.notifier).getTodayHabit(selectedDate);
-    final ReorderedDay? loadedHabitOrder = ref
-        .watch(ReorderedDayProvider)
+    final List<Habit> todayHabitsList = ref
+        .watch(habitProvider.notifier)
+        .getTodayHabit(dailyScreenState.selectedDate);
+
+    final CustomDay? loadedHabitOrder = ref
+        .watch(reorderedDayProvider)
         .firstWhereOrNull((e) =>
             e.userId == FirebaseAuth.instance.currentUser!.uid &&
-            e.date == selectedDate);
+            e.date == dailyScreenState.selectedDate);
 
     final List<Habit> todayHabitListCopy =
         todayHabitsList.map((habit) => habit.copy()).toList();
@@ -74,7 +44,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
     if (todayHabitListCopy.isNotEmpty) {
       content = HabitList(
         displayedHabitList: todayHabitListCopy,
-        selectedDate: selectedDate,
+        selectedDate: dailyScreenState.selectedDate,
         habitsPersonalisedOrder: loadedHabitOrder?.habitOrder,
       );
     } else {
@@ -92,14 +62,7 @@ class _MainScreenState extends ConsumerState<DailyScreen> {
 
     return Column(
       children: [
-        DaySwitch((value) {
-          setState(
-            () {
-              selectedDate = value;
-              widget.dateDisplay(_displayedDate(value));
-            },
-          );
-        }, selectedDate),
+        DaySwitch(),
         Expanded(child: Center(child: content)),
       ],
     );

@@ -8,8 +8,8 @@ const idGenerator = Uuid();
 
 enum Validated { notYet, yes, no }
 
-class TrackedDay {
-  TrackedDay({
+class HabitRecap {
+  HabitRecap({
     trackedDayId,
     required this.userId,
     required this.habitId,

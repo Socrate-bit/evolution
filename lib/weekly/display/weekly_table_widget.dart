@@ -1,13 +1,15 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/daily/logic/sort_habits_utility.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
-import 'package:tracker_v1/global/logic/compare_time.dart';
 import 'package:tracker_v1/weekly/logic/container_controller.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 import 'package:tracker_v1/global/logic/is_in_the_week.dart';
 import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
@@ -22,10 +24,15 @@ class WeeklyTable extends ConsumerWidget {
   static const List range = [0, 1, 2, 3, 4, 5, 6];
   final List<DateTime> offsetWeekDays;
 
-  List<dynamic> _getDayTrackingStatus(Habit habit,
-      List<DateTime> offsetWeekDays, List<TrackedDay> trackedDays) {
+  List<dynamic> _getDayTrackingStatus(
+      Habit habit,
+      List<DateTime> offsetWeekDays,
+      List<HabitRecap> trackedDays,
+      WidgetRef ref) {
     List<bool> isTrackedFilter = range.map((index) {
-      return HabitNotifier.getHabitTrackingStatus(habit, offsetWeekDays[index]);
+      return ref
+          .read(scheduledProvider.notifier)
+          .getHabitTrackingStatus(habit, offsetWeekDays[index]);
     }).toList();
 
     List<dynamic> result = range.map((index) {
@@ -56,10 +63,13 @@ class WeeklyTable extends ConsumerWidget {
     );
   }
 
-  TableRow _buildHabitRow(Habit habit, BuildContext context, WidgetRef ref,
-      List<TrackedDay> trackedDays, List<RecapDay> recapList) {
+  TableRow? _buildHabitRow(Habit habit, BuildContext context, WidgetRef ref,
+      List<HabitRecap> trackedDays, List<RecapDay> recapList) {
     final trackingStatusList =
-        _getDayTrackingStatus(habit, offsetWeekDays, trackedDays);
+        _getDayTrackingStatus(habit, offsetWeekDays, trackedDays, ref);
+    if (trackingStatusList.every((element) => element == false)) {
+      return null;}
+
     return TableRow(
       children: [
         Center(
@@ -160,25 +170,29 @@ class WeeklyTable extends ConsumerWidget {
     );
   }
 
+  List<TableRow> buildTableRows(List<Habit> activeHabits, WidgetRef ref,
+      List<HabitRecap> trackedDays, List<RecapDay> recapList, context) {
+    return activeHabits
+        .map((habit) => _buildHabitRow(habit, context, ref, trackedDays, recapList)).where((element) => element != null).cast<TableRow>().toList();
+      
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allHabits = ref
         .watch(habitProvider)
         .where((habit) => habit.validationType != HabitType.unique)
         .toList();
-    final activeHabits = allHabits
-        .where((habit) =>
-            isInTheWeek(habit.startDate, habit.endDate, offsetWeekDays) &&
-            !HabitNotifier.isPaused(
-                habit, offsetWeekDays.first, offsetWeekDays.last))
-        .toList()
-      ..sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
+
+    List<Habit> activeHabits = sortHabits(allHabits, null, ref);
 
     final trackedDays = ref.watch(trackedDayProvider);
     final recapList = ref.watch(recapDayProvider);
 
     double? ratioValidated = completionComputing(
         offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
+        
+    List<TableRow> rows = buildTableRows(activeHabits, ref, trackedDays, recapList, context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
@@ -195,14 +209,13 @@ class WeeklyTable extends ConsumerWidget {
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20))),
             children: [
+
               _buildTableHeader(),
-              if (activeHabits.isNotEmpty) _buildDailyRow(ref, ratioValidated),
-              if (activeHabits.isNotEmpty)
-                ...activeHabits.map((habit) => _buildHabitRow(
-                    habit, context, ref, trackedDays, recapList)),
+              if (rows.isNotEmpty) _buildDailyRow(ref, ratioValidated),
+              if (rows.isNotEmpty) ...rows,
             ],
           ),
-          if (activeHabits.isEmpty)
+          if (rows.isEmpty)
             Container(
               alignment: Alignment.center,
               height: 400,

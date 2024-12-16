@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/custom_day_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
+class ReorderedDayNotifier extends StateNotifier<List<CustomDay>> {
   ReorderedDayNotifier(this.ref) : super([]);
   final Ref ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Add a new ReorderedDay to the state and Firestore
-  Future<void> addReorderedDay(ReorderedDay newReorder) async {
+  Future<void> addReorderedDay(CustomDay newReorder) async {
     state = [...state, newReorder];
 
     await _firestore
@@ -19,7 +19,7 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
   }
 
   // Delete a ReorderedDay from state and Firestore
-  Future<void> deleteReorderedDay(ReorderedDay targetReorder) async {
+  Future<void> deleteReorderedDay(CustomDay targetReorder) async {
     await _firestore
         .collection('special_day_reorders')
         .doc('${targetReorder.userId}_${targetReorder.date.toIso8601String()}')
@@ -27,7 +27,7 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
   }
 
   // Update a ReorderedDay by deleting and re-adding it
-  Future<void> updateReorderedDay(ReorderedDay updatedReorder) async {
+  Future<void> updateReorderedDay(CustomDay updatedReorder) async {
     state = [
       ...state.where((reorder) => reorder.date != updatedReorder.date),
       updatedReorder
@@ -53,9 +53,9 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
 
     if (snapshot.docs.isEmpty) return;
 
-    final List<ReorderedDay> loadedData = snapshot.docs.map((doc) {
+    final List<CustomDay> loadedData = snapshot.docs.map((doc) {
       final data = doc.data();
-      return ReorderedDay.fromJson(data);
+      return CustomDay.fromJson(data);
     }).toList();
 
     state = loadedData;
@@ -67,7 +67,7 @@ class ReorderedDayNotifier extends StateNotifier<List<ReorderedDay>> {
   }
 }
 
-final ReorderedDayProvider =
-    StateNotifierProvider<ReorderedDayNotifier, List<ReorderedDay>>(
+final reorderedDayProvider =
+    StateNotifierProvider<ReorderedDayNotifier, List<CustomDay>>(
   (ref) => ReorderedDayNotifier(ref),
 );

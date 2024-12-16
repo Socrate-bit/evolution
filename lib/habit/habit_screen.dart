@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_launcher/cli_commands.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
@@ -13,8 +13,9 @@ import 'package:tracker_v1/habit/display/heatmap_widget.dart';
 import 'package:tracker_v1/habit/display/recap_list_widget.dart';
 
 class HabitScreen extends ConsumerWidget {
-  const HabitScreen(this.initialHabit, {super.key});
+  const HabitScreen(this.initialHabit, {this.dateOpened, super.key});
   final Habit initialHabit;
+  final DateTime? dateOpened;
 
   void showNewHabit(Habit targetHabit, context) {
     showModalBottomSheet(
@@ -23,6 +24,7 @@ class HabitScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => NewHabitScreen(
         habit: targetHabit,
+        dateOpened: dateOpened,
       ),
     );
   }
@@ -33,14 +35,8 @@ class HabitScreen extends ConsumerWidget {
         .watch(habitProvider)
         .firstWhere((h) => h.habitId == initialHabit.habitId);
 
-
     void resetData() {
       ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
-      ref.read(habitProvider.notifier).updateHabit(
-          habit,
-          habit.copy()
-            ..frequencyChanges = {today: habit.frequency}
-            ..startDate = today);
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Data deleted')));
@@ -133,30 +129,6 @@ class HabitScreen extends ConsumerWidget {
                   endIndent: 3, // Right spacing
                 ),
                 if (habit.validationType != HabitType.unique)
-                  Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: RichText(
-                            textAlign: TextAlign.left,
-                            text: TextSpan(
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge, // Base style
-                              children: [
-                                const TextSpan(
-                                  text:
-                                      'Frequency: ', // First part (regular style)
-                                ),
-                                TextSpan(
-                                  text:
-                                      '${habit.weekdays.map((e) => DaysOfTheWeekUtility.weekDayToAbrev[e]).toString().replaceAll('(', '').replaceAll(')', '')}', // Second part (italic style)
-                                  style: TextStyle(fontStyle: FontStyle.italic),
-                                ),
-                              ],
-                            ),
-                          ))),
-                if (habit.validationType != HabitType.unique)
                   Divider(
                     color: Colors.grey.withOpacity(0.2), // Line color
                     height: 20, // Space around the divider
@@ -180,8 +152,8 @@ class HabitScreen extends ConsumerWidget {
                                     'Habit type: ', // First part (regular style)
                               ),
                               TextSpan(
-                                text:
-                                    habit.validationType.name.capitalizeString(), // Second part (italic style)
+                                text: habit.validationType.name
+                                    .capitalizeString(), // Second part (italic style)
                                 style: TextStyle(fontStyle: FontStyle.italic),
                               ),
                             ],
@@ -248,16 +220,14 @@ class HabitScreen extends ConsumerWidget {
                   height: 8,
                 ),
                 if (habit.validationType != HabitType.unique)
-                  if (habit.frequencyChanges.values
-                          .toList()
-                          .reversed
-                          .toList()[0] ==
-                      0)
+                  if (ref
+                      .read(habitProvider.notifier)
+                      .isHabitCurrentlyPaused(habit))
                     CustomElevatedButton(
                       submit: () {
                         ref
                             .read(habitProvider.notifier)
-                            .pauseHabit(habit, true);
+                            .togglePause(habit, true);
                       },
                       text: 'Unpause habit',
                     )
@@ -266,7 +236,7 @@ class HabitScreen extends ConsumerWidget {
                       submit: () {
                         ref
                             .read(habitProvider.notifier)
-                            .pauseHabit(habit, false);
+                            .togglePause(habit, false);
                       },
                       text: 'Pause habit',
                     ),

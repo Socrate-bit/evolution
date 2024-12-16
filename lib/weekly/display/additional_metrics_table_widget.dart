@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -52,12 +53,14 @@ class AdditionalMetricsTable extends ConsumerWidget {
   List<dynamic> _getDayTrackingStatus(
       (Habit, String) metric,
       List<DateTime> offsetWeekDays,
-      List<TrackedDay> trackedDays,
-      List<RecapDay> recapDays) {
+      List<HabitRecap> trackedDays,
+      List<RecapDay> recapDays,
+      WidgetRef ref) {
     List<dynamic> result;
     List<bool> isTrackedFilter = range.map((index) {
-      return HabitNotifier.getHabitTrackingStatus(
-          metric.$1, offsetWeekDays[index]);
+      return ref
+          .read(scheduledProvider.notifier)
+          .getHabitTrackingStatus(metric.$1, offsetWeekDays[index]);
     }).toList();
 
     if (metric.$1.validationType == HabitType.recapDay) {
@@ -108,7 +111,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
         ),
         ...metricList.map((index) {
           return Container(
-            color: index != false 
+            color: index != false
                 ? Theme.of(context).colorScheme.surfaceBright
                 : Theme.of(context).colorScheme.surface,
             height: 30,
@@ -131,19 +134,11 @@ class AdditionalMetricsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allHabits = ref.watch(habitProvider).toList();
-    final activeHabits = allHabits
-        .where((habit) =>
-            _isInTheWeek(habit.startDate, date2: habit.endDate) &&
-            !HabitNotifier.isPaused(
-                habit, offsetWeekDays.first, offsetWeekDays.last))
-        .toList()
-      ..sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
-
     final trackedDays = ref.watch(trackedDayProvider);
     final recapDays = ref.watch(recapDayProvider);
 
-    final List<(Habit, String)> additionalMetrics = ref.read(habitProvider.notifier).getAllAdditionalMetrics();
+    final List<(Habit, String)> additionalMetrics =
+        ref.read(habitProvider.notifier).getAllAdditionalMetrics();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
@@ -165,7 +160,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
                   entry,
                   context,
                   _getDayTrackingStatus(
-                      entry, offsetWeekDays, trackedDays, recapDays))),
+                      entry, offsetWeekDays, trackedDays, recapDays, ref))),
             ],
           ),
           if (additionalMetrics.isEmpty)

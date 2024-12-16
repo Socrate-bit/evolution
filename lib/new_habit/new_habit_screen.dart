@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_iconpicker/Models/configuration.dart';
+import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_launcher/cli_commands.dart';
+import 'package:tracker_v1/global/display/modify_habit.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
-import 'package:tracker_v1/habit/habit_screen.dart';
+import 'package:tracker_v1/new_habit/data/frequency_state.dart';
+import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/new_habit/display/additional_metrics_widget.dart';
-import 'package:tracker_v1/new_habit/display/date_picker_widget.dart';
-import 'package:tracker_v1/new_habit/display/frequency_picker_widget.dart';
-import 'package:tracker_v1/new_habit/display/icon_picker_widget.dart';
+import 'package:tracker_v1/new_habit/display/frequency_picker2_widget.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
 import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
-  const NewHabitScreen({this.habit, super.key});
+  const NewHabitScreen({this.habit, this.dateOpened, super.key});
 
   final Habit? habit;
+  final DateTime? dateOpened;
 
   @override
   ConsumerState<NewHabitScreen> createState() => _MainScreenState();
@@ -29,110 +32,281 @@ class NewHabitScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<NewHabitScreen> {
   final formKey = GlobalKey<FormState>();
-
-  IconData _enteredIcon = Icons.self_improvement;
-  String? _enteredName;
-  String? _enteredDescription;
-  String? _mainImprovement;
-  int _enteredFrequency = 7;
-  List<WeekDay> _enteredWeekdays = [];
-  HabitType _enteredValidationType = HabitType.simple;
-  DateTime now = DateTime.now();
-  DateTime? _enteredStartDate;
-  DateTime? _enteredEndDate;
-  TimeOfDay? _enteredTimeOfTheDay;
-  List<String> _enteredAdditionalMetrics = [];
-  int _enteredPonderation = 3;
-  Color _color = Colors.grey;
+  dynamic notifier;
+  Schedule? oldSchedule;
 
   @override
   void initState() {
+    // Load the habit data if editing existing habit
+    if (widget.habit != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(newHabitProvider.notifier).setState(widget.habit!.copy());
+
+        if (widget.dateOpened != null) {
+          Schedule targetDaySchedule = ref
+              .read(scheduledProvider.notifier)
+              .getHabitTargetDaySchedule(widget.habit!, widget.dateOpened!);
+          oldSchedule = targetDaySchedule;
+          ref
+              .read(frequencyProvider.notifier)
+              .setState(targetDaySchedule.copyWith());
+        } else {
+          Schedule defaultSchedule = ref
+              .read(scheduledProvider.notifier)
+              .getHabitDefaultSchedule(widget.habit!);
+          oldSchedule = defaultSchedule;
+          ref
+              .read(frequencyProvider.notifier)
+              .setState(defaultSchedule.copyWith());
+        }
+      });
+    }
+
+    // Set the start date if created / edited from the dailyscreen
+    if (widget.dateOpened != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(frequencyProvider.notifier).setStartDate(widget.dateOpened!);
+        ref.read(frequencyProvider.notifier).setDaysOfTheWeek([
+          DaysOfTheWeekUtility.NumberToWeekDay[widget.dateOpened!.weekday]!
+        ]);
+      });
+    }
+
     super.initState();
-    if (widget.habit != null) {
-      _enteredIcon = widget.habit!.icon;
-      _enteredName = widget.habit!.name;
-      _enteredDescription = widget.habit!.description;
-      _mainImprovement = widget.habit!.newHabit;
-      _enteredFrequency = widget.habit!.frequency;
-      _enteredWeekdays = List.from(widget.habit!.weekdays);
-      _enteredValidationType = widget.habit!.validationType;
-      _enteredStartDate = widget.habit!.startDate;
-      _enteredEndDate = widget.habit!.endDate;
-      _enteredTimeOfTheDay = widget.habit!.timeOfTheDay;
-      _enteredPonderation = widget.habit!.ponderation;
-      _color = widget.habit!.color;
-      _enteredAdditionalMetrics = List.from(widget.habit!.additionalMetrics!);
-    }
+    notifier = ref.read(newHabitProvider.notifier);
   }
 
-  void submit() {
-    DateTime today = DateTime(now.year, now.month, now.day);
+  @override
+  Widget build(BuildContext context) {
+    Habit habitState = ref.watch(newHabitProvider);
+    Schedule frequencyState = ref.watch(frequencyProvider);
 
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-
-    formKey.currentState!.save();
-
-    if (_enteredWeekdays.isEmpty) {
-      _enteredWeekdays.addAll([...WeekDay.values]);
-    } else {
-      _enteredFrequency = _enteredWeekdays.length;
-    }
-
-    Habit newHabit = Habit(
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        habitId: widget.habit?.habitId,
-        icon: _enteredIcon,
-        name: _enteredName!,
-        description: _enteredDescription,
-        newHabit: _mainImprovement,
-        frequency: _enteredFrequency,
-        weekdays: _enteredWeekdays,
-        validationType: _enteredName == 'Daily recap'
-            ? HabitType.recapDay
-            : _enteredValidationType,
-        startDate: _enteredStartDate ?? today,
-        endDate: _enteredEndDate,
-        timeOfTheDay: _enteredTimeOfTheDay,
-        additionalMetrics: _enteredAdditionalMetrics,
-        orderIndex: widget.habit?.orderIndex ?? ref.read(habitProvider).length,
-        ponderation: _enteredPonderation,
-        color: _color,
-        frequencyChanges: widget.habit != null
-            ? Map<DateTime, int>.from(widget.habit!.frequencyChanges)
-            : {today: _enteredFrequency});
-
-    if (widget.habit != null && widget.habit!.frequency != _enteredFrequency) {
-      newHabit.frequencyChanges.addAll({today: _enteredFrequency});
-    }
-
-    if (widget.habit != null) {
-      ref.read(habitProvider.notifier).updateHabit(widget.habit!, newHabit);
-    } else {
-      ref.read(habitProvider.notifier).addHabit(newHabit);
-    }
-
-    Navigator.of(context).pop();
+    return CustomModalBottomSheet(
+      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
+      formKey: formKey,
+      content: Column(
+        children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            IconPickerWidget(),
+            const SizedBox(width: 16),
+            _getName(habitState),
+          ]),
+          _getColorPicker(habitState),
+          const SizedBox(height: 12),
+          _getDescriptionField(habitState),
+          const SizedBox(height: 16),
+          _getPriorityField(habitState),
+          const SizedBox(height: 32),
+          FrequencyPickerWidget(),
+          const SizedBox(height: 32),
+          _getTimeOfTheDayField(frequencyState),
+          const SizedBox(height: 32),
+          _getHabitType(habitState),
+          const SizedBox(height: 32),
+          AnimatedSwitcher(
+              transitionBuilder: (switcherChild, animation) {
+                return SizeTransition(
+                  sizeFactor: animation,
+                  child: FadeTransition(
+                    opacity: animation,
+                    child: switcherChild,
+                  ),
+                );
+              },
+              duration: Duration(milliseconds: 300),
+              child: habitState.validationType == HabitType.recap
+                  ? _getImprovementField(habitState)
+                  : null),
+          AdditionalMetrics(habitState.additionalMetrics!),
+          const SizedBox(height: 32),
+          CustomElevatedButton(
+            color: habitState.color,
+            submit: () => _submit(context),
+            text: widget.habit != null ? 'Edit' : 'Create',
+          )
+        ],
+      ),
+    );
   }
 
-  void showColorPicker() {
+  Widget _getName(habitState) {
+    return Expanded(
+        child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        BigTextFormField(
+          color: habitState.color,
+          maxLenght: 100,
+          maxLine: 1,
+          controlledValue: habitState.name,
+          onSaved: (value) {
+            notifier.setName(value);
+          },
+          toolTipTitle: 'Name:',
+          tooltipContent: 'Provide a name of this habit',
+        ),
+      ],
+    ));
+  }
+
+  Widget _getColorPicker(habitState) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        const CustomToolTipTitle(
+            title: 'Color:', content: 'Select the color of the stat'),
+        Spacer(),
+        Center(
+          child: InkWell(
+            onTap: _showColorPicker,
+            child: CircleAvatar(
+              backgroundColor: habitState.color,
+              radius: 24,
+            ),
+          ),
+        ),
+        Spacer(),
+      ],
+    );
+  }
+
+  void _showColorPicker() {
+    Habit habitState = ref.watch(newHabitProvider);
+
     showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
             backgroundColor: Colors.black,
             content: BlockPicker(
-                pickerColor: _color,
+                pickerColor: habitState.color,
                 onColorChanged: (value) {
                   setState(() {
-                    _color = value;
+                    notifier.setColor(value);
                   });
+                  Navigator.of(ctx).pop();
                 })));
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _getDescriptionField(habitState) {
+    return BigTextFormField(
+      color: habitState.color,
+      controlledValue: habitState.description,
+      onSaved: (value) {
+        notifier.setDescription(value);
+      },
+      toolTipTitle: 'Description:',
+      tooltipContent: 'Provide a description of this habit',
+    );
+  }
+
+  Widget _getPriorityField(habitState) {
+    return Row(
+      children: [
+        const CustomToolTipTitle(title: 'Priority:', content: 'Importance'),
+        Expanded(
+          child: Center(
+            child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceBright,
+                    borderRadius: BorderRadius.circular(5)),
+                child: DropdownButton(
+                  value: habitState.ponderation,
+                  icon: const Icon(Icons.arrow_drop_down),
+                  isDense: true,
+                  dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                  items: Ponderation.values.reversed
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.index + 1,
+                          child: Text(item.name.toString().capitalizeString()),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      notifier.setPonderation(value);
+                    });
+                  },
+                )),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _getTimeOfTheDayField(Schedule frequencyState) {
+    return Row(children: [
+      const CustomToolTipTitle(title: 'Time of the day:', content: 'Time'),
+      Expanded(
+        child: Center(
+          child: ElevatedButton(
+            onPressed: () async {
+              ref.read(frequencyProvider.notifier).setTimesOfTheDay(
+                  await showTimePicker(
+                      context: context,
+                      initialTime:
+                          frequencyState.timesOfTheDay?[0] ?? TimeOfDay.now(),
+                      initialEntryMode: TimePickerEntryMode.input));
+            },
+            style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5)),
+                backgroundColor: Theme.of(context).colorScheme.surfaceBright),
+            child: Text(
+              frequencyState.timesOfTheDay == null
+                  ? 'Whenever'
+                  : frequencyState.timesOfTheDay![0].format(context),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+        ),
+      )
+    ]);
+  }
+
+  Widget _getHabitType(habitState) {
+    List<HabitType> habitTypeList = _generateHabitTypeList();
+    return Row(
+      children: [
+        const CustomToolTipTitle(title: 'Habit type:', content: 'Item type'),
+        Expanded(
+          child: Center(
+            child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceBright,
+                    borderRadius: BorderRadius.circular(5)),
+                child: DropdownButton(
+                  value: habitState.validationType,
+                  icon: const Icon(Icons.arrow_drop_down),
+                  isDense: true,
+                  dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                  items: habitTypeList
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item,
+                          child: Text(habitTypeDescriptions[item] ?? ''),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    notifier.setValidationType(value);
+                  },
+                )),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<HabitType> _generateHabitTypeList() {
     List<HabitType> habitTypeList = List.from(HabitType.values);
+
     if (ref.read(habitProvider).firstWhereOrNull(
                 (h) => h.validationType == HabitType.recapDay) !=
             null &&
@@ -141,214 +315,92 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       habitTypeList.remove(HabitType.recapDay);
     }
 
-    return CustomModalBottomSheet(
-      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
-      formKey: formKey,
-      content: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconPickerWidget(
-                passIcon: (pickedIcon) {
-                  _enteredIcon = pickedIcon;
-                },
-                defaultIcon: _enteredIcon,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  BigTextFormField(
-                    maxLenght: 100,
-                    maxLine: 1,
-                    controlledValue: _enteredName ?? '',
-                    onSaved: (value) {
-                      _enteredName = value;
-                    },
-                    toolTipTitle: 'Name',
-                    tooltipContent: 'Provide a name of this habit',
-                  ),
-                ],
-              ))
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              const CustomToolTipTitle(
-                  title: 'Color:', content: 'Select the color of the stat'),
-              Spacer(),
-              Center(
-                child: InkWell(
-                  onTap: showColorPicker,
-                  child: CircleAvatar(
-                    backgroundColor: _color,
-                    radius: 24,
-                  ),
-                ),
-              ),
-              Spacer(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          BigTextFormField(
-            controlledValue: _enteredDescription ?? '',
-            onSaved: (value) {
-              _enteredDescription = value;
-            },
-            toolTipTitle: 'Description',
-            tooltipContent: 'Provide a description of this habit',
-          ),
-          Row(
-            children: [
-              const CustomToolTipTitle(
-                  title: 'Priority:', content: 'Importance'),
-              Expanded(
-                child: Center(
-                  child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceBright,
-                          borderRadius: BorderRadius.circular(5)),
-                      child: DropdownButton(
-                        value: _enteredPonderation,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        isDense: true,
-                        dropdownColor:
-                            Theme.of(context).colorScheme.surfaceBright,
-                        items: Ponderation.values.reversed
-                            .map(
-                              (item) => DropdownMenuItem(
-                                value: item.index + 1,
-                                child: Text(item.name.toString().capitalizeString()),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _enteredPonderation = value;
-                          });
-                        },
-                      )),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          FrequencyPicker(
-            passFrequency: (value) {
-              _enteredFrequency = value;
-            },
-            enteredWeekdays: _enteredWeekdays,
-          ),
-          const SizedBox(height: 16),
-          Row(children: [
-            const CustomToolTipTitle(
-                title: 'Time of the day:', content: 'Time'),
-            Expanded(
-              child: Center(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    _enteredTimeOfTheDay = await showTimePicker(
-                        context: context,
-                        initialTime:
-                            widget.habit?.timeOfTheDay ?? TimeOfDay.now(),
-                        initialEntryMode: TimePickerEntryMode.input);
-                    setState(() {});
-                  },
-                  style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 24),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5)),
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceBright),
-                  child: Text(
-                    _enteredTimeOfTheDay == null
-                        ? 'Whenever'
-                        : _enteredTimeOfTheDay!.format(context),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-              ),
-            )
-          ]),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const CustomToolTipTitle(
-                  title: 'Habit type:', content: 'Item type'),
-              Expanded(
-                child: Center(
-                  child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceBright,
-                          borderRadius: BorderRadius.circular(5)),
-                      child: DropdownButton(
-                        value: _enteredValidationType,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        isDense: true,
-                        dropdownColor:
-                            Theme.of(context).colorScheme.surfaceBright,
-                        items: habitTypeList
-                            .map(
-                              (item) => DropdownMenuItem(
-                                value: item,
-                                child: Text(habitTypeDescriptions[item] ?? ''),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _enteredValidationType = value;
-                          });
-                        },
-                      )),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          if (_enteredValidationType == HabitType.recap ||
-              _enteredValidationType == HabitType.recapDay)
-            BigTextFormField(
-              maxLenght: 100,
-              maxLine: 1,
-              controlledValue: _mainImprovement ?? '',
-              onSaved: (value) {
-                _mainImprovement = value;
-              },
-              toolTipTitle: 'Weekly focus',
-              tooltipContent: 'Main improvement',
+    return habitTypeList;
+  }
+
+  Widget _getImprovementField(habitState) {
+    return BigTextFormField(
+      color: habitState.color,
+      maxLenght: 100,
+      maxLine: 1,
+      controlledValue: habitState.newHabit,
+      onSaved: (value) {
+        notifier.setMainImprovement(value);
+      },
+      toolTipTitle: 'Weekly focus:',
+      tooltipContent: 'Main improvement',
+    );
+  }
+
+  void _submit(context) {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+    formKey.currentState!.save();
+    Habit newHabit = ref.read(newHabitProvider);
+
+    if (widget.habit != null) {
+      Schedule newSchedule = ref.read(frequencyProvider);
+      bool noScheduleChange = Schedule.compareSchedules(newSchedule, oldSchedule!);
+      bool noHabitChange = Habit.compare(widget.habit!, newHabit);
+      if (!noScheduleChange) {
+        showModifyHabitDialog(context, ref, ref.read(frequencyProvider));
+      }
+
+      if (!noHabitChange) {
+        ref.read(habitProvider.notifier).updateHabit(widget.habit!, newHabit);
+
+      }
+
+      if (noScheduleChange) {
+         Navigator.of(context).pop();
+      } 
+    } else {
+      ref.read(habitProvider.notifier).addHabit(newHabit);
+      ref.read(frequencyProvider.notifier).setHabitId(newHabit.habitId);
+      ref
+          .read(scheduledProvider.notifier)
+          .addSchedule(ref.read(frequencyProvider));
+      Navigator.of(context).pop();
+    }
+  }
+}
+
+class IconPickerWidget extends ConsumerWidget {
+  const IconPickerWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Habit habitState = ref.read(newHabitProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text('Icon:',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium!
+                .copyWith(color: Colors.white.withOpacity(0.75))),
+        IconButton(
+            icon: Icon(
+              habitState.icon,
+              color: habitState.color,
             ),
-          const SizedBox(height: 32),
-          AdditionalMetrics(_enteredAdditionalMetrics),
-          if (_enteredValidationType == HabitType.recap)
-            const SizedBox(height: 32),
-          DatePickerWidget(
-            passStartDate: (value) {
-              _enteredStartDate = value;
-            },
-            passEndDate: (value) {
-              _enteredEndDate = value;
-            },
-            startDate: _enteredStartDate,
-            endDate: _enteredEndDate,
-            unique: _enteredValidationType == HabitType.unique,
-          ),
-          const SizedBox(height: 64),
-          CustomElevatedButton(
-            submit: submit,
-            text: widget.habit != null ? 'Edit' : 'Create',
-          )
-        ],
-      ),
+            iconSize: 40,
+            onPressed: () async {
+              IconPickerIcon? iconPicker = await showIconPicker(context,
+                  configuration: SinglePickerConfiguration(
+                      iconPackModes: [IconPack.roundedMaterial],
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceBright
+                          .withOpacity(1)));
+
+              if (iconPicker == null) return;
+              IconData icon = iconPicker.data;
+              ref.read(newHabitProvider.notifier).setIcon(icon);
+            }),
+      ],
     );
   }
 }

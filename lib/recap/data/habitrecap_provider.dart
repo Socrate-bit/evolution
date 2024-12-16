@@ -5,12 +5,12 @@ import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
-class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
+class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
   TrackedDayNotifier(this.ref) : super([]);
   final Ref ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> addTrackedDay(TrackedDay newTrackedDay) async {
+  Future<void> addTrackedDay(HabitRecap newTrackedDay) async {
     state = [...state, newTrackedDay];
     await _firestore
         .collection('TrackedDay')
@@ -19,7 +19,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
       'userId': newTrackedDay.userId,
       'habitId': newTrackedDay.habitId,
       'date': newTrackedDay.date.toIso8601String(),
-      'done': newTrackedDay.done == Validated.yes ? true : false,
+      'done': newTrackedDay.done.toString().split('.').last,
       'notation_showUp': newTrackedDay.notation?.quantity,
       'notation_investment': newTrackedDay.notation?.quality,
       'notation_result': newTrackedDay.notation?.result,
@@ -34,8 +34,8 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
       'dateOnValidation': newTrackedDay.dateOnValidation?.toIso8601String(),
     });
   }
-  
-  Future<void> deleteTrackedDay(TrackedDay targetTrackedDay) async {
+
+  Future<void> deleteTrackedDay(HabitRecap targetTrackedDay) async {
     state = state
         .where((td) => td.trackedDayId != targetTrackedDay.trackedDayId)
         .toList();
@@ -51,7 +51,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
     final trackedDaysToDelete =
         state.where((td) => td.habitId == habit.habitId).toList();
 
-    for (TrackedDay trackedDay in trackedDaysToDelete) {
+    for (HabitRecap trackedDay in trackedDaysToDelete) {
       // Remove the tracked day from state
       deleteTrackedDay(trackedDay);
 
@@ -63,7 +63,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
     }
   }
 
-  Future<void> updateTrackedDay(TrackedDay targetTrackedDay) async {
+  Future<void> updateTrackedDay(HabitRecap targetTrackedDay) async {
     deleteTrackedDay(targetTrackedDay);
     addTrackedDay(targetTrackedDay);
   }
@@ -77,15 +77,16 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
 
     if (data.isEmpty) return;
 
-    final List<TrackedDay> loadedData = [];
+    final List<HabitRecap> loadedData = [];
     for (final doc in data) {
       final row = doc.data();
-      final trackedDay = TrackedDay(
+      final trackedDay = HabitRecap(
         trackedDayId: doc.id,
         userId: row['userId'] as String,
         habitId: row['habitId'] as String,
         date: DateTime.parse(row['date'] as String),
-        done: (row['done'] as bool) ? Validated.yes : Validated.no,
+        done: Validated.values
+            .firstWhere((e) => e.name.toString() == row['type'] as String),
         notation: row['notation_showUp'] == null
             ? null
             : Rating(
@@ -117,7 +118,7 @@ class TrackedDayNotifier extends StateNotifier<List<TrackedDay>> {
 }
 
 final trackedDayProvider =
-    StateNotifierProvider<TrackedDayNotifier, List<TrackedDay>>(
+    StateNotifierProvider<TrackedDayNotifier, List<HabitRecap>>(
   (ref) {
     return TrackedDayNotifier(ref);
   },
