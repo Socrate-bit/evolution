@@ -85,6 +85,6 @@ class NewHabitState extends StateNotifier<Habit> {
   }
 }
 
-final newHabitProvider = StateNotifierProvider.autoDispose<NewHabitState, Habit>((ref) {
+final newHabitStateProvider = StateNotifierProvider.autoDispose<NewHabitState, Habit>((ref) {
   return NewHabitState(ref);
 });

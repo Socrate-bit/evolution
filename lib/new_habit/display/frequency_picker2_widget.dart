@@ -7,6 +7,7 @@ import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/new_habit/data/frequency_state.dart';
 import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/display/end_date_dialog.dart';
 
 class FrequencyPickerWidget extends ConsumerStatefulWidget {
   const FrequencyPickerWidget({super.key});
@@ -21,8 +22,7 @@ class _FrequencyPickerWidgetState extends ConsumerState<FrequencyPickerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
-    String startDate = formater3.format(frequencyState.startDate);
+    Schedule frequencyState = ref.watch(frequencyStateProvider);
 
     return Column(
       children: [
@@ -35,17 +35,7 @@ class _FrequencyPickerWidgetState extends ConsumerState<FrequencyPickerWidget> {
               AnimatedSwitcher(
                 duration: Duration(milliseconds: 500),
                 child: frequencyState.type != FrequencyType.Once
-                    ? TextButton(
-                        onPressed: () {
-                          _datePicker(context, ref);
-                        },
-                        child: Text('Starting on $startDate',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall!
-                                .copyWith(
-                                    color: ref.read(newHabitProvider).color)),
-                      )
+                    ? _TextDatePicker()
                     : null,
               ),
             ],
@@ -62,7 +52,7 @@ class _FrequencyPickerWidgetState extends ConsumerState<FrequencyPickerWidget> {
   }
 
   Widget getContent(Schedule frequencyState) {
-    switch (frequencyState.type!) {
+    switch (frequencyState.type) {
       case FrequencyType.Once:
         return _OnceDatePicker();
       case FrequencyType.Daily:
@@ -93,21 +83,60 @@ class _FrequencyPickerWidgetState extends ConsumerState<FrequencyPickerWidget> {
   }
 }
 
+class _TextDatePicker extends ConsumerWidget {
+  const _TextDatePicker({super.key});
+
+  String getTextDate(Schedule frequencyState) {
+    String date = '';
+
+    if (frequencyState.endingDate == null && frequencyState.startDate != null) {
+      date = 'Starting on ${formater3.format(frequencyState.startDate!)}';
+    } else if (frequencyState.startDate == null) {
+      date = 'No start date';
+    } else if (frequencyState.endingDate != null &&
+        frequencyState.startDate != null) {
+      date =
+          '${formater4.format(frequencyState.startDate!)} - ${formater4.format(frequencyState.endingDate!)}';
+    }
+
+    return date;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Schedule frequencyState = ref.read(frequencyStateProvider);
+
+    String date = getTextDate(frequencyState);
+
+    return TextButton(
+      onPressed: () {
+        showModalBottomSheet(
+            context: context, builder: (context) => StartEndDateBottom());
+      },
+      child: Text(date,
+          style: Theme.of(context)
+              .textTheme
+              .titleSmall!
+              .copyWith(color: ref.read(newHabitStateProvider).color)),
+    );
+  }
+}
+
 class _ToggleFrequencyType extends ConsumerWidget {
   const _ToggleFrequencyType({super.key});
   static const pageNames = ['Once', 'Daily', 'Weekly', 'Monthly'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
-    return _CustomContainerTight(
+    Schedule frequencyState = ref.read(frequencyStateProvider);
+    return CustomContainerTight(
       child: CustomToggleButton(
-          color: ref.read(newHabitProvider).color,
+          color: ref.read(newHabitStateProvider).color,
           pageNames: pageNames,
           selected: FrequencyType.values.indexOf(frequencyState.type!),
           onPressed: (index) {
             ref
-                .read(frequencyProvider.notifier)
+                .read(frequencyStateProvider.notifier)
                 .setFrequencyType(FrequencyType.values[index]);
           }),
     );
@@ -119,7 +148,7 @@ class _PeriodPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
+    Schedule frequencyState = ref.read(frequencyStateProvider);
     String period1 =
         frequencyState.period1 != 1 ? '${frequencyState.period1} ' : '';
     String typeString;
@@ -142,7 +171,7 @@ class _PeriodPicker extends ConsumerWidget {
       typeString = typeString.substring(0, typeString.length - 1);
     }
 
-    return _CustomContainerTight(
+    return CustomContainerTight(
       uniqueKey: UniqueKey(),
       child: Row(
         children: [
@@ -161,7 +190,7 @@ class _PeriodPicker extends ConsumerWidget {
                 return;
               }
               ref
-                  .read(frequencyProvider.notifier)
+                  .read(frequencyStateProvider.notifier)
                   .setPeriod1(frequencyState.period1! + value);
             },
           ),
@@ -176,8 +205,8 @@ class _Period2Picker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
-    int period2 = frequencyState.period2!;
+    Schedule frequencyState = ref.read(frequencyStateProvider);
+    int period2 = frequencyState.period2;
     String typeString;
     String timeString = period2 > 1 ? 'times' : 'time';
 
@@ -192,7 +221,7 @@ class _Period2Picker extends ConsumerWidget {
         typeString = '';
     }
 
-    return _CustomContainerTight(
+    return CustomContainerTight(
       child: Row(
         children: [
           SizedBox(width: 20),
@@ -210,7 +239,7 @@ class _Period2Picker extends ConsumerWidget {
                 return;
               }
               ref
-                  .read(frequencyProvider.notifier)
+                  .read(frequencyStateProvider.notifier)
                   .setPeriod2(frequencyState.period2! + value);
             },
           ),
@@ -244,7 +273,10 @@ class _AddSubstractButton extends StatelessWidget {
           Container(
             height: 20,
             width: 1,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurfaceVariant
+                .withOpacity(0.25),
           ),
           IconButton(
             icon: Icon(
@@ -266,15 +298,15 @@ class _ToggleWhenever extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
-    return _CustomContainerTight(
+    Schedule frequencyState = ref.read(frequencyStateProvider);
+    return CustomContainerTight(
       child: CustomToggleButton(
-          color: ref.read(newHabitProvider).color,
+          color: ref.read(newHabitStateProvider).color,
           pageNames: pagesNames,
           selected: frequencyState.whenever ? 1 : 0,
           onPressed: (index) {
             ref
-                .read(frequencyProvider.notifier)
+                .read(frequencyStateProvider.notifier)
                 .setWhenever(index == 0 ? false : true);
           }),
     );
@@ -286,7 +318,7 @@ class _WeekdayPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _CustomContainerTight(
+    return CustomContainerTight(
       uniqueKey: UniqueKey(),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
         ...WeekDay.values.expand(
@@ -306,18 +338,18 @@ class _CircleToggleDay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
+    Schedule frequencyState = ref.read(frequencyStateProvider);
     List<WeekDay> enteredWeekdays = frequencyState.daysOfTheWeek!;
 
     return GestureDetector(
       onTap: () {
         if (enteredWeekdays.contains(weekday)) {
           ref
-              .read(frequencyProvider.notifier)
+              .read(frequencyStateProvider.notifier)
               .setDaysOfTheWeek(List.from(enteredWeekdays)..remove(weekday));
         } else {
           ref
-              .read(frequencyProvider.notifier)
+              .read(frequencyStateProvider.notifier)
               .setDaysOfTheWeek(List.from(enteredWeekdays)..add(weekday));
         }
       },
@@ -328,11 +360,14 @@ class _CircleToggleDay extends ConsumerWidget {
         decoration: BoxDecoration(
             shape: BoxShape.rectangle,
             border: Border.all(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.25),
                 width: 1),
             borderRadius: BorderRadius.circular(8),
             color: enteredWeekdays.contains(weekday)
-                ? ref.read(newHabitProvider).color
+                ? ref.read(newHabitStateProvider).color
                 : Theme.of(context).colorScheme.surfaceBright),
         child: Text(
           DaysOfTheWeekUtility.weekDayToSign[weekday]!,
@@ -346,11 +381,11 @@ class _CircleToggleDay extends ConsumerWidget {
   }
 }
 
-class _CustomContainerTight extends StatelessWidget {
+class CustomContainerTight extends StatelessWidget {
   final Widget? child;
   final Key? uniqueKey;
 
-  const _CustomContainerTight({super.key, this.child, this.uniqueKey});
+  const CustomContainerTight({super.key, this.child, this.uniqueKey});
 
   @override
   Widget build(BuildContext context) {
@@ -372,16 +407,18 @@ class _OnceDatePicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
+    Schedule frequencyState = ref.read(frequencyStateProvider);
     String startDate = 'On the ${formater1.format(frequencyState.startDate!)}';
 
-    if (today.isAtSameMomentAs(frequencyState.startDate!)) {
-      startDate = 'Today';
+    if (frequencyState.startDate == today ||
+        frequencyState.startDate == today.subtract(Duration(days: 1)) ||
+        frequencyState.startDate == today.add(Duration(days: 1))) {
+      startDate = displayedDate(frequencyState.startDate);
     }
 
     return GestureDetector(
         onTap: () => _datePicker(context, ref),
-        child: _CustomContainerTight(
+        child: CustomContainerTight(
             uniqueKey: UniqueKey(),
             child: Text(startDate,
                 style: Theme.of(context)
@@ -396,14 +433,14 @@ class _MonthDatePicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.watch(frequencyProvider);
+    Schedule frequencyState = ref.read(frequencyStateProvider);
     String suffix = getOrdinalSuffix(frequencyState.startDate!.day);
     String startDate =
         'On every ${formater2.format(frequencyState.startDate!)}$suffix';
 
     return GestureDetector(
         onTap: () => _datePicker(context, ref),
-        child: _CustomContainerTight(
+        child: CustomContainerTight(
             uniqueKey: UniqueKey(),
             child: Text(startDate,
                 style: Theme.of(context)
@@ -414,7 +451,8 @@ class _MonthDatePicker extends ConsumerWidget {
 }
 
 Future<void> _datePicker(context, WidgetRef ref) async {
-  DateTime initial = today;
+  Schedule frequencyState = ref.read(frequencyStateProvider);
+  DateTime initial = frequencyState.startDate ?? today;
 
   DateTime firstDate = DateTime(initial.year - 1, initial.month, initial.day);
   DateTime lastDate = DateTime(initial.year + 1, initial.month, initial.day);
@@ -427,6 +465,6 @@ Future<void> _datePicker(context, WidgetRef ref) async {
   );
 
   if (pickedDate != null) {
-    ref.read(frequencyProvider.notifier).setStartDate(pickedDate);
+    ref.read(frequencyStateProvider.notifier).setStartDate(pickedDate);
   }
 }

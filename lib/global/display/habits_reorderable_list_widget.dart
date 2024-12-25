@@ -1,32 +1,29 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
-import 'package:tracker_v1/daily/data/custom_day_model.dart';
-import 'package:tracker_v1/global/logic/compare_time.dart';
-import 'package:tracker_v1/daily/logic/sort_habits_utility.dart';
+import 'package:tracker_v1/global/logic/time_utility.dart';
 import 'package:tracker_v1/global/logic/time_of_day_extent.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
-import 'package:tracker_v1/daily/data/reorderedday_provider.dart';
 import 'package:tracker_v1/daily/display/habit_item_widget.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 
-class HabitList extends ConsumerStatefulWidget {
-  const HabitList(
-      {required this.displayedHabitList,
-      this.selectedDate,
-      this.habitsPersonalisedOrder,
-      super.key});
+class HabitReorderableList extends ConsumerStatefulWidget {
+  const HabitReorderableList(
+      {required this.habitScheduleMap, this.selectedDate, super.key});
 
-  final List<Habit> displayedHabitList;
+  final LinkedHashMap<Habit, Schedule> habitScheduleMap;
   final DateTime? selectedDate;
-  final Map<String, (TimeOfDay?, int)>? habitsPersonalisedOrder;
 
   @override
-  ConsumerState<HabitList> createState() => _HabitsReorderableListState();
+  ConsumerState<HabitReorderableList> createState() =>
+      _HabitsReorderableListState();
 }
 
-class _HabitsReorderableListState extends ConsumerState<HabitList> {
+class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
   final ScrollController _listViewScrollController = ScrollController();
   Timer? _timer;
   static const int _itemHeight = 56;
@@ -39,7 +36,6 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
   double? _cursorPositionCorection;
   int? _draggedItemPosition;
   TimeOfDay? _computedDraggedTime;
-  int? _draggedNewIndex;
 
   @override
   void initState() {
@@ -60,65 +56,19 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    _sortedHabitList = sortHabits(widget.displayedHabitList, widget.selectedDate, ref);
-
-    return Container(
-      margin: const EdgeInsets.all(8),
-      child: Listener(
-        onPointerDown: (event) {
-          _updatePointerCorrection(event);
-        },
-        onPointerMove: (event) {
-          _updateDraggingVariables(event);
-        },
-        child: ReorderableListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          scrollController: _listViewScrollController,
-          proxyDecorator: (child, index, animation) {
-            return ProxyDecoratorWidget(
-                timeText: _computedDraggedTime?.format(context) ?? '',
-                child: child);
-          },
-          onReorderStart: (initialIndex) {
-            _inDragging = true;
-            _draggedInitialIndex = initialIndex;
-          },
-          onReorderEnd: (newIndex) {
-            _inDragging = false;
-            _draggedNewIndex = newIndex;
-            if (_computedDraggedTime != _sortedHabitList[_draggedInitialIndex!].timeOfTheDay && _cursorPosition != null) {
-              _onReorderEnd(ref.read(habitProvider.notifier));
-            }
-          },
-          onReorder: (oldIndex, newIndex) {},
-          itemCount: _sortedHabitList.length,
-          itemBuilder: (ctx, item) {
-            return HabitWidget(
-                key: ObjectKey(_sortedHabitList[item]),
-                date: widget.selectedDate,
-                habitList: !(widget.selectedDate != null),
-                habit: _sortedHabitList[item],
-                isLastItem: item == _sortedHabitList.length - 1,
-                timeMarker: widget.selectedDate != null
-                    ? _getTimeCursor(_sortedHabitList, item)
-                    : null);
-          },
-        ),
-      ),
-    );
-  }
-
   double? _getTimeCursor(List<Habit> todayHabit, int index) {
     TimeOfDay clockNow = TimeOfDay.now();
-    TimeOfDay? currentItemTime = todayHabit[index].timeOfTheDay;
+    TimeOfDay? currentItemTime = widget
+        .habitScheduleMap[_sortedHabitList[index]]!
+        .getTimeOfTargetDay(widget.selectedDate);
 
     if (todayHabit.length == index + 1) {
       return null;
     }
 
-    TimeOfDay? nextItemTime = todayHabit[index + 1].timeOfTheDay;
+    TimeOfDay? nextItemTime = widget
+        .habitScheduleMap[_sortedHabitList[index + 1]]!
+        .getTimeOfTargetDay(widget.selectedDate);
 
     if (currentItemTime == null || nextItemTime == null) {
       return null;
@@ -164,12 +114,27 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
     const TimeOfDay endOfTheDay = TimeOfDay(hour: 23, minute: 59);
     int rangeInBound;
     int rangeOutBound;
-
-    if (_draggedItemPosition == null) {
-      return sortedHabitList[_draggedInitialIndex!].timeOfTheDay!;
-    }
+    TimeOfDay? timeIndexPlusOne;
+    TimeOfDay? timeIndex;
 
     int cursorIndexPosition = _calculateDraggedItemPosition();
+
+    if (cursorIndexPosition + 1 < sortedHabitList.length &&
+        cursorIndexPosition > -1) {
+      timeIndexPlusOne = widget
+          .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]
+          ?.getTimeOfTargetDay(widget.selectedDate);
+    }
+
+    if (cursorIndexPosition > -1 &&
+        cursorIndexPosition < sortedHabitList.length) {
+      timeIndex = widget.habitScheduleMap[_sortedHabitList[cursorIndexPosition]]
+          ?.getTimeOfTargetDay(widget.selectedDate);
+    }
+
+    if (_draggedItemPosition == null) {
+      return timeIndex;
+    }
 
     // Outside the list
     if (cursorIndexPosition < -1) return startOfTheDay;
@@ -180,30 +145,23 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
     // Inside the list
     if (cursorIndexPosition == -1) {
       rangeInBound = startOfTheDay.toMinutes();
-      rangeOutBound = sortedHabitList[cursorIndexPosition + 1].timeOfTheDay ==
-              null
+      rangeOutBound = timeIndexPlusOne == null
           ? endOfTheDay.toMinutes()
-          : sortedHabitList[cursorIndexPosition + 1].timeOfTheDay!.toMinutes();
+          : timeIndexPlusOne.toMinutes();
     } else if (cursorIndexPosition + 1 == sortedHabitList.length) {
-      if (sortedHabitList[cursorIndexPosition].timeOfTheDay == null) {
+      if (timeIndex == null) {
         return null;
       }
-      rangeInBound =
-          sortedHabitList[cursorIndexPosition].timeOfTheDay!.toMinutes();
+      rangeInBound = timeIndex.toMinutes();
       rangeOutBound = endOfTheDay.toMinutes();
-    } else if (sortedHabitList[cursorIndexPosition].timeOfTheDay != null &&
-        sortedHabitList[cursorIndexPosition + 1].timeOfTheDay == null) {
-      rangeInBound =
-          sortedHabitList[cursorIndexPosition].timeOfTheDay!.toMinutes();
+    } else if (timeIndex != null && timeIndexPlusOne == null) {
+      rangeInBound = timeIndex.toMinutes();
       rangeOutBound = endOfTheDay.toMinutes();
-    } else if (sortedHabitList[cursorIndexPosition + 1].timeOfTheDay == null &&
-        sortedHabitList[cursorIndexPosition].timeOfTheDay == null) {
+    } else if (timeIndexPlusOne == null && timeIndex == null) {
       return null;
     } else {
-      rangeInBound =
-          sortedHabitList[cursorIndexPosition].timeOfTheDay!.toMinutes();
-      rangeOutBound =
-          sortedHabitList[cursorIndexPosition + 1].timeOfTheDay!.toMinutes();
+      rangeInBound = timeIndex!.toMinutes();
+      rangeOutBound = timeIndexPlusOne!.toMinutes();
     }
 
     return _calculateDraggedTime(rangeInBound, rangeOutBound);
@@ -236,47 +194,74 @@ class _HabitsReorderableListState extends ConsumerState<HabitList> {
 
 // On reorder end function
   void _onReorderEnd(HabitNotifier habitsNotifier) {
-    if (widget.selectedDate != null) {
-      _updateReorderState();
-    } else {
-      _updateHabitState(habitsNotifier);
+    Schedule? oldSchedule =
+        ref.read(scheduleCacheProvider(widget.selectedDate))[
+            _sortedHabitList[_draggedInitialIndex!]];
+
+    if (oldSchedule == null) {
+      return;
     }
+
+    Schedule newSchedule = oldSchedule.copyWith();
+    newSchedule.startDate = widget.selectedDate ?? today;
+
+    showModifyHabitDialog(context, ref, newSchedule,
+        drag: true,
+        isHabitListPage: widget.selectedDate == null,
+        newTime: _computedDraggedTime);
   }
 
-  void _updateReorderState() {
-    _updateSortedList();
-    CustomDay newReorder = _createReorderedDay();
-    if (widget.habitsPersonalisedOrder != null) {
-      ref.read(reorderedDayProvider.notifier).updateReorderedDay(newReorder);
-    } else {
-      ref.read(reorderedDayProvider.notifier).addReorderedDay(newReorder);
-    }
-  }
+  @override
+  Widget build(BuildContext context) {
+    _sortedHabitList = widget.habitScheduleMap.keys.toList();
 
-  void _updateSortedList() {
-    _sortedHabitList[_draggedInitialIndex!].timeOfTheDay = _computedDraggedTime;
-    _sortedHabitList = HabitNotifier.orderChange(
-        _sortedHabitList, _draggedInitialIndex!, _draggedNewIndex!);
-  }
-
-  CustomDay _createReorderedDay() {
-    Map<String, (TimeOfDay?, int)> habitOrder =
-        Map.fromEntries(_sortedHabitList.map(
-      (e) => MapEntry(e.habitId, (e.timeOfTheDay, e.orderIndex)),
-    ));
-
-    return CustomDay(
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        date: widget.selectedDate!,
-        habitOrder: habitOrder);
-  }
-
-  void _updateHabitState(HabitNotifier habitsNotifier) {
-    ref.read(habitProvider.notifier).updateHabit(
-        _sortedHabitList[_draggedInitialIndex!],
-        _sortedHabitList[_draggedInitialIndex!].copy()
-          ..timeOfTheDay = _computedDraggedTime);
-    habitsNotifier.updateStateOrder(_draggedInitialIndex!, _draggedNewIndex!);
+    return Container(
+      margin: const EdgeInsets.all(8),
+      child: Listener(
+        onPointerDown: (event) {
+          _updatePointerCorrection(event);
+        },
+        onPointerMove: (event) {
+          _updateDraggingVariables(event);
+        },
+        child: ReorderableListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          scrollController: _listViewScrollController,
+          proxyDecorator: (child, index, animation) {
+            return ProxyDecoratorWidget(
+                timeText: _computedDraggedTime?.format(context) ?? '',
+                child: child);
+          },
+          onReorderStart: (initialIndex) {
+            _inDragging = true;
+            _draggedInitialIndex = initialIndex;
+          },
+          onReorderEnd: (newIndex) {
+            TimeOfDay? initialTime = widget
+                .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!
+                .timesOfTheDay?[(widget.selectedDate?.weekday ?? 1) - 1];
+            _inDragging = false;
+            if (_computedDraggedTime != initialTime &&
+                _cursorPosition != null) {
+              _onReorderEnd(ref.read(habitProvider.notifier));
+            }
+          },
+          onReorder: (oldIndex, newIndex) {},
+          itemCount: _sortedHabitList.length,
+          itemBuilder: (ctx, item) {
+            return HabitWidget(
+                key: ObjectKey(_sortedHabitList[item]),
+                date: widget.selectedDate,
+                habitList: !(widget.selectedDate != null),
+                habit: _sortedHabitList[item],
+                isLastItem: item == _sortedHabitList.length - 1,
+                timeMarker: widget.selectedDate != null
+                    ? _getTimeCursor(_sortedHabitList, item)
+                    : null);
+          },
+        ),
+      ),
+    );
   }
 }
 

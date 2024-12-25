@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class CustomModalBottomSheet extends StatelessWidget {
   const CustomModalBottomSheet(
-      {required this.title,
+      {this.title,
       required this.content,
       this.formKey,
       this.function,
       super.key});
 
-  final String title;
+  final String? title;
   final Widget content;
   final GlobalKey<FormState>? formKey;
   final Function()? function;
@@ -34,10 +34,11 @@ class CustomModalBottomSheet extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleLarge!,
-                      ),
+                      if (title != null)
+                        Text(
+                          title!,
+                          style: Theme.of(context).textTheme.titleLarge!,
+                        ),
                       IconButton(
                         iconSize: 30,
                         onPressed: () {

@@ -7,7 +7,8 @@ class BigTextFormField extends StatelessWidget {
       required this.onSaved,
       required this.toolTipTitle,
       required this.tooltipContent,
-      this.maxLine = 3,
+      this.minLine = 3,
+      this.maxLine = 20,
       this.maxLenght = 1000,
       this.color,
       super.key});
@@ -17,6 +18,7 @@ class BigTextFormField extends StatelessWidget {
   final String toolTipTitle;
   final String tooltipContent;
   final int maxLine;
+  final int minLine;
   final int maxLenght;
   final Color? color;
   late final TextEditingController controller;
@@ -34,8 +36,8 @@ class BigTextFormField extends StatelessWidget {
             FocusScope.of(context).unfocus();
           },
           controller: controller,
-          minLines: maxLine,
-          maxLines: maxLine + 20,
+          minLines: minLine,
+          maxLines: maxLine,
           validator: (value) {
             return null;
           },

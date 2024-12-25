@@ -7,7 +7,7 @@ import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 
 class EmotionTable extends ConsumerWidget {
@@ -53,7 +53,7 @@ class EmotionTable extends ConsumerWidget {
     List<bool> isTrackedFilter = range.map((index) {
       return ref
           .read(scheduledProvider.notifier)
-          .getHabitTrackingStatus(habitRecap, offsetWeekDays[index]);
+          .getHabitTrackingStatusWithSchedule(habitRecap.habitId, offsetWeekDays[index]).$1;
     }).toList();
 
     return isTrackedFilter;

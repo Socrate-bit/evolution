@@ -30,7 +30,6 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
           newRecapDay.lookingForwardToWakeUpTomorrow,
       'recap': newRecapDay.recap,
       'improvements': newRecapDay.improvements,
-      'newHabit': newRecapDay.newHabit ? 1 : 0,
       'gratefulness': newRecapDay.gratefulness,
       'emotionalRecap': newRecapDay.emotionalRecap,
       'proudness': newRecapDay.proudness,
@@ -57,6 +56,28 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
   Future<void> updateRecapDay(RecapDay updatedRecapDay) async {
     await deleteRecapDay(updatedRecapDay);
     await addRecapDay(updatedRecapDay);
+  }
+
+  Future<void> deleteAllRecapDays() async {
+    state = [];
+   await _deleteAllRecapDaysFirebase();
+  }
+
+  Future<void> _deleteAllRecapDaysFirebase() async {
+    final querySnapshot = await _firestore
+        .collection('RecapDay')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return;
+
+    WriteBatch batch = _firestore.batch();
+
+    for (var doc in querySnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 
   // Load data from Firestore into the state
@@ -89,7 +110,6 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
             data['lookingForwardToWakeUpTomorrow'] as double? ?? 0,
         recap: data['recap'] as String?,
         improvements: data['improvements'] as String?,
-        newHabit: data['newHabit'] as int == 0 ? false : true,
         additionalMetrics: data['additionalMetrics'] != null
             ? jsonDecode(data['additionalMetrics'] as String)
             : null,

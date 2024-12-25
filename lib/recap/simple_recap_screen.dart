@@ -1,16 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
 import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
+import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 
 class BasicRecapScreen extends ConsumerStatefulWidget {
   const BasicRecapScreen(this.habit, this.date,
       {super.key, this.oldTrackedDay, required this.validated});
+
 
   final Habit habit;
   final DateTime date;
@@ -56,7 +59,6 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
 
     formKey.currentState!.save();
 
-
     HabitRecap newTrackedDay = HabitRecap(
       trackedDayId: widget.oldTrackedDay?.trackedDayId,
       userId: FirebaseAuth.instance.currentUser!.uid,
@@ -89,6 +91,9 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
         children: [
           // Recap and Improvements fields
           BigTextFormField(
+            minLine: 3,
+            maxLine: 20,
+            color: widget.habit.color,
             controlledValue: _enteredRecap ?? '',
             onSaved: (value) {
               _enteredRecap = value;
@@ -112,9 +117,15 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
                         onSaved: (newValue) {
                           _additionalInputs![item] = newValue;
                         },
+                        cursorColor: widget.habit.color,
                         decoration: InputDecoration(
                           filled: true,
                           counterText: '',
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                              color: widget.habit.color,
+                            ),
+                          ),
                           fillColor: Theme.of(context)
                               .colorScheme
                               .surfaceBright
@@ -126,11 +137,15 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
           const SizedBox(height: 32),
 
           // Submit Button
-          CustomElevatedButton(submit: () {
-            _isSubmitted = true;
-            submit(validated: widget.validated);
-            Navigator.of(context).pop();
-          }),
+          CustomElevatedButton(
+            submit: () async{
+              _isSubmitted = true;
+              submit(validated: widget.validated);
+              Navigator.of(context).pop();
+
+            },
+            color: widget.habit.color,
+          ),
         ],
       ),
     );

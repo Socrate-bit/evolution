@@ -24,7 +24,7 @@ Schedule convertHabitToSchedule(Habit habit) {
 Future<bool> v1Converter(List<Habit> habits, Ref ref) async {
   for (Habit habit in habits) {
     List<Schedule> scheduleList =
-        ref.read(scheduledProvider.notifier).getSchedulesForHabit(habit);
+        ref.read(scheduledProvider.notifier).getHabitAllSchedule(habit.habitId);
 
     if (scheduleList.isEmpty &&
         habit.startDate != null &&

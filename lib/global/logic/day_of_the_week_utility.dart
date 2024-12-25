@@ -10,7 +10,7 @@ class DaysOfTheWeekUtility {
     WeekDay.saturday: 6,
     WeekDay.sunday: 7,
   };
-  static final Map<int, WeekDay> NumberToWeekDay = {
+  static final Map<int, WeekDay> numberToWeekDay = {
     1: WeekDay.monday,
     2: WeekDay.tuesday,
     3: WeekDay.wednesday,

@@ -3,7 +3,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_iconpicker/Models/configuration.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/global/display/modify_habit.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
@@ -19,6 +20,7 @@ import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
+import 'package:tracker_v1/new_habit/display/time_picker_widget.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
   const NewHabitScreen({this.habit, this.dateOpened, super.key});
@@ -37,49 +39,41 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
   @override
   void initState() {
-    // Load the habit data if editing existing habit
-    if (widget.habit != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(newHabitProvider.notifier).setState(widget.habit!.copy());
+    super.initState();
+    notifier = ref.read(newHabitStateProvider.notifier);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.habit != null) {
+        oldSchedule =
+            ref.read(scheduleCacheProvider(widget.dateOpened))[widget.habit!];
+        ref.read(newHabitStateProvider.notifier).setState(widget.habit!.copy());
+
+        if (oldSchedule != null) {
+          ref
+              .read(frequencyStateProvider.notifier)
+              .setState(oldSchedule!.copyWith());
+        }
 
         if (widget.dateOpened != null) {
-          Schedule targetDaySchedule = ref
-              .read(scheduledProvider.notifier)
-              .getHabitTargetDaySchedule(widget.habit!, widget.dateOpened!);
-          oldSchedule = targetDaySchedule;
           ref
-              .read(frequencyProvider.notifier)
-              .setState(targetDaySchedule.copyWith());
-        } else {
-          Schedule defaultSchedule = ref
-              .read(scheduledProvider.notifier)
-              .getHabitDefaultSchedule(widget.habit!);
-          oldSchedule = defaultSchedule;
-          ref
-              .read(frequencyProvider.notifier)
-              .setState(defaultSchedule.copyWith());
+              .read(frequencyStateProvider.notifier)
+              .setStartDate(widget.dateOpened!);
         }
-      });
-    }
-
-    // Set the start date if created / edited from the dailyscreen
-    if (widget.dateOpened != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(frequencyProvider.notifier).setStartDate(widget.dateOpened!);
-        ref.read(frequencyProvider.notifier).setDaysOfTheWeek([
-          DaysOfTheWeekUtility.NumberToWeekDay[widget.dateOpened!.weekday]!
+      } else {
+        ref
+            .read(frequencyStateProvider.notifier)
+            .setStartDate(widget.dateOpened!);
+        ref.read(frequencyStateProvider.notifier).setDaysOfTheWeek([
+          DaysOfTheWeekUtility.numberToWeekDay[widget.dateOpened!.weekday]!
         ]);
-      });
-    }
-
-    super.initState();
-    notifier = ref.read(newHabitProvider.notifier);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    Habit habitState = ref.watch(newHabitProvider);
-    Schedule frequencyState = ref.watch(frequencyProvider);
+    Habit habitState = ref.watch(newHabitStateProvider);
+    ref.watch(frequencyStateProvider);
 
     return CustomModalBottomSheet(
       title: widget.habit != null ? 'Edit Habit' : 'New Habit',
@@ -99,7 +93,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           const SizedBox(height: 32),
           FrequencyPickerWidget(),
           const SizedBox(height: 32),
-          _getTimeOfTheDayField(frequencyState),
+          TimeOfTheDayField(),
           const SizedBox(height: 32),
           _getHabitType(habitState),
           const SizedBox(height: 32),
@@ -137,6 +131,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         BigTextFormField(
           color: habitState.color,
           maxLenght: 100,
+          minLine: 1,
           maxLine: 1,
           controlledValue: habitState.name,
           onSaved: (value) {
@@ -171,7 +166,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   }
 
   void _showColorPicker() {
-    Habit habitState = ref.watch(newHabitProvider);
+    Habit habitState = ref.read(newHabitStateProvider);
 
     showDialog(
         context: context,
@@ -189,6 +184,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
   Widget _getDescriptionField(habitState) {
     return BigTextFormField(
+      minLine: 3,
+      maxLine: 20,
       color: habitState.color,
       controlledValue: habitState.description,
       onSaved: (value) {
@@ -234,38 +231,6 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         ),
       ],
     );
-  }
-
-  Widget _getTimeOfTheDayField(Schedule frequencyState) {
-    return Row(children: [
-      const CustomToolTipTitle(title: 'Time of the day:', content: 'Time'),
-      Expanded(
-        child: Center(
-          child: ElevatedButton(
-            onPressed: () async {
-              ref.read(frequencyProvider.notifier).setTimesOfTheDay(
-                  await showTimePicker(
-                      context: context,
-                      initialTime:
-                          frequencyState.timesOfTheDay?[0] ?? TimeOfDay.now(),
-                      initialEntryMode: TimePickerEntryMode.input));
-            },
-            style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5)),
-                backgroundColor: Theme.of(context).colorScheme.surfaceBright),
-            child: Text(
-              frequencyState.timesOfTheDay == null
-                  ? 'Whenever'
-                  : frequencyState.timesOfTheDay![0].format(context),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-        ),
-      )
-    ]);
   }
 
   Widget _getHabitType(habitState) {
@@ -315,6 +280,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       habitTypeList.remove(HabitType.recapDay);
     }
 
+    habitTypeList.remove(HabitType.unique);
+
     return habitTypeList;
   }
 
@@ -322,6 +289,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     return BigTextFormField(
       color: habitState.color,
       maxLenght: 100,
+      minLine: 1,
       maxLine: 1,
       controlledValue: habitState.newHabit,
       onSaved: (value) {
@@ -337,30 +305,31 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       return;
     }
     formKey.currentState!.save();
-    Habit newHabit = ref.read(newHabitProvider);
+    Habit newHabit = ref.read(newHabitStateProvider);
 
     if (widget.habit != null) {
-      Schedule newSchedule = ref.read(frequencyProvider);
-      bool noScheduleChange = Schedule.compareSchedules(newSchedule, oldSchedule!);
+      
+      Schedule newSchedule = ref.read(frequencyStateProvider);
+      bool noScheduleChange =
+          Schedule.compareSchedules(newSchedule, oldSchedule!);
       bool noHabitChange = Habit.compare(widget.habit!, newHabit);
       if (!noScheduleChange) {
-        showModifyHabitDialog(context, ref, ref.read(frequencyProvider));
+        showModifyHabitDialog(context, ref, ref.read(frequencyStateProvider));
       }
 
       if (!noHabitChange) {
         ref.read(habitProvider.notifier).updateHabit(widget.habit!, newHabit);
-
       }
 
       if (noScheduleChange) {
-         Navigator.of(context).pop();
-      } 
+        Navigator.of(context).pop();
+      }
     } else {
       ref.read(habitProvider.notifier).addHabit(newHabit);
-      ref.read(frequencyProvider.notifier).setHabitId(newHabit.habitId);
+      ref.read(frequencyStateProvider.notifier).setHabitId(newHabit.habitId);
       ref
           .read(scheduledProvider.notifier)
-          .addSchedule(ref.read(frequencyProvider));
+          .addSchedule(ref.read(frequencyStateProvider));
       Navigator.of(context).pop();
     }
   }
@@ -371,7 +340,7 @@ class IconPickerWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Habit habitState = ref.read(newHabitProvider);
+    Habit habitState = ref.read(newHabitStateProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -398,7 +367,7 @@ class IconPickerWidget extends ConsumerWidget {
 
               if (iconPicker == null) return;
               IconData icon = iconPicker.data;
-              ref.read(newHabitProvider.notifier).setIcon(icon);
+              ref.read(newHabitStateProvider.notifier).setIcon(icon);
             }),
       ],
     );

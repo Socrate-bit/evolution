@@ -48,7 +48,6 @@ class RecapDay {
     required this.date,
     this.recap,
     this.improvements,
-    required this.newHabit,
     this.emotionalRecap,
     this.gratefulness,
     this.proudness,
@@ -73,7 +72,6 @@ class RecapDay {
   DateTime date;
   String? recap;
   String? improvements;
-  bool newHabit;
   String? emotionalRecap;
   String? gratefulness;
   String? proudness;
@@ -99,7 +97,6 @@ class RecapDay {
       'date': date,
       'recap': recap,
       'improvements': improvements,
-      'newHabit': newHabit,
       'emotionalRecap': emotionalRecap,
       'gratefulness': gratefulness,
       'proudness': proudness,

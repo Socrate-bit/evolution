@@ -150,6 +150,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           title: Text('Did you reach your weekly focus?',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
+            activeColor: widget.habit.color,
             value: _goal,
             onChanged: (value) {
               setState(() {
@@ -163,6 +164,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
           title: Text('Did you reach your daily goal?',
               style: Theme.of(context).textTheme.titleSmall!),
           trailing: Checkbox(
+            activeColor: widget.habit.color,
             value: _extra,
             onChanged: (value) {
               setState(() {
@@ -178,12 +180,18 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
               trailing: SizedBox(
                   width: 64,
                   child: TextFormField(
+                      cursorColor: widget.habit.color,
                       style: Theme.of(context).textTheme.bodyMedium,
                       initialValue: _additionalInputs?[item],
                       onSaved: (newValue) {
                         _additionalInputs![item] = newValue;
                       },
                       decoration: InputDecoration(
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.habit.color,
+                          ),
+                        ),
                         filled: true,
                         counterText: '',
                         fillColor: Theme.of(context)
@@ -197,6 +205,9 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         const SizedBox(height: 32),
         // Recap and Improvements fields
         BigTextFormField(
+          minLine: 3,
+          maxLine: 20,
+          color: widget.habit.color,
           controlledValue: _enteredRecap ?? '',
           onSaved: (value) {
             _enteredRecap = value;
@@ -208,6 +219,9 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         const SizedBox(height: 16),
 
         BigTextFormField(
+          minLine: 3,
+          maxLine: 20,
+          color: widget.habit.color,
           controlledValue: _enteredImprovement ?? '',
           onSaved: (value) {
             _enteredImprovement = value;
@@ -219,11 +233,13 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
         const SizedBox(height: 32),
 
         // Submit Button
-        CustomElevatedButton(submit: () {
-          _isSubmitted = true;
-          submit();
-          Navigator.of(context).pop();
-        }),
+        CustomElevatedButton(
+            submit: () {
+              _isSubmitted = true;
+              submit();
+              Navigator.of(context).pop();
+            },
+            color: widget.habit.color),
       ],
     );
 

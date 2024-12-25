@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/global/logic/num_extent.dart';
-import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 
@@ -27,7 +27,8 @@ double? completionComputing(List<DateTime> dates, ref, {String? reference}) {
   return totalToValidate != 0 ? totalValidated / totalToValidate * 100 : null;
 }
 
-List<Habit> _fetchTargetHabits(DateTime date, ref, {String? reference}) {
+List<Habit> _fetchTargetHabits(DateTime date, ref,
+    {String? reference}) {
   List<Habit> targetHabits = [];
   Habit? habit;
 
@@ -38,12 +39,16 @@ List<Habit> _fetchTargetHabits(DateTime date, ref, {String? reference}) {
   if (reference != null && habit != null) {
     bool trackingStatus = ref
         .read(scheduledProvider.notifier)
-        .getHabitTrackingStatus(habit, date);
+        .getHabitTrackingStatusWithSchedule(habit.habitId, date)
+        .$1;
     targetHabits = trackingStatus ? [habit] : [];
   } else if (reference != null && habit == null) {
     targetHabits = [];
   } else if (reference == null) {
-    targetHabits = ref.watch(habitProvider.notifier).getTodayHabit(date);
+    targetHabits = ref
+        .read(scheduleCacheProvider(date))
+        .keys
+        .toList();
   }
 
   return targetHabits;
@@ -54,7 +59,7 @@ List<HabitRecap> _fetchTargetTrackedDays(
   List<String> todayHabitIds = targetHabits.map((h) => h.habitId).toList();
 
   List<HabitRecap> todayTrackedDays = ref
-      .watch(trackedDayProvider)
+      .read(trackedDayProvider)
       .where((t) =>
           date == t.date &&
           todayHabitIds.contains(t.habitId) &&
@@ -128,8 +133,10 @@ int getCurrentStreak(DateTime date, Habit habit, ref,
   });
 
   DateTime start = date;
-  DateTime startDate =
-      ref.read(scheduledProvider.notifier).getHabitStartDateSchedule(habit);
+  DateTime? startDate =
+      ref.read(scheduledProvider.notifier).getHabitStartDate(habit.habitId);
+
+  if (startDate == null) return streak;
 
   for (HabitRecap trackeDay in habitPastTrackedDays) {
     start = DateTime(start.year, start.month, start.day);
@@ -139,7 +146,7 @@ int getCurrentStreak(DateTime date, Habit habit, ref,
     start = trackeDay.date.subtract(const Duration(days: 1));
     while (!ref
             .read(scheduledProvider.notifier)
-            .getHabitTrackingStatus(habit, start) &&
+            .getHabitTrackingStatusWithSchedule(habit.habitId, start).$1 &&
         !start.isBefore(startDate)) {
       start = start.subtract(const Duration(days: 1));
     }
@@ -237,10 +244,10 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
     {required (String, String) reference}) {
   List<dynamic> result = [];
   Habit habit =
-      ref.watch(habitProvider).firstWhere((h) => h.habitId == reference.$1);
+      ref.read(habitProvider).firstWhere((h) => h.habitId == reference.$1);
 
   if (habit.validationType == HabitType.recapDay) {
-    final List<RecapDay> recapDays = ref.watch(recapDayProvider);
+    final List<RecapDay> recapDays = ref.read(recapDayProvider);
     for (DateTime date in dates) {
       final RecapDay? recapDay =
           recapDays.firstWhereOrNull((td) => td.date == date);
@@ -253,7 +260,7 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
       }
     }
   } else {
-    final List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
+    final List<HabitRecap> trackedDays = ref.read(trackedDayProvider);
     for (DateTime date in dates) {
       final HabitRecap? trackedDay = trackedDays.firstWhereOrNull(
           (td) => td.habitId == habit.habitId && td.date == date);
@@ -299,7 +306,7 @@ String additionalMetricsAverageFormatted(List<DateTime> dates, ref,
 double? emotionAverage(List<DateTime> dates, ref, {required String reference}) {
   List<dynamic> result = [];
 
-  final List<RecapDay> recapDays = ref.watch(recapDayProvider);
+  final List<RecapDay> recapDays = ref.read(recapDayProvider);
 
   for (DateTime date in dates) {
     final RecapDay? recapDay =

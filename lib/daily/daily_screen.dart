@@ -1,68 +1,99 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:collection';
+import 'dart:math';
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
-import 'package:tracker_v1/daily/data/custom_day_model.dart';
-import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/daily/data/reorderedday_provider.dart';
 import 'package:tracker_v1/daily/display/day_switcher_widget.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
+import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 
-class DailyScreen extends ConsumerWidget {
+class DailyScreen extends ConsumerStatefulWidget {
   const DailyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    DailyScreenState dailyScreenState = ref.watch(dailyScreenStateProvider);
-    final habitsList = ref.watch(habitProvider);
-    final List<Habit> todayHabitsList = ref
-        .watch(habitProvider.notifier)
-        .getTodayHabit(dailyScreenState.selectedDate);
+  ConsumerState<DailyScreen> createState() => _DailyScreenState();
+}
 
-    final CustomDay? loadedHabitOrder = ref
-        .watch(reorderedDayProvider)
-        .firstWhereOrNull((e) =>
-            e.userId == FirebaseAuth.instance.currentUser!.uid &&
-            e.date == dailyScreenState.selectedDate);
+class _DailyScreenState extends ConsumerState<DailyScreen> {
+  late ConfettiController confettiController;
+  late Widget content;
 
-    final List<Habit> todayHabitListCopy =
-        todayHabitsList.map((habit) => habit.copy()).toList();
+  @override
+  void initState() {
+    super.initState();
+    confettiController =
+        ConfettiController(duration: Duration(milliseconds: 500));
+  }
 
-    if (loadedHabitOrder != null) {
-      for (Habit habit in todayHabitListCopy) {
-        if (loadedHabitOrder.habitOrder[habit.habitId] != null) {
-          habit.timeOfTheDay = loadedHabitOrder.habitOrder[habit.habitId]!.$1;
-          habit.orderIndex = loadedHabitOrder.habitOrder[habit.habitId]!.$2;
+  @override
+  void dispose() {
+    confettiController.dispose();
+    super.dispose();
+  }
+
+  void setConfettiTrigger(DailyScreenState dailyScreenState) {
+    ref.listen(
+      trackedDayProvider,
+      (prev, next) {
+        if (completionComputing([dailyScreenState.selectedDate], ref) == 100 &&
+            dailyScreenState.previousComputingRatio != 100) {
+          confettiController.play();
         }
-      }
-    }
+      },
+    );
+  }
 
-    Widget content;
+  Widget setCondionnalContent(DailyScreenState dailyScreenState) {
+    final LinkedHashMap<Habit, Schedule> habitScheduleMap =
+        ref.watch(scheduleCacheProvider(dailyScreenState.selectedDate));
 
-    if (todayHabitListCopy.isNotEmpty) {
-      content = HabitList(
-        displayedHabitList: todayHabitListCopy,
-        selectedDate: dailyScreenState.selectedDate,
-        habitsPersonalisedOrder: loadedHabitOrder?.habitOrder,
-      );
-    } else {
-      content = SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const SizedBox(
-              height: 200,
-            ),
-            habitsList.isNotEmpty
-                ? const Text('No habits today 💤')
-                : const Text('No habits yet, create one!')
-          ]));
-    }
+    content = habitScheduleMap.isNotEmpty
+        ? HabitReorderableList(
+            habitScheduleMap: habitScheduleMap,
+            selectedDate: dailyScreenState.selectedDate)
+        : SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const SizedBox(
+                height: 200,
+              ),
+              ref.read(habitProvider.notifier).isHabitListEmpty()
+                  ? const Text('No habits today 💤')
+                  : const Text('No habits yet, create one!')
+            ]));
+
+    return content;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    DailyScreenState dailyScreenState = ref.watch(dailyScreenStateProvider);
+    ref.watch(trackedDayProvider);
+
+    setConfettiTrigger(dailyScreenState);
+    Widget content = setCondionnalContent(dailyScreenState);
 
     return Column(
       children: [
-        DaySwitch(),
+        ConfettiWidget(
+          blastDirectionality: BlastDirectionality.explosive,
+          blastDirection: -pi / 2, // radial value - RIGHT
+          emissionFrequency: 1,
+          minimumSize: const Size(10, 10),
+          maximumSize: const Size(20, 20),
+          numberOfParticles: 20,
+          maxBlastForce: 200,
+          minBlastForce: 10,
+          gravity: 0.5,
+          confettiController: confettiController,
+        ),
+        DailyUpperBarWidget(),
         Expanded(child: Center(child: content)),
       ],
     );

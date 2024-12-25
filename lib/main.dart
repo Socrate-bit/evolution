@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/alldata_manager.dart';
 import 'package:tracker_v1/theme.dart';
 import 'package:tracker_v1/authentification/auth_screen.dart';
-import 'package:tracker_v1/navigation.dart';
+import 'package:tracker_v1/naviguation/navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -27,39 +27,48 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    bool uploadingFlag = ref.watch(firestoreUploadProvider);
-
     return MaterialApp(
       darkTheme: darkThemeData,
       themeMode: ThemeMode.dark,
       theme: lightThemeData,
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (ctx, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text(snapshot.error.toString()));
-          }
-          if (snapshot.hasData && !uploadingFlag) {
-            return FutureBuilder(
-                future: ref.read(dataManagerProvider).loadData(),
-                builder: (ctx, loadSnapshot) {
-                  if (loadSnapshot.connectionState == ConnectionState.done) {
-                    return const MainScreen();
-                  } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                });
-          } else if (snapshot.connectionState == ConnectionState.waiting ||
-              uploadingFlag) {
-            return const AuthScreen();
-          } else {
-            Future.microtask(() => ref.read(dataManagerProvider).cleanData());
-            return const AuthScreen();
-          }
-        },
-      ),
+      home: MyStreamBuilder(),
+    );
+  }
+}
+
+class MyStreamBuilder extends ConsumerWidget {
+  const MyStreamBuilder({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    bool uploadingFlag = ref.watch(firestoreUploadProvider);
+
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (ctx, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text(snapshot.error.toString()));
+        }
+        if (snapshot.hasData && !uploadingFlag) {
+          return FutureBuilder(
+              future: ref.read(dataManagerProvider).loadData(),
+              builder: (ctx, loadSnapshot) {
+                if (loadSnapshot.connectionState == ConnectionState.done) {
+                  return const MainScreen();
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              });
+        } else if (snapshot.connectionState == ConnectionState.waiting ||
+            uploadingFlag) {
+          return const AuthScreen();
+        } else {
+          Future.microtask(() => ref.read(dataManagerProvider).cleanData());
+          return const AuthScreen();
+        }
+      },
     );
   }
 }

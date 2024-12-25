@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
-import 'package:tracker_v1/habit/data/habits_provider.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 
 class AllHabitsPage extends ConsumerStatefulWidget {
@@ -14,14 +13,12 @@ class AllHabitsPage extends ConsumerStatefulWidget {
 class _MyWidgetState extends ConsumerState<AllHabitsPage> {
   @override
   Widget build(BuildContext context) {
-    final habitsList = ref
-        .watch(habitProvider)
-        .where((habit) => habit.validationType != HabitType.unique)
-        .toList();
+    final habitsList = ref.watch(scheduleCacheProvider(null));
+
     Widget content;
 
     if (habitsList.isNotEmpty) {
-      content = HabitList(displayedHabitList: habitsList);
+      content = HabitReorderableList(habitScheduleMap: habitsList);
     } else {
       content = const Align(child: Text('No habits yet, create one!'));
     }

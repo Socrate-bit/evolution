@@ -4,7 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/logic/convert_habitV1.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
-import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/daily/data/reorderedday_provider.dart';
 import 'package:tracker_v1/statistics/data/statistics_provider.dart';
@@ -25,7 +25,7 @@ class DataManager {
     ref.read(habitProvider.notifier).cleanState();
     ref.read(trackedDayProvider.notifier).cleanState();
     ref.read(recapDayProvider.notifier).cleanState();
-    ref.read(reorderedDayProvider.notifier).cleanState();
+    ref.read(scheduledProvider.notifier).cleanState();
   }
 
   Future<void> signOut() async {
@@ -134,7 +134,6 @@ class DataManager {
         ref.read(habitProvider.notifier).loadData(),
         ref.read(trackedDayProvider.notifier).loadData(),
         ref.read(recapDayProvider.notifier).loadData(),
-        ref.read(reorderedDayProvider.notifier).loadData(),
         ref.read(userStatsProvider.notifier).loadUserStats(),
         ref.read(statNotiferProvider.notifier).loadData(),
         ref.read(habitProvider.notifier).loadData(),

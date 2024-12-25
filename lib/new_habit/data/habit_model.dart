@@ -7,13 +7,13 @@ const idGenerator = Uuid();
 enum HabitType { simple, recap, unique, recapDay }
 
 const Map<HabitType, String> habitTypeDescriptions = {
-  HabitType.simple: 'Simple habit',
+  HabitType.simple: 'Simple task',
   HabitType.recap: 'Evaluation',
   HabitType.unique: 'Unique task',
   HabitType.recapDay: 'Journaling',
 };
 
-enum Ponderation { negligible, additional, valuable, significant, critical }
+enum Ponderation { negligible, low, normal, high, critical }
 
 DateTime now = DateTime.now();
 DateTime today = DateTime(now.year, now.month, now.day);

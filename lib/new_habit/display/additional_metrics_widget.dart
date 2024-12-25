@@ -42,7 +42,7 @@ class _AdditionalMetricsState extends ConsumerState<AdditionalMetrics> {
 
   @override
   Widget build(BuildContext context) {
-    Habit habitState = ref.watch(newHabitProvider);
+    Habit habitState = ref.watch(newHabitStateProvider);
 
     return Form(
       key: formKey,
@@ -55,6 +55,7 @@ class _AdditionalMetricsState extends ConsumerState<AdditionalMetrics> {
                   color: habitState.color,
                   maxLenght: 100,
                   maxLine: 1,
+                  minLine: 1,
                   controlledValue: _additionalMetrics ?? '',
                   onSaved: (value) {
                     _additionalMetrics = value;

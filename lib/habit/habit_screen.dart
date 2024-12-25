@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/daily/daily_screen.dart';
+import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
-import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
@@ -17,7 +19,7 @@ class HabitScreen extends ConsumerWidget {
   final Habit initialHabit;
   final DateTime? dateOpened;
 
-  void showNewHabit(Habit targetHabit, context) {
+  void _showNewHabit(Habit targetHabit, context) {
     showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
@@ -29,43 +31,52 @@ class HabitScreen extends ConsumerWidget {
     );
   }
 
+  void _resetData(WidgetRef ref, BuildContext context, Habit habit) {
+    if (habit.validationType == HabitType.recapDay) {
+      ref.read(recapDayProvider.notifier).deleteAllRecapDays();
+    }
+
+    ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Data deleted')));
+  }
+
+  void _showConfirmationDialog(context, ref, Function() function, String text) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        actions: [CustomOutlinedButton(submit: function, text: text)],
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Are you sure? This operation is irreversible.'),
+            SizedBox(
+              height: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Habit? habit = ref
         .watch(habitProvider)
-        .firstWhere((h) => h.habitId == initialHabit.habitId);
+        .firstWhereOrNull((h) => h.habitId == initialHabit.habitId);
 
-    void resetData() {
-      ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Data deleted')));
+    if (habit == null) {
+      return Container();
     }
 
-    final currentHabit = ref.watch(habitProvider).firstWhere(
+    ref.watch(scheduledProvider);
+
+    final currentHabit = ref.read(habitProvider).firstWhere(
           (h) => h.habitId == habit.habitId,
           orElse: () => habit,
         );
-
-    void showConfirmationDialog(
-        context, ref, Function() function, String text) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          actions: [CustomOutlinedButton(submit: function, text: text)],
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Are you sure? This operation is irreversible.'),
-              SizedBox(
-                height: 16,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -212,7 +223,7 @@ class HabitScreen extends ConsumerWidget {
                 ),
                 CustomElevatedButton(
                   submit: () {
-                    showNewHabit(currentHabit, context);
+                    _showNewHabit(currentHabit, context);
                   },
                   text: 'Edit habit',
                 ),
@@ -245,8 +256,8 @@ class HabitScreen extends ConsumerWidget {
                 ),
                 CustomOutlinedButton(
                   submit: () {
-                    showConfirmationDialog(context, ref, () {
-                      resetData();
+                    _showConfirmationDialog(context, ref, () {
+                      _resetData(ref, context, habit);
                       Navigator.of(context).pop();
                     }, 'Yes I want to reset data for this habit');
                   },
@@ -257,7 +268,7 @@ class HabitScreen extends ConsumerWidget {
                 ),
                 CustomOutlinedButton(
                   submit: () {
-                    showConfirmationDialog(context, ref, () {
+                    _showConfirmationDialog(context, ref, () {
                       Navigator.of(context).pop();
                       Navigator.of(context).pop();
                       WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -6,7 +6,6 @@ import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 
 class CustomHeatMap extends ConsumerWidget {
@@ -46,7 +45,9 @@ class CustomHeatMap extends ConsumerWidget {
     List<DateTime> dates = generateDateList();
 
     for (DateTime date in dates) {
-      bool trackingStatus = ref.read(scheduledProvider.notifier).getHabitTrackingStatus(habit, date);
+      bool trackingStatus = ref
+          .read(scheduledProvider.notifier)
+          .getHabitTrackingStatusWithSchedule(habit.habitId, date).$1;
 
       if (trackingStatus == false || date.isAfter(today)) {
         heatMapDataSet[date] = 0;
@@ -60,7 +61,8 @@ class CustomHeatMap extends ConsumerWidget {
         } else {
           trackedDay.notation == null
               ? heatMapDataSet[date] = 6
-              : heatMapDataSet[date] = RatingDisplayUtility.ratingToHeatmapNumber(
+              : heatMapDataSet[date] =
+                  RatingDisplayUtility.ratingToHeatmapNumber(
                   trackedDay.totalRating()! / 2,
                 );
         }
@@ -71,6 +73,7 @@ class CustomHeatMap extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(scheduledProvider);
     Map<DateTime, int> heatMapDataSet = getHeatMapDataSet(ref);
 
     return HeatMap(

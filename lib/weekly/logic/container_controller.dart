@@ -4,11 +4,11 @@ import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
-import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/recap/simple_recap_screen.dart';
 import 'package:tracker_v1/recap/daily_recap_screen.dart';
-import 'package:tracker_v1/recap/activity_recap_screen.dart';
+import 'package:tracker_v1/recap/habit_recap_screen.dart';
 
 class ContainerController {
   final Habit habit;

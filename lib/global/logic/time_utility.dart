@@ -9,4 +9,12 @@ int compareTimeOfDay(TimeOfDay? a, TimeOfDay? b) {
   if (a.minute < b.minute) return -1;
   if (a.minute > b.minute) return 1;
   return 0;
-  }
+}
+
+TimeOfDay stringToTimeOfDay(String timeString) {
+  final format = timeString.split(':');
+  int hour = int.parse(format[0]);
+  int minute = int.parse(format[1]);
+
+  return TimeOfDay(hour: hour, minute: minute);
+}

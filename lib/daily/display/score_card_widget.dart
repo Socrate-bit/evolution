@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
-import 'package:tracker_v1/habit/data/habits_provider.dart';
 
 String getDisplayedScore(double? score, {bool elloge = false}) {
   String displayedScore = '-';
@@ -39,7 +39,7 @@ Color getScoreCardColor(WidgetRef ref, bool isFull, TimeOfDay? time,
       today.year, today.month, today.day, time?.hour ?? 0, time?.minute ?? 0);
 
   bool habitListIsEmpty =
-      ref.watch(habitProvider.notifier).getTodayHabit(selectedDay).isEmpty;
+      ref.watch(scheduleCacheProvider(selectedDay)).isEmpty;
   bool todayAndNotEnded = DateTime.now().isBefore(selectedDayNight) &&
       selectedDay == today &&
       !isFull;

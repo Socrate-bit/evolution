@@ -11,7 +11,7 @@ class Schedule {
   String? scheduleId;
   final String userId;
   final String? habitId;
-  final DateTime startDate;
+  DateTime? startDate;
   DateTime? endDate;
   final DateTime? endingDate;
   final bool paused;
@@ -20,13 +20,13 @@ class Schedule {
   final bool whenever;
   final int period2;
   final List<WeekDay>? daysOfTheWeek;
-  final List<TimeOfDay>? timesOfTheDay;
+  final List<TimeOfDay?>? timesOfTheDay;
 
   Schedule({
     scheduleId,
     this.habitId,
     userId,
-    required this.startDate,
+    this.startDate,
     this.endDate,
     this.endingDate,
     this.paused = false,
@@ -34,7 +34,7 @@ class Schedule {
     this.period1 = 1,
     this.whenever = false,
     this.period2 = 1,
-    this.daysOfTheWeek,
+    this.daysOfTheWeek = const [...WeekDay.values],
     this.timesOfTheDay,
   })  : scheduleId = scheduleId ?? idGenerator.v4(),
         userId = FirebaseAuth.instance.currentUser!.uid;
@@ -44,7 +44,7 @@ class Schedule {
       'scheduleId': scheduleId,
       'userId': userId,
       'habitId': habitId,
-      'startDate': startDate.toIso8601String(),
+      'startDate': startDate?.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
       'endingDate': endingDate?.toIso8601String(),
       'paused': paused,
@@ -55,7 +55,7 @@ class Schedule {
       'daysOfTheWeek':
           daysOfTheWeek?.map((day) => day.toString().split('.').last).toList(),
       'timesOfTheDay':
-          timesOfTheDay?.map((time) => '${time.hour}:${time.minute}').toList(),
+          timesOfTheDay?.map((time) => time != null ? '${time!.hour}:${time.minute}' : null).toList(),
     };
   }
 
@@ -65,9 +65,12 @@ class Schedule {
       scheduleId: json['scheduleId'],
       habitId: json['habitId'],
       userId: json['userId'],
-      startDate: DateTime.parse(json['startDate']),
+      startDate:
+          json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      endingDate: json['endingDate'] != null ? DateTime.parse(json['endingDate']) : null,
+      endingDate: json['endingDate'] != null
+          ? DateTime.parse(json['endingDate'])
+          : null,
       paused: json['paused'],
       type: FrequencyType.values
           .firstWhere((e) => e.name.toString() == json['type'] as String),
@@ -79,7 +82,7 @@ class Schedule {
               WeekDay.values.firstWhere((e) => e.name.toString() == day))
           .toList(),
       timesOfTheDay: (json['timesOfTheDay'] as List<dynamic>?)
-          ?.map((time) => stringToTimeOfDay(time))
+          ?.map((time) => stringToTimeOfDay(time.toString()))
           .toList(),
     );
   }
@@ -96,12 +99,23 @@ class Schedule {
         schedule1.period1 == schedule2.period1 &&
         schedule1.whenever == schedule2.whenever &&
         schedule1.period2 == schedule2.period2 &&
-        schedule1.daysOfTheWeek?.toString() == schedule2.daysOfTheWeek?.toString() &&
-        schedule1.timesOfTheDay?.toString() == schedule2.timesOfTheDay?.toString();
+        schedule1.daysOfTheWeek?.toString() ==
+            schedule2.daysOfTheWeek?.toString() &&
+        schedule1.timesOfTheDay?.toString() ==
+            schedule2.timesOfTheDay?.toString();
+  }
+
+  bool isMixedhour() {
+    if (timesOfTheDay == null) return false;
+    return timesOfTheDay!.toSet().length > 1;
   }
 
   void resetScheduleId() {
     scheduleId = idGenerator.v4();
+  }
+
+  TimeOfDay? getTimeOfTargetDay(DateTime? date) {
+    return timesOfTheDay?[(date?.weekday ?? 1) - 1];
   }
 
   Schedule copyWith({
@@ -116,15 +130,18 @@ class Schedule {
     bool? whenever,
     int? period2,
     List<WeekDay>? daysOfTheWeek,
-    List<TimeOfDay>? timesOfTheDay,
+    List<TimeOfDay?>? timesOfTheDay,
+    bool startDateNullInput = false,
+    bool enDateNullInput = false,
+    bool endingNullDateInput = false,
   }) {
     return Schedule(
       scheduleId: scheduleId ?? this.scheduleId,
       habitId: habitId ?? this.habitId,
       userId: userId,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      endingDate: endingDate ?? this.endingDate,
+      startDate: startDateNullInput ? null : startDate ?? this.startDate,
+      endDate: enDateNullInput ? null : endDate ?? this.endDate,
+      endingDate: endingNullDateInput ? null : endingDate ?? this.endingDate,
       paused: paused ?? this.paused,
       type: type ?? this.type,
       period1: period1 ?? this.period1,
@@ -135,7 +152,8 @@ class Schedule {
     );
   }
 
-  static TimeOfDay stringToTimeOfDay(String tod) {
+  static TimeOfDay? stringToTimeOfDay(String tod) {
+    if (tod == 'null') return null;
     final parts = tod.split(':');
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }

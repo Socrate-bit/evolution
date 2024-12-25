@@ -19,7 +19,7 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
       'userId': newTrackedDay.userId,
       'habitId': newTrackedDay.habitId,
       'date': newTrackedDay.date.toIso8601String(),
-      'done': newTrackedDay.done == Validated.yes ? true : false,
+      'done': newTrackedDay.done.toString().split('.').last,
       'notation_showUp': newTrackedDay.notation?.quantity,
       'notation_investment': newTrackedDay.notation?.quality,
       'notation_result': newTrackedDay.notation?.result,
@@ -90,6 +90,7 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
     if (data.isEmpty) return;
 
     final List<HabitRecap> loadedData = [];
+
     for (final doc in data) {
       final row = doc.data();
       final trackedDay = HabitRecap(
@@ -97,7 +98,7 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
         userId: row['userId'] as String,
         habitId: row['habitId'] as String,
         date: DateTime.parse(row['date'] as String),
-        done: (row['done'] as bool) ? Validated.yes : Validated.no,
+        done: validatedCorrectionV1(row['done']),
         notation: row['notation_showUp'] == null
             ? null
             : Rating(
@@ -121,6 +122,16 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
     }
 
     state = loadedData;
+  }
+
+  Validated validatedCorrectionV1(dynamic value) {
+    if (value.toString() != 'true' && value.toString() != 'false') {
+      return Validated.values
+          .firstWhere((e) => e.name.toString() == value as String);
+    }
+    if (!value) return Validated.no;
+    if (value) return Validated.yes;
+    return Validated.yes;
   }
 
   void cleanState() {

@@ -1,8 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/daily/logic/sort_habits_utility.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -11,8 +9,7 @@ import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
-import 'package:tracker_v1/global/logic/is_in_the_week.dart';
-import 'package:tracker_v1/recap/data/daily_recap_repository.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/daily/display/score_card_widget.dart';
@@ -32,7 +29,7 @@ class WeeklyTable extends ConsumerWidget {
     List<bool> isTrackedFilter = range.map((index) {
       return ref
           .read(scheduledProvider.notifier)
-          .getHabitTrackingStatus(habit, offsetWeekDays[index]);
+          .getHabitTrackingStatusWithSchedule(habit.habitId, offsetWeekDays[index]).$1;
     }).toList();
 
     List<dynamic> result = range.map((index) {
@@ -137,7 +134,7 @@ class WeeklyTable extends ConsumerWidget {
       double? score = evalutationComputing([date], ref);
       double? ratio = completionComputing([date], ref);
       TimeOfDay? time =
-          ref.read(habitProvider.notifier).getLastTimeOfTheDay(date);
+          ref.read(scheduleCacheProvider(date).notifier).getLastTimeOfTheDay(date);
       Color color = getScoreCardColor(ref, ratio == 100, time, date, score);
       return (score, ratio == 100, color, date);
     }).toList();
@@ -179,20 +176,14 @@ class WeeklyTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allHabits = ref
-        .watch(habitProvider)
-        .where((habit) => habit.validationType != HabitType.unique)
-        .toList();
-
-    List<Habit> activeHabits = sortHabits(allHabits, null, ref);
-
+    final allHabits = ref.watch(habitProvider);
     final trackedDays = ref.watch(trackedDayProvider);
     final recapList = ref.watch(recapDayProvider);
 
     double? ratioValidated = completionComputing(
         offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);
         
-    List<TableRow> rows = buildTableRows(activeHabits, ref, trackedDays, recapList, context);
+    List<TableRow> rows = buildTableRows(allHabits, ref, trackedDays, recapList, context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),

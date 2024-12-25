@@ -59,6 +59,10 @@ class ProfilScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     UserData? userData = ref.watch(userDataProvider);
 
+    if (userData == null) {
+      return Container();
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(),
