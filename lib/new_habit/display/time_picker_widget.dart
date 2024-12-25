@@ -100,6 +100,8 @@ class _CustomTimePickerState extends ConsumerState<_CustomTimePicker> {
   void dispose() {
     _hourFocusNode.dispose();
     _minuteFocusNode.dispose();
+    _hourController.dispose();
+    _minuteController.dispose();
     super.dispose();
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 
-class BigTextFormField extends StatelessWidget {
-  BigTextFormField(
+class BigTextFormField extends StatefulWidget {
+  const BigTextFormField(
       {required this.controlledValue,
       required this.onSaved,
       required this.toolTipTitle,
@@ -21,43 +21,61 @@ class BigTextFormField extends StatelessWidget {
   final int minLine;
   final int maxLenght;
   final Color? color;
+
+  @override
+  State<BigTextFormField> createState() => _BigTextFormFieldState();
+}
+
+class _BigTextFormFieldState extends State<BigTextFormField> {
   late final TextEditingController controller;
 
   @override
-  Widget build(BuildContext context) {
-    controller = TextEditingController(text: controlledValue);
+  void initState() {
+    controller = TextEditingController(text: widget.controlledValue);
+    super.initState();
+  }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
-        CustomToolTipTitle(title: toolTipTitle, content: tooltipContent),
+        CustomToolTipTitle(
+            title: widget.toolTipTitle, content: widget.tooltipContent),
         TextFormField(
           textInputAction: TextInputAction.newline,
           onFieldSubmitted: (value) {
             FocusScope.of(context).unfocus();
           },
           controller: controller,
-          minLines: minLine,
-          maxLines: maxLine,
+          minLines: widget.minLine,
+          maxLines: widget.maxLine,
           validator: (value) {
             return null;
           },
           onSaved: (value) {
-            onSaved(value);
+            widget.onSaved(value);
           },
           onTapOutside: (event) {
-            onSaved(controller.text);
+            widget.onSaved(controller.text);
           },
           onEditingComplete: () {
-            onSaved(controller.text);
+            widget.onSaved(controller.text);
           },
-          maxLength: maxLenght,
+          maxLength: widget.maxLenght,
           style: Theme.of(context).textTheme.bodyMedium,
-          cursorColor: color,
+          cursorColor: widget.color,
           decoration: InputDecoration(
             filled: true,
             focusedBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                  color: color ?? Theme.of(context).primaryColor, width: 3),
+                  color: widget.color ?? Theme.of(context).primaryColor,
+                  width: 3),
             ),
             fillColor:
                 Theme.of(context).colorScheme.surfaceBright.withOpacity(0.75),

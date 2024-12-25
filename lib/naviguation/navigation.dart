@@ -75,9 +75,7 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   void onTitleTap(WidgetRef ref) {
     ref.read(navigationStateProvider.notifier).setIndex(0);
-    ref
-        .read(dailyScreenStateProvider.notifier)
-        .updateSelectedDate(today);
+    ref.read(dailyScreenStateProvider.notifier).updateSelectedDate(today);
     ref.read(dailyScreenStateProvider.notifier).jumpToTodayPage();
   }
 
@@ -108,11 +106,17 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
           size: 30,
         ),
       ),
-      title: InkWell(
+      title: GestureDetector(
           onTap: () {
             onTitleTap(ref);
           },
-          child: Text(pageTitle)),
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: 200),
+            child: Text(
+              pageTitle,
+              key: ValueKey<String>(pageTitle),
+            ),
+          )),
       titleTextStyle: Theme.of(context).textTheme.titleLarge,
       centerTitle: true,
       actions: [

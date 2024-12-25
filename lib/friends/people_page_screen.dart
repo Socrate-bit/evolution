@@ -116,6 +116,12 @@ class _MessageCardState extends ConsumerState<MessageCard> {
   }
 
   @override
+  void dispose() {
+    textController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget content = Text(
       widget.userStats.message.isEmpty

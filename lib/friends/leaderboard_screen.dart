@@ -37,6 +37,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   }
 
   @override
+  void dispose() {
+    tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     ref.invalidate(allUserStatsProvider);
     AsyncValue usersStat = ref.watch(allUserStatsProvider);

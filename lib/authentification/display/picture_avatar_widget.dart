@@ -23,6 +23,9 @@ class _PictureAvatarState extends State<PictureAvatar> {
 
   void _takePicture({bool gallery = false}) async {
     final pickedImage = await _imagePicker.pickImage(
+        maxHeight: 600,
+        maxWidth: 600,
+        imageQuality: 80,
         source: gallery ? ImageSource.gallery : ImageSource.camera);
 
     if (pickedImage == null) return;
