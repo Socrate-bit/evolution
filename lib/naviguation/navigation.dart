@@ -53,6 +53,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
       appBar: _TopAppBar(),
       body: selectedPage,

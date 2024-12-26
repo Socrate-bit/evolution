@@ -34,7 +34,7 @@ class NewHabitScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<NewHabitScreen> {
   final formKey = GlobalKey<FormState>();
-  dynamic notifier;
+  late NewHabitState notifier;
   Schedule? oldSchedule;
 
   @override
@@ -123,7 +123,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     );
   }
 
-  Widget _getName(habitState) {
+  Widget _getName(Habit habitState) {
     return Expanded(
         child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           maxLine: 1,
           controlledValue: habitState.name,
           onSaved: (value) {
-            notifier.setName(value);
+            notifier.setName(value ?? '');
           },
           toolTipTitle: 'Name:',
           tooltipContent: 'Provide a name of this habit',
@@ -189,7 +189,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       color: habitState.color,
       controlledValue: habitState.description,
       onSaved: (value) {
-        notifier.setDescription(value);
+        notifier.setDescription(value ?? '');
       },
       toolTipTitle: 'Description:',
       tooltipContent: 'Provide a description of this habit',
@@ -223,7 +223,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
-                      notifier.setPonderation(value);
+                      notifier.setPonderation(value as int);
                     });
                   },
                 )),
@@ -260,7 +260,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
                       .toList(),
                   onChanged: (value) {
                     if (value == null) return;
-                    notifier.setValidationType(value);
+                    notifier.setValidationType(value as HabitType);
                   },
                 )),
           ),
@@ -285,15 +285,15 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     return habitTypeList;
   }
 
-  Widget _getImprovementField(habitState) {
+  Widget _getImprovementField(Habit habitState) {
     return BigTextFormField(
       color: habitState.color,
       maxLenght: 100,
       minLine: 1,
       maxLine: 1,
-      controlledValue: habitState.newHabit,
+      controlledValue: habitState.newHabit ?? '',
       onSaved: (value) {
-        notifier.setMainImprovement(value);
+        notifier.setMainImprovement(value ?? '');
       },
       toolTipTitle: 'Weekly focus:',
       tooltipContent: 'Main improvement',

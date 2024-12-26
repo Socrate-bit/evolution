@@ -13,7 +13,7 @@ class BigTextFormField extends StatefulWidget {
       this.color,
       super.key});
 
-  final String? controlledValue;
+  final String controlledValue;
   final void Function(String? value) onSaved;
   final String toolTipTitle;
   final String tooltipContent;
