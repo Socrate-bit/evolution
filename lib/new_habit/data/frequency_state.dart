@@ -16,6 +16,9 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
         endDate: state.endDate,
         endingDate: state.endingDate,
         habitId: state.habitId,
+        daysOfTheWeek: frequencyType == FrequencyType.Weekly
+            ? [DaysOfTheWeekUtility.numberToWeekDay[state.startDate!.weekday]!]
+            : [...WeekDay.values],
         timesOfTheDay: [for (int x = 0; x < 7; x++) state.timesOfTheDay?[0]],
         type: frequencyType);
     state.copyWith(type: frequencyType);

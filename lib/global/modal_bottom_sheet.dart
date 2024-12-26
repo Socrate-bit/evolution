@@ -23,7 +23,8 @@ class CustomModalBottomSheet extends StatelessWidget {
         padding:
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: SingleChildScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, 
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
             child: Form(
