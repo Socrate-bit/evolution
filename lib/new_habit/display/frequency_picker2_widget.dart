@@ -7,7 +7,7 @@ import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/new_habit/data/frequency_state.dart';
 import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
-import 'package:tracker_v1/new_habit/display/end_date_dialog.dart';
+import 'package:tracker_v1/new_habit/display/startend_date_modal.dart';
 
 class FrequencyPickerWidget extends ConsumerStatefulWidget {
   const FrequencyPickerWidget({super.key});
