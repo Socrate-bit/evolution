@@ -254,7 +254,7 @@ class _MultipleTimePicker extends ConsumerWidget {
 
     return CustomModalBottomSheet(
         title: 'Mixed Time',
-        content: ListView(shrinkWrap: true, children: [
+        content: ListView(shrinkWrap: true,physics: NeverScrollableScrollPhysics() , children: [
           ...frequencyState.daysOfTheWeek!.map((day) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

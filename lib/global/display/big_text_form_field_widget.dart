@@ -28,10 +28,12 @@ class BigTextFormField extends StatefulWidget {
 
 class _BigTextFormFieldState extends State<BigTextFormField> {
   late final TextEditingController controller;
+  late final FocusNode focusNode;
 
   @override
   void initState() {
     controller = TextEditingController(text: widget.controlledValue);
+    focusNode = FocusNode();
     super.initState();
   }
 
@@ -53,6 +55,7 @@ class _BigTextFormFieldState extends State<BigTextFormField> {
             FocusScope.of(context).unfocus();
           },
           controller: controller,
+          focusNode: focusNode,
           minLines: widget.minLine,
           maxLines: widget.maxLine,
           validator: (value) {
