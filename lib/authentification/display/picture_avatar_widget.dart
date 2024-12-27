@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -48,8 +49,9 @@ class _PictureAvatarState extends State<PictureAvatar> {
           onTap: _takePicture,
           child: CircleAvatar(
             radius: widget.radius,
+            backgroundColor: Colors.transparent,
             backgroundImage: widget.profilPicture != null
-                ? NetworkImage(widget.profilPicture!)
+                ? CachedNetworkImageProvider(widget.profilPicture!)
                 : _pickedProfilPicture == null
                     ? null
                     : FileImage(_pickedProfilPicture!),

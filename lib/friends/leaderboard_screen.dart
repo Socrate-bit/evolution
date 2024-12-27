@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -450,7 +451,8 @@ class PodiumPictureAvatar extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: CircleAvatar(
-        backgroundImage: NetworkImage(pictureUrl),
+        backgroundColor: Colors.transparent,
+        backgroundImage: CachedNetworkImageProvider( pictureUrl),
       ),
     );
   }
@@ -578,7 +580,8 @@ class LeaderboardCard extends StatelessWidget {
                     width: 32,
                   ),
                   CircleAvatar(
-                    backgroundImage: NetworkImage(userData.profilPicture),
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: CachedNetworkImageProvider(userData.profilPicture),
                     radius: 20,
                   ),
                 ],
@@ -604,3 +607,4 @@ void goToPeoplePage(context, UserStats userStats, UserData userData, int rank) {
       builder: (ctx) => CustomModalBottomSheet(
           title: '', content: PeoplePage(userStats, userData, rank)));
 }
+

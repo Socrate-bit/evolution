@@ -12,6 +12,10 @@ class NavigationStateNotifier extends StateNotifier<NavigationState> {
   void setIndex(int index) {
     state = NavigationState(index);
   }
+
+  void cleanState() {
+    state = NavigationState(0);
+  }
 }
 
 final navigationStateProvider = StateNotifierProvider<NavigationStateNotifier, NavigationState>((ref) {

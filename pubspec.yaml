@@ -59,6 +59,10 @@ dependencies:
   collection: ^1.18.0
   flutter_datetime_picker_plus: ^2.2.0
   flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+  upgrader: ^11.3.1
+  awesome_notifications: ^0.10.0
+  firebase_messaging: ^15.1.6
 
 flutter_native_splash:
  color: "#141414"

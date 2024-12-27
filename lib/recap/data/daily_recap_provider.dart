@@ -42,7 +42,8 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
   }
 
   // Delete a RecapDay from state and Firestore
-  Future<void> deleteRecapDay(RecapDay targetRecapDay) async {
+  Future<void> deleteRecapDay(RecapDay? targetRecapDay) async {
+    if (targetRecapDay == null) return;
     state =
         state.where((day) => day.recapId != targetRecapDay.recapId).toList();
 

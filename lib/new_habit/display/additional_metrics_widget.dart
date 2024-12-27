@@ -13,7 +13,8 @@ class AdditionalMetrics extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Habit habitState = ref.watch(newHabitStateProvider);
-    int additionalMetricsLength = (habitState.additionalMetrics?.length ?? 0) + 1 ;
+    int additionalMetricsLength =
+        (habitState.additionalMetrics?.length ?? 0) + 1;
 
     return SizedBox(
       child: Column(
@@ -119,11 +120,17 @@ class _NewAdditionalMetricCard extends ConsumerWidget {
   }
 }
 
-class _NewMetricModal extends ConsumerWidget {
+class _NewMetricModal extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_NewMetricModal> createState() => _NewMetricModalState();
+}
+
+class _NewMetricModalState extends ConsumerState<_NewMetricModal> {
+  String? additionalMetrics;
+
+  @override
+  Widget build(BuildContext context) {
     Habit habitState = ref.watch(newHabitStateProvider);
-    String? additionalMetrics;
 
     return Column(
       children: [

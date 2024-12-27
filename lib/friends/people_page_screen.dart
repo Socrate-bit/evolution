@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,8 +59,9 @@ class ProfilCard extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
+            backgroundColor: Colors.transparent,
             radius: 40,
-            backgroundImage: NetworkImage(userData.profilPicture),
+            backgroundImage: CachedNetworkImageProvider(userData.profilPicture),
           ),
           SizedBox(width: 32),
           Column(

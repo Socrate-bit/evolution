@@ -277,8 +277,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     if (ref.read(habitProvider).firstWhereOrNull(
                 (h) => h.validationType == HabitType.recapDay) !=
             null &&
-        widget.habit != null &&
-        widget.habit!.validationType != HabitType.recapDay) {
+        (widget.habit != null ?
+        widget.habit!.validationType != HabitType.recapDay : true)) {
       habitTypeList.remove(HabitType.recapDay);
     }
 

@@ -69,7 +69,7 @@ class ContainerController {
                 oldTrackedDay: trackedDay,
               ));
         case HabitType.recapDay:
-          RecapDay recapDay = dailyRecaps.firstWhere((recapDay) {
+          RecapDay? recapDay = dailyRecaps.firstWhereOrNull((recapDay) {
             return recapDay.date == date;
           });
           return ActionHandlers(

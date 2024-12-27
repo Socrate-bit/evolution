@@ -120,7 +120,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
     int cursorIndexPosition = _calculateDraggedItemPosition();
 
     if (cursorIndexPosition + 1 < sortedHabitList.length &&
-        cursorIndexPosition > -1) {
+        cursorIndexPosition >= -1) {
       timeIndexPlusOne = widget
           .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]
           ?.getTimeOfTargetDay(widget.selectedDate);

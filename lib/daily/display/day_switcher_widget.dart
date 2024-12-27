@@ -64,19 +64,7 @@ class _DailyPages extends ConsumerStatefulWidget {
 }
 
 class _DailyPagesState extends ConsumerState<_DailyPages> {
-  late PageController _pageController;
   int weekShifts = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +73,7 @@ class _DailyPagesState extends ConsumerState<_DailyPages> {
     return SizedBox(
       width: 300,
       child: PageView.builder(
-        controller: _pageController = dailyScreenState.pageIndex,
+        controller: dailyScreenState.pageIndex,
         itemBuilder: (ctx, item) {
           weekShifts = item - 52;
           final List<DateTime> weeklyDayList =

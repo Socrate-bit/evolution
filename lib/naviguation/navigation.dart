@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
@@ -75,9 +76,11 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
   ];
 
   void onTitleTap(WidgetRef ref) {
+    if (ref.read(navigationStateProvider).currentIndex == 0) {
+      ref.read(dailyScreenStateProvider.notifier).jumpToTodayPage();
+      ref.read(dailyScreenStateProvider.notifier).updateSelectedDate(today);
+    }
     ref.read(navigationStateProvider.notifier).setIndex(0);
-    ref.read(dailyScreenStateProvider.notifier).updateSelectedDate(today);
-    ref.read(dailyScreenStateProvider.notifier).jumpToTodayPage();
   }
 
   @override
@@ -122,19 +125,21 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       centerTitle: true,
       actions: [
         InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
-          },
-          child: Hero(
-            tag: userData.userId!,
-            child: CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage(userData.profilPicture),
-            ),
-          ),
-        ),
+            borderRadius: BorderRadius.circular(18),
+            onTap: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
+            },
+            child: Hero(
+              tag: userData.userId!,
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.transparent,
+                backgroundImage: CachedNetworkImageProvider(
+                  (userData.profilPicture),
+                ),
+              ),
+            )),
         const SizedBox(
           width: 8,
         )
@@ -147,7 +152,7 @@ class _MyBottomAppBar extends ConsumerWidget {
   const _MyBottomAppBar();
 
   static const int _animationDurationShort = 300;
-  static const int _animationDurationLong = 600;
+  static const int _animationDurationLong = 200;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -191,9 +196,9 @@ class _MyFloatingActionButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     int selectedIndex = ref.read(navigationStateProvider).currentIndex;
-    DateTime selectedDate = ref.read(dailyScreenStateProvider).selectedDate;
 
     return AnimatedScale(
+      curve: Curves.easeInOut,
       scale: selectedIndex == 0 ? 1 : 0, // Shrink to 0 before disappearing
       duration: selectedIndex != 0
           ? const Duration(milliseconds: 300)
@@ -202,7 +207,8 @@ class _MyFloatingActionButton extends ConsumerWidget {
         elevation: 6,
         shape: const CircleBorder(),
         onPressed: () {
-          _openNewHabitScreen(context, selectedDate);
+          _openNewHabitScreen(
+              context, ref.read(dailyScreenStateProvider).selectedDate);
         },
         child: const Icon(
           Icons.add_rounded,

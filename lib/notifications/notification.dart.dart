@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 import 'package:tracker_v1/new_habit/data/frequency_state.dart';
+import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
@@ -49,6 +51,7 @@ class _NotificationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Schedule scheduleState = ref.watch(frequencyStateProvider);
+    Habit habitState = ref.watch(newHabitStateProvider);
     List<int>? notifications = scheduleState.notification;
     int hour = notifications![item] ~/ 60;
     int minute = notifications[item] % 60;
@@ -59,7 +62,7 @@ class _NotificationCard extends ConsumerWidget {
       child: ListTile(
         leading: Icon(
           Icons.notifications,
-          color: Theme.of(context).colorScheme.primary,
+          color: habitState.color,
         ),
         title: Text(
           time,
@@ -111,6 +114,8 @@ class _NewNotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Habit habitState = ref.watch(newHabitStateProvider);
+
     return InkWell(
       onTap: () => _addNotification(context, ref),
       child: BasicCard(
@@ -120,13 +125,13 @@ class _NewNotificationCard extends ConsumerWidget {
             Icon(
               Icons.add_box_rounded,
               size: 20,
-              color: Theme.of(context).colorScheme.primary,
+              color: habitState.color,
             ),
             const SizedBox(width: 8),
             Text(
               'Add Notification',
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: habitState.color,
                   fontWeight: FontWeight.bold),
             ),
           ],
