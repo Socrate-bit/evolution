@@ -34,7 +34,7 @@ class WeeklyTable extends ConsumerWidget {
 
     List<dynamic> result = range.map((index) {
       final trackedDay = trackedDays.firstWhereOrNull((td) =>
-          td.habitId == habit.habitId && td.date == offsetWeekDays[index]);
+          td.habitId == habit.habitId && td.date == offsetWeekDays[index] && td.done != Validated.notYet);
       return trackedDay?.trackedDayId ?? isTrackedFilter[index];
     }).toList();
 
