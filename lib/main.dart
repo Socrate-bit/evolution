@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/alldata_manager.dart';
+import 'package:tracker_v1/global/update/compress_image.dart';
 import 'package:tracker_v1/theme.dart';
 import 'package:tracker_v1/authentification/auth_screen.dart';
 import 'package:tracker_v1/naviguation/navigation.dart';
@@ -21,6 +22,7 @@ void main() async {
   await Future.delayed(const Duration(seconds: 3));
   FlutterNativeSplash.remove();
 }
+
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});

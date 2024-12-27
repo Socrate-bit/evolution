@@ -58,6 +58,7 @@ dependencies:
   confetti: ^0.8.0
   collection: ^1.18.0
   flutter_datetime_picker_plus: ^2.2.0
+  flutter_image_compress: ^2.3.0
 
 flutter_native_splash:
  color: "#141414"
