@@ -119,7 +119,7 @@ class ContainerController {
       return (
         trackedDay.getStatusAppearance(colorScheme).backgroundColor,
         trackedDay.done == Validated.no ? Icons.close : null,
-        trackedDay.totalRating()
+        trackedDay.done == Validated.notYet ? null : trackedDay.totalRating()
       );
     }
   }
