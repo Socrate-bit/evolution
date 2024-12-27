@@ -25,6 +25,24 @@ void main() async {
     sound: true,
   );
 
+  AwesomeNotifications().initialize(
+    null, // App icon for notifications
+    [
+      NotificationChannel(
+        channelKey: 'basic_channel',
+        channelName: 'Push Notifications',
+        channelDescription: 'Channel for push notifications',
+        defaultColor: Color(0xFF9D50DD),
+        playSound: true,
+        defaultRingtoneType: DefaultRingtoneType.Alarm,
+        enableLights: true,
+        enableVibration: true,
+        ledColor: Colors.white,
+        importance: NotificationImportance.High,
+      ),
+    ],
+  );
+
   FirebaseMessaging.onBackgroundMessage(_firebasePushHandler);
   FlutterNativeSplash.preserve(widgetsBinding: widgetbinding);
 
@@ -90,5 +108,17 @@ class MyStreamBuilder extends ConsumerWidget {
 Future<void> _firebasePushHandler(RemoteMessage message) async {
   print('Message from Firebase: ${message.messageId}');
 
-  AwesomeNotifications().createNotificationFromJsonData(message.data);
+  AwesomeNotifications().createNotificationFromJsonData(message.data, );
+}
+
+void notifyTest() {
+  AwesomeNotifications().createNotification(
+    content: NotificationContent(
+      id: 10,
+      channelKey: 'basic_channel',
+      title: 'Simple Notification',
+      body: 'Simple body',
+      locked: true,
+    ),
+  );
 }
