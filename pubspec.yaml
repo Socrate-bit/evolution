@@ -57,6 +57,7 @@ dependencies:
   reorderable_grid_view: ^2.2.8
   confetti: ^0.8.0
   collection: ^1.18.0
+  flutter_datetime_picker_plus: ^2.2.0
 
 flutter_native_splash:
  color: "#141414"

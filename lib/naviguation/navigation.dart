@@ -178,19 +178,20 @@ class _MyBottomAppBar extends ConsumerWidget {
 class _MyFloatingActionButton extends ConsumerWidget {
   const _MyFloatingActionButton();
 
-  void _openNewHabitScreen(context, ref) {
+  void _openNewHabitScreen(context, DateTime selectedDate) {
     showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
         builder: (ctx) => NewHabitScreen(
-              dateOpened: ref.read(dailyScreenStateProvider).selectedDate,
+              dateOpened: selectedDate,
             ));
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     int selectedIndex = ref.read(navigationStateProvider).currentIndex;
+    DateTime selectedDate = ref.read(dailyScreenStateProvider).selectedDate;
 
     return AnimatedScale(
       scale: selectedIndex == 0 ? 1 : 0, // Shrink to 0 before disappearing
@@ -201,7 +202,7 @@ class _MyFloatingActionButton extends ConsumerWidget {
         elevation: 6,
         shape: const CircleBorder(),
         onPressed: () {
-          _openNewHabitScreen(context, ref);
+          _openNewHabitScreen(context, selectedDate);
         },
         child: const Icon(
           Icons.add_rounded,

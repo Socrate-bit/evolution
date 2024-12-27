@@ -20,7 +20,8 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
             ? [DaysOfTheWeekUtility.numberToWeekDay[state.startDate!.weekday]!]
             : [...WeekDay.values],
         timesOfTheDay: [for (int x = 0; x < 7; x++) state.timesOfTheDay?[0]],
-        type: frequencyType);
+        type: frequencyType,
+        notification: state.notification);
     state.copyWith(type: frequencyType);
   }
 
@@ -83,6 +84,22 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
 
   void setState(Schedule newSchedule) {
     state = newSchedule.copyWith();
+  }
+
+  void setNotification(List<int> notification) {
+    state = state.copyWith(notification: notification);
+  }
+
+  void addNotification(int notification) {
+    state = state
+        .copyWith(notification: [...state.notification ?? [], notification]);
+  }
+
+  void deleteNotification(int index) {
+    state = state.copyWith(notification: [
+      for (int x = 0; x < state.notification!.length; x++)
+        if (x != index) state.notification![x]
+    ]);
   }
 }
 

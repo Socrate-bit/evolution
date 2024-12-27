@@ -72,6 +72,19 @@ class NewHabitState extends StateNotifier<Habit> {
     state = state.copy(additionalMetrics: additionalMetrics);
   }
 
+  void addAdditionalMetrics(String metric) {
+    state =
+        state.copy(additionalMetrics: [...state.additionalMetrics!, metric]);
+  }
+
+  void removeAdditionalMetrics(int index) {
+    state = state.copy(
+      additionalMetrics: [
+        ...List.from(state.additionalMetrics!)..removeAt(index)
+      ],
+    );
+  }
+
   void setPonderation(int ponderation) {
     state = state.copy(ponderation: ponderation);
   }
@@ -85,6 +98,7 @@ class NewHabitState extends StateNotifier<Habit> {
   }
 }
 
-final newHabitStateProvider = StateNotifierProvider.autoDispose<NewHabitState, Habit>((ref) {
+final newHabitStateProvider =
+    StateNotifierProvider.autoDispose<NewHabitState, Habit>((ref) {
   return NewHabitState(ref);
 });

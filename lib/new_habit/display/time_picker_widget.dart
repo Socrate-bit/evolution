@@ -227,12 +227,12 @@ class _CustomTimePickerContainer extends ConsumerWidget {
           filled: true,
           fillColor: focusNode.hasFocus ? focusedColor : unfocusedColor,
           focusColor: Theme.of(context).colorScheme.primary,
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2.0,
-              )),
+          // focusedBorder: OutlineInputBorder(
+          //     borderRadius: BorderRadius.circular(10),
+          //     borderSide: BorderSide(
+          //       color: Theme.of(context).colorScheme.primary,
+          //       width: 2.0,
+          //     )),
           hintText: hint,
           counterText: '',
         ),

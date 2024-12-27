@@ -38,6 +38,14 @@ class _BigTextFormFieldState extends State<BigTextFormField> {
   }
 
   @override
+  void didUpdateWidget(covariant BigTextFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.text = widget.controlledValue;
+    });
+  }
+
+  @override
   void dispose() {
     controller.dispose();
     super.dispose();
