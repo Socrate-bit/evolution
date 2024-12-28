@@ -53,7 +53,7 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   fl_chart: ^0.69.0
   dotted_border: ^2.1.0
-  syncfusion_flutter_datepicker: ^27.2.4
+  syncfusion_flutter_datepicker: ^28.1.36
   reorderable_grid_view: ^2.2.8
   confetti: ^0.8.0
   collection: ^1.18.0
