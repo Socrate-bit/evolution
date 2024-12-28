@@ -25,6 +25,10 @@ void main() async {
     sound: true,
   );
 
+  String? token = await FirebaseMessaging.instance.getToken();
+  print('#############################');
+  print('token: $token');
+
   AwesomeNotifications().initialize(
     null, // App icon for notifications
     [
@@ -106,8 +110,6 @@ class MyStreamBuilder extends ConsumerWidget {
 }
 
 Future<void> _firebasePushHandler(RemoteMessage message) async {
-  print('Message from Firebase: ${message.messageId}');
-
   AwesomeNotifications().createNotificationFromJsonData(message.data, );
 }
 
