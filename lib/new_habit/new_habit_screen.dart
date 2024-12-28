@@ -20,7 +20,7 @@ import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
-import 'package:tracker_v1/notifications/notification.dart.dart';
+import 'package:tracker_v1/notifications/display/notification.dart.dart';
 import 'package:tracker_v1/new_habit/display/time_picker_widget.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
