@@ -15,9 +15,6 @@ const Map<HabitType, String> habitTypeDescriptions = {
 
 enum Ponderation { negligible, low, normal, high, critical }
 
-DateTime now = DateTime.now();
-DateTime today = DateTime(now.year, now.month, now.day);
-
 class Habit {
   Habit(
       {required this.userId,

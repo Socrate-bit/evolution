@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
@@ -190,6 +191,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   if (!_isAuthentifying)
                     TextButton(
                       onPressed: () {
+                        HapticFeedback.lightImpact();
                         setState(() {
                           _isLogin = !_isLogin;
                         });

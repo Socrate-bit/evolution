@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomToggleButton extends StatelessWidget {
-  CustomToggleButton({
+  const CustomToggleButton({
     required this.pageNames,
     required this.selected,
     required this.onPressed,
@@ -40,7 +41,10 @@ class CustomToggleButton extends StatelessWidget {
               Row(
                 children: List.generate(pageNames.length, (index) {
                   return GestureDetector(
-                    onTap: () => onPressed(index),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onPressed(index);
+                    },
                     child: Container(
                       height: 40,
                       width: buttonWidth,

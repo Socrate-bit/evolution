@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/time_utility.dart';
 import 'package:tracker_v1/global/logic/time_of_day_extent.dart';
@@ -101,6 +103,9 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
             _cursorPositionCorection!)
         .toInt();
     if (_inDragging) {
+      if (_computedDraggedTime != null) {
+        HapticFeedback.selectionClick();
+      }
       setState(() {
         _computedDraggedTime = _dragToTime(_sortedHabitList);
       });
@@ -233,10 +238,12 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
                 child: child);
           },
           onReorderStart: (initialIndex) {
+            HapticFeedback.mediumImpact();
             _inDragging = true;
             _draggedInitialIndex = initialIndex;
           },
           onReorderEnd: (newIndex) {
+            HapticFeedback.lightImpact();
             TimeOfDay? initialTime = widget
                 .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!
                 .timesOfTheDay?[(widget.selectedDate?.weekday ?? 1) - 1];

@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    xmlns:tools="http://schemas.android.com/tools"
+
     <application
+    +        tools:replace="android:label"
         android:label="PeakYou"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -44,4 +47,5 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+          <uses-permission android:minSdkVersion="34" android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>

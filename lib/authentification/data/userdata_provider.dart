@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
+import 'package:tracker_v1/notifications/logic/local_notification_service.dart';
+import 'package:tracker_v1/notifications/logic/scheduled_notification_service.dart';
 import 'package:tracker_v1/statistics/data/user_stats.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
 
@@ -62,10 +65,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
   }
 
   Future<UserData?> loadTargetUserData(String uuid) async {
-    final docSnapshot = await firestore
-        .collection('user_data')
-        .doc(uuid)
-        .get();
+    final docSnapshot = await firestore.collection('user_data').doc(uuid).get();
 
     if (!docSnapshot.exists) {
       return null;
@@ -80,6 +80,25 @@ class AuthNotifier extends StateNotifier<UserData?> {
   // Clear the state when needed
   void cleanState() {
     state = null;
+  }
+
+  // Update user data
+  Future<void> changeUserDataSettings(bool notificationActivated) async {
+    if (!notificationActivated) {
+      ref.read(notificationsProvider.notifier).cancelNotifications();
+    } else {
+      ref.read(notificationsProvider.notifier).cancelNotifications();
+      ref.read(notificationsProvider.notifier).scheduleNotifications();
+    }
+
+    // Update the user data in Firestore using the toJson method
+    await firestore
+        .collection('user_data')
+        .doc(state!.userId)
+        .update({'notificationActivated': notificationActivated});
+
+    // Update local state with the new notificationActivated value
+    state = state!.copy()..notificationActivated = notificationActivated;
   }
 
   // Method to update existing user data in Firestore

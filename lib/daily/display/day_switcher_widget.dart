@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/global/logic/offset_days.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
@@ -73,6 +75,7 @@ class _DailyPagesState extends ConsumerState<_DailyPages> {
     return SizedBox(
       width: 300,
       child: PageView.builder(
+        onPageChanged: (value) => HapticFeedback.mediumImpact(),
         controller: dailyScreenState.pageIndex,
         itemBuilder: (ctx, item) {
           weekShifts = item - 52;
@@ -103,6 +106,7 @@ class _DailyPagesState extends ConsumerState<_DailyPages> {
 
               return InkWell(
                 onTap: () {
+                  HapticFeedback.selectionClick();
                   ref
                       .read(dailyScreenStateProvider.notifier)
                       .updateSelectedDate(weeklyDayList[item]);

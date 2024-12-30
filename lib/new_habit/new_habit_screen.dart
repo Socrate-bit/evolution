@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_iconpicker/Models/configuration.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
@@ -20,7 +21,7 @@ import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
-import 'package:tracker_v1/notifications/display/notification.dart.dart';
+import 'package:tracker_v1/notifications/display/notification_widget.dart.dart';
 import 'package:tracker_v1/new_habit/display/time_picker_widget.dart';
 
 class NewHabitScreen extends ConsumerStatefulWidget {
@@ -74,7 +75,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
   @override
   Widget build(BuildContext context) {
     Habit habitState = ref.watch(newHabitStateProvider);
-    ref.watch(frequencyStateProvider);
+    Schedule scheduleState = ref.watch(frequencyStateProvider);
 
     return CustomModalBottomSheet(
       title: widget.habit != null ? 'Edit Habit' : 'New Habit',
@@ -90,14 +91,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           const SizedBox(height: 12),
           _getDescriptionField(habitState),
           const SizedBox(height: 16),
-          _getPriorityField(habitState),
-          const SizedBox(height: 32),
-          FrequencyPickerWidget(),
-          const SizedBox(height: 32),
-          TimeOfTheDayField(),
-          const SizedBox(height: 32),
           _getHabitType(habitState),
-          const SizedBox(height: 32),
+          SizedBox(
+              height: habitState.validationType == HabitType.recap ? 32 : 16),
           AnimatedSwitcher(
               transitionBuilder: (switcherChild, animation) {
                 return SizeTransition(
@@ -112,8 +108,31 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               child: habitState.validationType == HabitType.recap
                   ? _getImprovementField(habitState)
                   : null),
+          SizedBox(height: habitState.validationType == HabitType.recap ? 32 : 16),
+          _getPriorityField(habitState),
+          const SizedBox(height: 32),
+          FrequencyPickerWidget(),
+          const SizedBox(height: 32),
+          TimeOfTheDayField(),
+          const SizedBox(height: 32),
+          AnimatedSwitcher(
+              transitionBuilder: (switcherChild, animation) {
+                return SizeTransition(
+                  sizeFactor: animation,
+                  child: FadeTransition(
+                    opacity: animation,
+                    child: switcherChild,
+                  ),
+                );
+              },
+              duration: Duration(milliseconds: 300),
+              child: scheduleState.timesOfTheDay != null &&
+                      scheduleState.timesOfTheDay!
+                          .where((t) => t != null)
+                          .isNotEmpty
+                  ? NotificationField()
+                  : null),
           AdditionalMetrics(),
-          NotificationField(),
           const SizedBox(height: 32),
           CustomElevatedButton(
             color: habitState.color,
@@ -155,7 +174,10 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         Spacer(),
         Center(
           child: InkWell(
-            onTap: _showColorPicker,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              _showColorPicker();
+            },
             child: CircleAvatar(
               backgroundColor: habitState.color,
               radius: 24,
@@ -202,35 +224,38 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     return Row(
       children: [
         const CustomToolTipTitle(title: 'Priority:', content: 'Importance'),
-        Expanded(
-          child: Center(
-            child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceBright,
-                    borderRadius: BorderRadius.circular(5)),
-                child: DropdownButton(
-                  value: habitState.ponderation,
-                  icon: const Icon(Icons.arrow_drop_down),
-                  isDense: true,
-                  dropdownColor: Theme.of(context).colorScheme.surfaceBright,
-                  items: Ponderation.values.reversed
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item.index + 1,
-                          child: Text(item.name.toString().capitalizeString()),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      notifier.setPonderation(value as int);
-                    });
-                  },
-                )),
-          ),
+        Spacer(),
+        Center(
+          child: Container(
+              height: 40,
+              width: 175,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceBright,
+                  borderRadius: BorderRadius.circular(5)),
+              child: DropdownButton(
+                value: habitState.ponderation,
+                icon: const Icon(Icons.arrow_drop_down),
+                isDense: true,
+                dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                items: Ponderation.values.reversed
+                    .map(
+                      (item) => DropdownMenuItem(
+                        value: item.index + 1,
+                        child: Text(item.name.toString().capitalizeString()),
+                      ),
+                    )
+                    .toList(),
+                onTap: () => HapticFeedback.selectionClick(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() {
+                    notifier.setPonderation(value as int);
+                  });
+                },
+              )),
         ),
+        SizedBox(width: 16),
       ],
     );
   }
@@ -240,33 +265,36 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     return Row(
       children: [
         const CustomToolTipTitle(title: 'Habit type:', content: 'Item type'),
-        Expanded(
-          child: Center(
-            child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceBright,
-                    borderRadius: BorderRadius.circular(5)),
-                child: DropdownButton(
-                  value: habitState.validationType,
-                  icon: const Icon(Icons.arrow_drop_down),
-                  isDense: true,
-                  dropdownColor: Theme.of(context).colorScheme.surfaceBright,
-                  items: habitTypeList
-                      .map(
-                        (item) => DropdownMenuItem(
-                          value: item,
-                          child: Text(habitTypeDescriptions[item] ?? ''),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    notifier.setValidationType(value as HabitType);
-                  },
-                )),
-          ),
+        Spacer(),
+        Center(
+          child: Container(
+              height: 40,
+              width: 175,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceBright,
+                  borderRadius: BorderRadius.circular(5)),
+              child: DropdownButton(
+                value: habitState.validationType,
+                icon: const Icon(Icons.arrow_drop_down),
+                isDense: true,
+                dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+                items: habitTypeList
+                    .map(
+                      (item) => DropdownMenuItem(
+                        value: item,
+                        child: Text(habitTypeDescriptions[item] ?? ''),
+                      ),
+                    )
+                    .toList(),
+                onTap: () => HapticFeedback.selectionClick(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  notifier.setValidationType(value as HabitType);
+                },
+              )),
         ),
+        SizedBox(width: 16),
       ],
     );
   }
@@ -277,8 +305,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     if (ref.read(habitProvider).firstWhereOrNull(
                 (h) => h.validationType == HabitType.recapDay) !=
             null &&
-        (widget.habit != null ?
-        widget.habit!.validationType != HabitType.recapDay : true)) {
+        (widget.habit != null
+            ? widget.habit!.validationType != HabitType.recapDay
+            : true)) {
       habitTypeList.remove(HabitType.recapDay);
     }
 
@@ -310,7 +339,6 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     Habit newHabit = ref.read(newHabitStateProvider);
 
     if (widget.habit != null) {
-      
       Schedule newSchedule = ref.read(frequencyStateProvider);
       bool noScheduleChange =
           Schedule.compareSchedules(newSchedule, oldSchedule!);
@@ -359,6 +387,7 @@ class IconPickerWidget extends ConsumerWidget {
             ),
             iconSize: 40,
             onPressed: () async {
+              HapticFeedback.selectionClick();
               IconPickerIcon? iconPicker = await showIconPicker(context,
                   configuration: SinglePickerConfiguration(
                       iconPackModes: [IconPack.roundedMaterial],

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/frequency_state.dart';
@@ -104,6 +105,7 @@ void showModifyHabitDialog(
                 ? 'Update for this date only'
                 : 'Update for today only'),
             onPressed: () {
+              HapticFeedback.mediumImpact();
               if (drag) {
                 _modifyTodayTimeOfDay(
                     isHabitListPage, newTime, newSchedule, context, ref);
@@ -115,6 +117,7 @@ void showModifyHabitDialog(
         CupertinoDialogAction(
           child: Text('Update for all future days'),
           onPressed: () {
+            HapticFeedback.mediumImpact();
             if (drag) {
               _modifyFutureTimeOfDay(
                   isHabitListPage, newTime, newSchedule, context, ref);
@@ -126,6 +129,7 @@ void showModifyHabitDialog(
         CupertinoDialogAction(
           child: Text('Update for all'),
           onPressed: () {
+            HapticFeedback.heavyImpact();
             showCupertinoDialog(
               context: context,
               builder: (BuildContext context) {
@@ -138,6 +142,7 @@ void showModifyHabitDialog(
                     CupertinoDialogAction(
                       child: Text('Yes'),
                       onPressed: () {
+                        HapticFeedback.mediumImpact();
                         if (drag) {
                           _modifyAllTimeOfDay(isHabitListPage, newTime,
                               newSchedule, context, ref);
@@ -149,6 +154,7 @@ void showModifyHabitDialog(
                     CupertinoDialogAction(
                       child: Text('No'),
                       onPressed: () {
+                        HapticFeedback.selectionClick();
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                       },
@@ -162,6 +168,7 @@ void showModifyHabitDialog(
         CupertinoDialogAction(
           child: Text('Cancel'),
           onPressed: () {
+            HapticFeedback.selectionClick();
             Navigator.of(context).pop();
           },
         ),

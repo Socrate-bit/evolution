@@ -13,7 +13,10 @@ class ScheduleCacheNotifier
     extends StateNotifier<LinkedHashMap<Habit, Schedule>> {
   ScheduleCacheNotifier(this.ref, {this.date}) : super(LinkedHashMap()) {
     initCache();
+    _instances.add(this);
   }
+
+  static final List<ScheduleCacheNotifier> _instances = [];
   Ref ref;
   DateTime? date;
 
@@ -29,8 +32,9 @@ class ScheduleCacheNotifier
     for (Habit habit in habits) {
       // Conditional logic for habit list or daily screen
       if (date == null) {
-        Schedule? defaultSchedule =
-            ref.read(scheduledProvider.notifier).getHabitDefaultSchedule(habit.habitId);
+        Schedule? defaultSchedule = ref
+            .read(scheduledProvider.notifier)
+            .getHabitDefaultSchedule(habit.habitId);
 
         if (defaultSchedule != null &&
             defaultSchedule.type != FrequencyType.Once) {
@@ -94,9 +98,15 @@ class ScheduleCacheNotifier
       },
     );
   }
+
+  static void cleanAll() {
+    for (var instance in _instances) {
+      instance.state = LinkedHashMap();
+    }
+  }
 }
 
-final scheduleCacheProvider = StateNotifierProvider.autoDispose.family<
+final scheduleCacheProvider = StateNotifierProvider.family<
     ScheduleCacheNotifier,
     LinkedHashMap<Habit, Schedule>,
     DateTime?>((ref, date) {

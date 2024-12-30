@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/statistics/data/user_stats.dart';
@@ -66,6 +67,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             child: Column(
               children: [
                 TabBar(
+                  onTap: (value) => HapticFeedback.selectionClick(),
                   tabs: <Widget>[..._pageNames1.map((e) => Text(e))],
                   controller: tabController,
                 ),
@@ -73,7 +75,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                   child: SingleChildScrollView(
                       child: Container(
                     alignment: Alignment.topCenter,
-                    height: MediaQuery.of(context).size.height * 1.25,
+                    height: MediaQuery.of(context).size.height * 1.1,
                     child: Column(
                       children: [
                         const SizedBox(
@@ -246,6 +248,7 @@ class PodiumColumn extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               child: InkWell(
                   onTap: () {
+                    HapticFeedback.selectionClick();
                     goToPeoplePage(context, userStats, userData, number);
                   },
                   child: Container(
@@ -452,7 +455,7 @@ class PodiumPictureAvatar extends StatelessWidget {
       ),
       child: CircleAvatar(
         backgroundColor: Colors.transparent,
-        backgroundImage: CachedNetworkImageProvider( pictureUrl),
+        backgroundImage: CachedNetworkImageProvider(pictureUrl),
       ),
     );
   }
@@ -548,6 +551,7 @@ class LeaderboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
+        HapticFeedback.selectionClick();
         goToPeoplePage(context, userStats, userData, number);
       },
       child: Container(
@@ -581,7 +585,8 @@ class LeaderboardCard extends StatelessWidget {
                   ),
                   CircleAvatar(
                     backgroundColor: Colors.transparent,
-                    backgroundImage: CachedNetworkImageProvider(userData.profilPicture),
+                    backgroundImage:
+                        CachedNetworkImageProvider(userData.profilPicture),
                     radius: 20,
                   ),
                 ],
@@ -607,4 +612,3 @@ void goToPeoplePage(context, UserStats userStats, UserData userData, int rank) {
       builder: (ctx) => CustomModalBottomSheet(
           title: '', content: PeoplePage(userStats, userData, rank)));
 }
-

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomElevatedButton extends StatelessWidget {
   const CustomElevatedButton({
     this.color,
     required this.submit,
-    this.text= 'Submit',
+    this.text = 'Submit',
     super.key,
   });
 
@@ -21,14 +22,17 @@ class CustomElevatedButton extends StatelessWidget {
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: color ?? Theme.of(context).colorScheme.primary,
-
           ),
-          onPressed: submit,
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            submit();
+          },
           child: Text(
             text,
             style: Theme.of(context)
                 .textTheme
-                .titleMedium!.copyWith(color: Theme.of(context).colorScheme.surface),
+                .titleMedium!
+                .copyWith(color: Theme.of(context).colorScheme.surface),
           ),
         ),
       ),

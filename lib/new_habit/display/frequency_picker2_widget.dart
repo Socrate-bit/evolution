@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/toggle_button_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
@@ -110,6 +111,7 @@ class _TextDatePicker extends ConsumerWidget {
 
     return TextButton(
       onPressed: () {
+        HapticFeedback.selectionClick();
         showModalBottomSheet(
             context: context, builder: (context) => StartEndDateBottom());
       },
@@ -189,9 +191,10 @@ class _PeriodPicker extends ConsumerWidget {
               if (frequencyState.period1! < 2 && value == -1) {
                 return;
               }
+              HapticFeedback.lightImpact();
               ref
                   .read(frequencyStateProvider.notifier)
-                  .setPeriod1(frequencyState.period1! + value);
+                  .setPeriod1(frequencyState.period1 + value);
             },
           ),
         ],
@@ -238,9 +241,10 @@ class _Period2Picker extends ConsumerWidget {
               if (frequencyState.period2! < 2 && value == -1) {
                 return;
               }
+              HapticFeedback.lightImpact();
               ref
                   .read(frequencyStateProvider.notifier)
-                  .setPeriod2(frequencyState.period2! + value);
+                  .setPeriod2(frequencyState.period2 + value);
             },
           ),
         ],
@@ -344,10 +348,12 @@ class _CircleToggleDay extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         if (enteredWeekdays.contains(weekday)) {
+          HapticFeedback.selectionClick();
           ref
               .read(frequencyStateProvider.notifier)
               .setDaysOfTheWeek(List.from(enteredWeekdays)..remove(weekday));
         } else {
+          HapticFeedback.lightImpact();
           ref
               .read(frequencyStateProvider.notifier)
               .setDaysOfTheWeek(List.from(enteredWeekdays)..add(weekday));
@@ -408,7 +414,7 @@ class _OnceDatePicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Schedule frequencyState = ref.read(frequencyStateProvider);
-    String startDate = 'On the ${formater1.format(frequencyState.startDate!)}';
+    String startDate = 'On the ${formater1.format(frequencyState.startDate ?? today)}';
 
     if (frequencyState.startDate == today ||
         frequencyState.startDate == today.subtract(Duration(days: 1)) ||
@@ -417,7 +423,10 @@ class _OnceDatePicker extends ConsumerWidget {
     }
 
     return GestureDetector(
-        onTap: () => _datePicker(context, ref),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _datePicker(context, ref);
+        },
         child: CustomContainerTight(
             uniqueKey: UniqueKey(),
             child: Text(startDate,
@@ -434,9 +443,9 @@ class _MonthDatePicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Schedule frequencyState = ref.read(frequencyStateProvider);
-    String suffix = getOrdinalSuffix(frequencyState.startDate!.day);
+    String suffix = getOrdinalSuffix(frequencyState.startDate?.day ?? today.day);
     String startDate =
-        'On every ${formater2.format(frequencyState.startDate!)}$suffix';
+        'On every ${formater2.format(frequencyState.startDate ?? today)}$suffix';
 
     return GestureDetector(
         onTap: () => _datePicker(context, ref),

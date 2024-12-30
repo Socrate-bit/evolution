@@ -1,12 +1,12 @@
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:tracker_v1/global/display/custom_surface_container.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/statistics/data/statistics_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_state.dart';
 import 'package:tracker_v1/statistics/display/chart_widget.dart';
@@ -61,6 +61,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
       child: Column(
         children: [
           TabBar(
+            onTap: (value) => HapticFeedback.selectionClick(),
             tabs: const <Widget>[
               Text('Daily'),
               Text('Weekly'),
@@ -125,8 +126,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
     );
   }
 }
-
-
 
 class StatsGrid extends ConsumerStatefulWidget {
   const StatsGrid({super.key});
@@ -209,6 +208,7 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
         screenState.pickedEndDate);
 
     return ReorderableGridView.count(
+      onDragStart: (dragIndex) => HapticFeedback.lightImpact(),
       dragWidgetBuilder: (index, child) => Material(
           borderRadius: BorderRadius.circular(20),
           borderOnForeground: true,
@@ -226,6 +226,7 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
       footer: [
         InkWell(
             onTap: () {
+              HapticFeedback.lightImpact();
               showModalBottomSheet(
                   isScrollControlled: true,
                   context: context,
@@ -237,9 +238,11 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
         ...screenState.allStats.asMap().entries.map((entry) => InkWell(
               key: ObjectKey(entry),
               onDoubleTap: () {
+                HapticFeedback.lightImpact();
                 onTap2(ref, entry.key, screenState);
               },
               onTap: () {
+                HapticFeedback.selectionClick();
                 onTap(ref, entry.key, screenState, entry.value);
               },
               child: StatContainer(
@@ -437,12 +440,14 @@ class DateShift extends ConsumerWidget {
             IconButton(
               padding: EdgeInsets.zero,
               onPressed: () {
+                HapticFeedback.selectionClick();
                 ref.read(statisticsStateProvider.notifier).updateOffset(1);
               },
               icon: const Icon(Icons.arrow_left_rounded, size: 60),
             ),
             InkWell(
               onLongPress: () {
+                HapticFeedback.lightImpact();
                 _showDatePicker(context, ref);
               },
               child: Text(getDatePickerText(ref, screenState),
@@ -451,6 +456,7 @@ class DateShift extends ConsumerWidget {
             IconButton(
               padding: EdgeInsets.zero,
               onPressed: () {
+                HapticFeedback.selectionClick();
                 ref.read(statisticsStateProvider.notifier).updateOffset(-1);
               },
               icon: const Icon(

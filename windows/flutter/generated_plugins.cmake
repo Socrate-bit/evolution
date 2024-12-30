@@ -3,12 +3,13 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  awesome_notifications
+  audioplayers_windows
   cloud_firestore
   file_selector_windows
   firebase_auth
   firebase_core
   firebase_storage
+  flutter_timezone
   url_launcher_windows
 )
 

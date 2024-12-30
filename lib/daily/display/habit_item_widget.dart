@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
+import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
@@ -144,6 +147,8 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
               ));
       return;
     }
+
+    EffectsService().playUnvalided();
     ref.read(trackedDayProvider.notifier).deleteTrackedDay(trackedDay);
 
     if (habit.validationType == HabitType.recapDay) {
@@ -261,8 +266,10 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
             : DismissDirection.none,
         confirmDismiss: (direction) async {
           if (direction == DismissDirection.startToEnd) {
+            HapticFeedback.lightImpact();
             _startToEndSwiping(widget.habit, ref, context);
           } else if (direction == DismissDirection.endToStart) {
+            HapticFeedback.lightImpact();
             _endToStartSwiping(trackedDay, widget.habit, ref, context);
           }
           return false;
@@ -284,6 +291,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
         ),
         child: GestureDetector(
             onTap: () {
+              HapticFeedback.selectionClick();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (ctx) =>

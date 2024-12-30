@@ -9,6 +9,7 @@ class UserData {
     required this.name,
     required this.profilPicture,
     this.synced = false,
+    this.notificationActivated = true,
   }) {
     this.userId = userId ?? idGenerator.v4();
   }
@@ -18,6 +19,7 @@ class UserData {
   String name;
   String profilPicture;
   bool synced;
+  bool notificationActivated;
 
   // Copy method to return a new instance of UserData with the same properties
   UserData copy() {
@@ -27,6 +29,7 @@ class UserData {
       name: name,
       profilPicture: profilPicture,
       synced: synced,
+      notificationActivated: notificationActivated,
     );
   }
 
@@ -37,8 +40,8 @@ class UserData {
       inscriptionDate: DateTime.parse(json['inscriptionDate'] as String),
       name: json['name'] as String,
       profilPicture: json['profilPicture'] as String,
-      synced:
-          json['synced'] as bool? ?? false, // Handle possible null for synced
+      synced: json['synced'] as bool? ?? false, // Handle possible null for synced
+      notificationActivated: json['notificationActivated'] as bool? ?? true, // Handle possible null for notificationActivated
     );
   }
 
@@ -50,6 +53,7 @@ class UserData {
       'name': name,
       'profilPicture': profilPicture,
       'synced': synced,
+      'notificationActivated': notificationActivated,
     };
   }
 }

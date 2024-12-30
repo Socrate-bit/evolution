@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tracker_v1/global/logic/num_extent.dart';
-import 'package:tracker_v1/theme.dart';
 
 class DayContainer extends StatelessWidget {
   const DayContainer(
@@ -20,8 +20,13 @@ class DayContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onLongPress: onLongPress,
-      onTap: onTap,
+      onLongPress: onLongPress != null ? () {
+        HapticFeedback.mediumImpact();
+        onLongPress!();} : null,
+      onTap: 
+      onTap != null ? () {
+        HapticFeedback.selectionClick();
+        onTap!();} : null,
       child: Container(
         alignment: Alignment.center,
         height: 30,

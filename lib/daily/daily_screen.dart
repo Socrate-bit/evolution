@@ -2,14 +2,19 @@ import 'dart:collection';
 import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
+import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/daily/display/day_switcher_widget.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/notifications/data/basic_notification_model.dart';
+import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 
@@ -43,6 +48,8 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
       (prev, next) {
         if (completionComputing([dailyScreenState.selectedDate], ref) == 100 &&
             dailyScreenState.previousComputingRatio != 100) {
+          HapticFeedback.vibrate();
+          EffectsService().playFullValidated();
           confettiController.play();
         }
       },

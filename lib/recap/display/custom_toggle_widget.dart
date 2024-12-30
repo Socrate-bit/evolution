@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 
 class CustomToggleButtonsSlider extends StatefulWidget {
@@ -52,6 +53,7 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
                 5, (index) => index == ratingKeys.indexOf(controlledValue)),
             fillColor: RatingDisplayUtility.ratingToColor(controlledValue.toDouble()),// Color for unselected
             onPressed: (index) {
+              HapticFeedback.selectionClick();
               setState(() {
                 controlledValue = ratingKeys[index];
               });

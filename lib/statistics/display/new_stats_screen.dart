@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
@@ -92,7 +93,10 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
             title: 'Color:',
             content: 'Select the color of the stat',
             child: InkWell(
-              onTap: _showColorPicker,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                _showColorPicker;
+              },
               child: CircleAvatar(
                 backgroundColor: _color,
                 radius: 24,
@@ -341,6 +345,7 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
           return ListTile(
             title: Text(option.$2),
             onTap: () {
+              HapticFeedback.selectionClick();
               onSelected(option);
               FocusScope.of(context).unfocus();
             },
@@ -356,8 +361,8 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
 
     switch (widget.type) {
       case StatType.habit:
-        suggestions.addAll(
-            habits.map((e) => (e.habitId, e.name.capitalizeString())));
+        suggestions
+            .addAll(habits.map((e) => (e.habitId, e.name.capitalizeString())));
         break;
       case StatType.additionalMetrics:
         final List<(Habit, String)> additionalMetrics =

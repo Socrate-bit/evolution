@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tracker_v1/weekly/display/additional_metrics_table_widget.dart';
@@ -61,6 +62,7 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
           TabBar(
             tabs: <Widget>[..._pageNames.map((e) => Text(e))],
             controller: tabController,
+            onTap: (value) => HapticFeedback.selectionClick(),
           ),
           Expanded(
             child: Column(
@@ -73,8 +75,8 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
                     ),
                     SingleChildScrollView(
                       physics: AlwaysScrollableScrollPhysics(),
-                      child:
-                          AdditionalMetricsTable(offsetWeekDays: offsetWeekDays),
+                      child: AdditionalMetricsTable(
+                          offsetWeekDays: offsetWeekDays),
                     ),
                     SingleChildScrollView(
                       physics: AlwaysScrollableScrollPhysics(),

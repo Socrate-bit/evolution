@@ -1,53 +1,29 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/alldata_manager.dart';
+import 'package:tracker_v1/notifications/logic/local_notification_service.dart';
 import 'package:tracker_v1/theme.dart';
 import 'package:tracker_v1/authentification/auth_screen.dart';
 import 'package:tracker_v1/naviguation/navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:upgrader/upgrader.dart';
 import 'firebase_options.dart';
+import 'dart:io' show Platform;
 
 void main() async {
   WidgetsBinding widgetbinding = WidgetsFlutterBinding.ensureInitialized();
+  // Initialize firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  NotificationSettings settings =
-      await FirebaseMessaging.instance.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  // Initialize notification
+  await LocalNotificationService.initializeNotifications();
+  await LocalNotificationService.askPermissions();
 
-  String? token = await FirebaseMessaging.instance.getToken();
-  print('#############################');
-  print('token: $token');
-
-  AwesomeNotifications().initialize(
-    null, // App icon for notifications
-    [
-      NotificationChannel(
-        channelKey: 'basic_channel',
-        channelName: 'Push Notifications',
-        channelDescription: 'Channel for push notifications',
-        defaultColor: Color(0xFF9D50DD),
-        playSound: true,
-        defaultRingtoneType: DefaultRingtoneType.Alarm,
-        enableLights: true,
-        enableVibration: true,
-        ledColor: Colors.white,
-        importance: NotificationImportance.High,
-      ),
-    ],
-  );
-
-  FirebaseMessaging.onBackgroundMessage(_firebasePushHandler);
+  // Initialize splash screen
   FlutterNativeSplash.preserve(widgetsBinding: widgetbinding);
 
   runApp(const ProviderScope(
@@ -66,9 +42,42 @@ class MyApp extends ConsumerWidget {
       darkTheme: darkThemeData,
       themeMode: ThemeMode.dark,
       theme: lightThemeData,
-      home: UpgradeAlert(
-          dialogStyle: UpgradeDialogStyle.cupertino, child: MyStreamBuilder()),
+      home: Platform.isIOS || Platform.isAndroid
+          ? UpgradeAlert(
+              dialogStyle: UpgradeDialogStyle.cupertino,
+              child: MyStreamBuilder())
+          : MyStreamBuilder(),
     );
+  }
+}
+
+class MyHomeWidget extends StatefulWidget {
+  const MyHomeWidget({super.key});
+
+  @override
+  State<MyHomeWidget> createState() => _MyHomeWidgetState();
+}
+
+class _MyHomeWidgetState extends State<MyHomeWidget> {
+  // static const String appGroupId = 'group.productive'; // Add from here
+  // static const String iOSWidgetName = 'test_homeExtension';
+  // static const String androidWidgetName = 'test_homeExtension';
+
+  @override
+  void initState() {
+    // HomeWidget.setAppGroupId(appGroupId);
+    super.initState();
+  }
+
+  // void updateHomeWidget() {
+  //   HomeWidget.saveWidgetData('title', 'I am a home widget :)');
+  //   HomeWidget.updateWidget(
+  //       iOSName: iOSWidgetName, androidName: androidWidgetName);
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return MyStreamBuilder();
   }
 }
 
@@ -86,8 +95,10 @@ class MyStreamBuilder extends ConsumerWidget {
           return Center(child: Text(snapshot.error.toString()));
         }
         if (snapshot.hasData && !uploadingFlag) {
+          final future = ref.read(dataManagerProvider).loadData();
+
           return FutureBuilder(
-              future: ref.read(dataManagerProvider).loadData(),
+              future: future,
               builder: (ctx, loadSnapshot) {
                 if (loadSnapshot.connectionState == ConnectionState.done) {
                   return const MainScreen();
@@ -107,20 +118,4 @@ class MyStreamBuilder extends ConsumerWidget {
       },
     );
   }
-}
-
-Future<void> _firebasePushHandler(RemoteMessage message) async {
-  AwesomeNotifications().createNotificationFromJsonData(message.data, );
-}
-
-void notifyTest() {
-  AwesomeNotifications().createNotification(
-    content: NotificationContent(
-      id: 10,
-      channelKey: 'basic_channel',
-      title: 'Simple Notification',
-      body: 'Simple body',
-      locked: true,
-    ),
-  );
 }

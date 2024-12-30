@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/effects/effects_service.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -178,6 +181,14 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       done: validated ?? widget.validated,
       dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
     );
+
+    if (trackedDay.done == Validated.yes) {
+      EffectsService().playValidated();
+      HapticFeedback.heavyImpact();
+    } else if (trackedDay.done == Validated.no) {
+      EffectsService().playFaillure();
+      HapticFeedback.lightImpact();
+    }
 
     if (widget.oldDailyRecap == null) {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);

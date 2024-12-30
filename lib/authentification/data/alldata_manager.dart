@@ -1,10 +1,14 @@
+import 'package:background_fetch/background_fetch.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/convert_habitV1.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
+import 'package:tracker_v1/notifications/logic/background_fetch.dart';
 import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/statistics/data/statistics_provider.dart';
@@ -20,13 +24,15 @@ class DataManager {
 
   DataManager(this.ref);
 
-  void cleanData() {
+  Future<void> cleanData() async {
     ref.read(userDataProvider.notifier).cleanState();
     ref.read(habitProvider.notifier).cleanState();
     ref.read(trackedDayProvider.notifier).cleanState();
     ref.read(recapDayProvider.notifier).cleanState();
     ref.read(scheduledProvider.notifier).cleanState();
     ref.read(navigationStateProvider.notifier).cleanState();
+    ref.read(notificationsProvider.notifier).deleteNotifications();
+    ScheduleCacheNotifier.cleanAll();
   }
 
   Future<void> signOut() async {
@@ -131,6 +137,8 @@ class DataManager {
         return;
       }
 
+      ref.read(notificationsProvider);
+
       await Future.wait([
         ref.read(habitProvider.notifier).loadData(),
         ref.read(trackedDayProvider.notifier).loadData(),
@@ -144,6 +152,7 @@ class DataManager {
       await v1Converter(ref.read(habitProvider), ref);
 
       ref.read(allUserStatsProvider);
+
     } catch (error) {
       signOut();
     }

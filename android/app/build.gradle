@@ -9,6 +9,7 @@ plugins {
 }
 
 android {
+    +   compileSdkVersion rootProject.ext.compileSdkVersion
     namespace = "com.example.tracker_v1"
     compileSdk = 34
     ndkVersion = 23
@@ -31,6 +32,7 @@ android {
         targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        +       targetSdkVersion rootProject.ext.targetSdkVersion
     }
 
     buildTypes {

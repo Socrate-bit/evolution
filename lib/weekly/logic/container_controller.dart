@@ -109,9 +109,9 @@ class ContainerController {
   // Determines the color based on the tracking status
   (Color, IconData?, double?) getFillColor() {
     if (trackingStatus == false) {
-      return (colorScheme.surface, null, null);
-    } else if (trackingStatus == true) {
       return (const Color.fromARGB(255, 52, 52, 52), null, null);
+    } else if (trackingStatus == true) {
+      return (colorScheme.surface, null, null);
     } else {
       final HabitRecap trackedDay = trackedDays.firstWhere((td) {
         return td.habitId == habit.habitId && td.date == date;

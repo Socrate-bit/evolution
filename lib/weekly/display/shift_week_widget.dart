@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 import 'package:tracker_v1/daily/display/score_card_widget.dart';
 
@@ -39,6 +40,7 @@ class WeekShifter extends ConsumerWidget {
                   IconButton(
                     padding: EdgeInsets.zero,
                     onPressed: () {
+                      HapticFeedback.selectionClick();
                       updateWeekIndex(-1);
                     },
                     icon: const Icon(Icons.arrow_left_rounded, size: 60),
@@ -50,6 +52,7 @@ class WeekShifter extends ConsumerWidget {
                   IconButton(
                     padding: EdgeInsets.zero,
                     onPressed: () {
+                      HapticFeedback.selectionClick();
                       updateWeekIndex(1);
                     },
                     icon: const Icon(

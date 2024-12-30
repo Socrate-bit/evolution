@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -46,14 +47,17 @@ class _PictureAvatarState extends State<PictureAvatar> {
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(widget.radius),
-          onTap: _takePicture,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _takePicture();
+          },
           child: CircleAvatar(
             radius: widget.radius,
             backgroundColor: Colors.transparent,
             backgroundImage: widget.profilPicture != null
                 ? CachedNetworkImageProvider(widget.profilPicture!)
                 : _pickedProfilPicture == null
-                    ? null
+                    ? AssetImage('assets/default.jpg')
                     : FileImage(_pickedProfilPicture!),
             child: Icon(
               color: _pickedProfilPicture == null
@@ -69,6 +73,7 @@ class _PictureAvatarState extends State<PictureAvatar> {
         ),
         TextButton(
             onPressed: () {
+              HapticFeedback.lightImpact();
               _takePicture(gallery: true);
             },
             child: const Text('Take from gallery'))

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
@@ -67,9 +68,11 @@ class _AdditionalMetricCard extends ConsumerWidget {
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         trailing: IconButton(
-            onPressed: () => ref
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              ref
                 .read(newHabitStateProvider.notifier)
-                .removeAdditionalMetrics(item),
+                .removeAdditionalMetrics(item);},
             icon: const Icon(
               Icons.delete,
               size: 20,
@@ -97,7 +100,10 @@ class _NewAdditionalMetricCard extends ConsumerWidget {
     Habit habitState = ref.watch(newHabitStateProvider);
 
     return InkWell(
-      onTap: () => _addAdditionalMetrics(context),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _addAdditionalMetrics(context);
+      },
       child: BasicCard(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

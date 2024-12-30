@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
@@ -55,8 +56,9 @@ class _NotificationCard extends ConsumerWidget {
     List<int>? notifications = scheduleState.notification;
     int hour = notifications![item] ~/ 60;
     int minute = notifications[item] % 60;
-    String time = hour == 0 && minute == 0 ? 'At start of habit' :
-        '${(hour == 0 ? '' : '${hour}h ')}${(minute == 0 ? '' : '${minute}min ')}before start';
+    String time = hour == 0 && minute == 0
+        ? 'At start of habit'
+        : '${(hour == 0 ? '' : '${hour}h ')}${(minute == 0 ? '' : '${minute}min ')}before start';
 
     return BasicCard(
       child: ListTile(
@@ -72,9 +74,12 @@ class _NotificationCard extends ConsumerWidget {
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         trailing: IconButton(
-            onPressed: () => ref
-                .read(frequencyStateProvider.notifier)
-                .deleteNotification(item),
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              ref
+                  .read(frequencyStateProvider.notifier)
+                  .deleteNotification(item);
+            },
             icon: const Icon(
               Icons.delete,
               size: 20,
@@ -115,9 +120,37 @@ class _NewNotificationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Habit habitState = ref.watch(newHabitStateProvider);
+    Schedule scheduleState = ref.watch(frequencyStateProvider);
+
+    if (scheduleState.notification != null &&
+        scheduleState.notification!.length >= 5) {
+      return BasicCard(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off,
+              size: 20,
+              color: Colors.grey,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Max notifications reached',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge!
+                  .copyWith(color: Colors.grey, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }
 
     return InkWell(
-      onTap: () => _addNotification(context, ref),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _addNotification(context, ref);
+      },
       child: BasicCard(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -131,50 +164,11 @@ class _NewNotificationCard extends ConsumerWidget {
             Text(
               'Add Notification',
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: habitState.color,
-                  fontWeight: FontWeight.bold),
+                  color: habitState.color, fontWeight: FontWeight.bold),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _NewNotificationModal extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    int? notification;
-
-    return Column(
-      children: [
-        TimePickerDialog(
-          initialTime: TimeOfDay.now(),
-        ),
-        // BigTextFormField(
-        //   color: Theme.of(context).colorScheme.primary,
-        //   maxLenght: 100,
-        //   maxLine: 1,
-        //   minLine: 1,
-        //   controlledValue: notification?.toString() ?? '',
-        //   onSaved: (value) {
-        //     notification = int.tryParse(value);
-        //   },
-        //   toolTipTitle: 'Notification:',
-        //   tooltipContent: 'Provide notification time in minutes (Optional)',
-        // ),
-        const SizedBox(height: 32),
-        CustomElevatedButton(
-          submit: () {
-            if (notification != null) {
-              ref
-                  .read(frequencyStateProvider.notifier)
-                  .addNotification(notification!);
-            }
-            Navigator.pop(context);
-          },
-        )
-      ],
     );
   }
 }

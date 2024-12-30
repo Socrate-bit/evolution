@@ -2,6 +2,10 @@ import 'package:intl/intl.dart';
 
 DateTime now = DateTime.now();
 DateTime today = DateTime(now.year, now.month, now.day);
+DateTime yesterday = DateTime(now.year, now.month, now.day - 1);
+DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
+DateTime inTwoDays = DateTime(now.year, now.month, now.day + 2);
+DateTime inThreeDays = DateTime(now.year, now.month, now.day + 3);
 
 final formater1 = DateFormat('d MMM');
 final formater2 = DateFormat('d');

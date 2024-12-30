@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
   FrequencyNotifier()
       : super(Schedule(
           startDate: today,
+          notification: [5, 0]
         ));
 
   void setFrequencyType(FrequencyType frequencyType) {
@@ -91,8 +92,9 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
   }
 
   void addNotification(int notification) {
-    state = state
-        .copyWith(notification: [...state.notification ?? [], notification]);
+    state = state.copyWith(
+        notification: [...state.notification ?? [], notification]
+          ..sort((a, b) => b.compareTo(a)));
   }
 
   void deleteNotification(int index) {

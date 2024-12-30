@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
@@ -22,12 +23,15 @@ class TimeOfTheDayField extends ConsumerWidget {
           const CustomToolTipTitle(title: 'Time of the day:', content: 'Time'),
           Spacer(),
           if ((frequencyState.type == FrequencyType.Weekly ||
-                  (frequencyState.type == FrequencyType.Daily && frequencyState.period1 == 1)) &&
-              frequencyState.daysOfTheWeek != null && !frequencyState.whenever &&
+                  (frequencyState.type == FrequencyType.Daily &&
+                      frequencyState.period1 == 1)) &&
+              frequencyState.daysOfTheWeek != null &&
+              !frequencyState.whenever &&
               frequencyState.daysOfTheWeek!.isNotEmpty &&
               frequencyState.daysOfTheWeek!.length > 1)
             TextButton(
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   showModalBottomSheet(
                       context: context,
                       builder: (ctx) => _MultipleTimePicker());
@@ -185,9 +189,8 @@ class _CustomTimePickerState extends ConsumerState<_CustomTimePicker> {
   }
 }
 
-class _CustomTimePickerContainer extends ConsumerWidget {
+class _CustomTimePickerContainer extends ConsumerStatefulWidget {
   const _CustomTimePickerContainer({
-    super.key,
     required this.controller,
     required this.hint,
     required this.focusNode,
@@ -202,7 +205,14 @@ class _CustomTimePickerContainer extends ConsumerWidget {
   final Function onTimeChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CustomTimePickerContainer> createState() =>
+      _CustomTimePickerContainerState();
+}
+
+class _CustomTimePickerContainerState
+    extends ConsumerState<_CustomTimePickerContainer> {
+  @override
+  Widget build(BuildContext context) {
     Color focusedColor = ref.read(newHabitStateProvider).color;
     Color unfocusedColor = Theme.of(context).colorScheme.surface;
 
@@ -211,8 +221,8 @@ class _CustomTimePickerContainer extends ConsumerWidget {
       height: 75,
       child: TextFormField(
         style: TextStyle(fontSize: 45),
-        focusNode: focusNode,
-        controller: controller,
+        focusNode: widget.focusNode,
+        controller: widget.controller,
         cursorColor: Colors.black,
         cursorHeight: 50,
         keyboardType: TextInputType.number,
@@ -225,7 +235,7 @@ class _CustomTimePickerContainer extends ConsumerWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           filled: true,
-          fillColor: focusNode.hasFocus ? focusedColor : unfocusedColor,
+          fillColor: widget.focusNode.hasFocus ? focusedColor : unfocusedColor,
           focusColor: Theme.of(context).colorScheme.primary,
           // focusedBorder: OutlineInputBorder(
           //     borderRadius: BorderRadius.circular(10),
@@ -233,11 +243,11 @@ class _CustomTimePickerContainer extends ConsumerWidget {
           //       color: Theme.of(context).colorScheme.primary,
           //       width: 2.0,
           //     )),
-          hintText: hint,
+          hintText: widget.hint,
           counterText: '',
         ),
         onEditingComplete: () {
-          onTimeChanged(ref, day: day);
+          widget.onTimeChanged(ref, day: widget.day);
         },
         textAlign: TextAlign.center,
       ),
@@ -254,19 +264,23 @@ class _MultipleTimePicker extends ConsumerWidget {
 
     return CustomModalBottomSheet(
         title: 'Mixed Time',
-        content: ListView(shrinkWrap: true,physics: NeverScrollableScrollPhysics() , children: [
-          ...frequencyState.daysOfTheWeek!.map((day) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(day.name.toString().capitalizeString(),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium!
-                          .copyWith(color: Colors.white.withOpacity(0.75))),
-                  _CustomTimePicker(mixedSpecificDay: day, key: ValueKey(day)),
-                  SizedBox(height: 16),
-                ],
-              ))
-        ]));
+        content: ListView(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            children: [
+              ...frequencyState.daysOfTheWeek!.map((day) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(day.name.toString().capitalizeString(),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium!
+                              .copyWith(color: Colors.white.withOpacity(0.75))),
+                      _CustomTimePicker(
+                          mixedSpecificDay: day, key: ValueKey(day)),
+                      SizedBox(height: 16),
+                    ],
+                  ))
+            ]));
   }
 }

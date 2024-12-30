@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
@@ -102,6 +103,7 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       leading: IconButton(
         onPressed: () {
+          HapticFeedback.selectionClick();
           Navigator.of(context)
               .push(MaterialPageRoute(builder: (ctx) => const AllHabitsPage()));
         },
@@ -112,6 +114,7 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       title: GestureDetector(
           onTap: () {
+            HapticFeedback.mediumImpact();
             onTitleTap(ref);
           },
           child: AnimatedSwitcher(
@@ -127,6 +130,7 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
         InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: () {
+              HapticFeedback.selectionClick();
               Navigator.of(context).push(
                   MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
             },
@@ -207,6 +211,7 @@ class _MyFloatingActionButton extends ConsumerWidget {
         elevation: 6,
         shape: const CircleBorder(),
         onPressed: () {
+          HapticFeedback.mediumImpact();
           _openNewHabitScreen(
               context, ref.read(dailyScreenStateProvider).selectedDate);
         },
@@ -254,15 +259,17 @@ class _IconBottomAppBar extends ConsumerWidget {
           Positioned(
             bottom: 1,
             child: IconButton(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              icon: Icon(iconIconBar[identityIndex],
-                  color: selectedIndex == identityIndex
-                      ? Theme.of(context).colorScheme.secondary
-                      : null),
-              iconSize: 30,
-              onPressed: () => _selectIndex(identityIndex, ref),
-            ),
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                icon: Icon(iconIconBar[identityIndex],
+                    color: selectedIndex == identityIndex
+                        ? Theme.of(context).colorScheme.secondary
+                        : null),
+                iconSize: 30,
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  _selectIndex(identityIndex, ref);
+                }),
           ),
           Positioned(
               bottom: -9,
