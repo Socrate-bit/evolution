@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -12,6 +10,7 @@ import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/recap/display/custom_slider_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
+import 'package:tracker_v1/recap/logic/haptic_validation_logic.dart';
 
 class HabitRecapScreen extends ConsumerStatefulWidget {
   const HabitRecapScreen(this.habit, this.date,
@@ -111,13 +110,7 @@ class _HabitRecapScreenState extends ConsumerState<HabitRecapScreen> {
       dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
     );
 
-    if (newTrackedDay.done == Validated.yes) {
-      EffectsService().playValidated();
-      HapticFeedback.heavyImpact();
-    } else if (newTrackedDay.done == Validated.no) {
-      EffectsService().playFaillure();
-      HapticFeedback.lightImpact();
-    }
+    validationHaptic(newTrackedDay, widget.oldTrackedDay);
 
     if (widget.oldTrackedDay == null) {
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);

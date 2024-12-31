@@ -16,7 +16,6 @@ class ProfilScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfilScreenState extends ConsumerState<ProfilScreen> {
-  bool? userDataSetting;
 
   void logOut(ref, context) async {
     Navigator.of(context).pop();
@@ -64,7 +63,8 @@ class _ProfilScreenState extends ConsumerState<ProfilScreen> {
   @override
   Widget build(BuildContext context) {
     UserData? userData = ref.watch(userDataProvider);
-    bool? userDataSetting = userData?.notificationActivated ?? false;
+    bool userDataSetting = userData?.notificationActivated ?? false;
+    bool userDisplaySetting = userData?.priorityDisplay ?? false;
 
     if (userData == null) {
       return Container();
@@ -111,7 +111,19 @@ class _ProfilScreenState extends ConsumerState<ProfilScreen> {
       ),
       onChanged: (value) {
         HapticFeedback.lightImpact();
-        ref.read(userDataProvider.notifier).changeUserDataSettings(value);
+        ref.read(userDataProvider.notifier).changeNotificationSettings(value);
+      },
+    );
+
+    Widget settingPriorityDisplay = SwitchListTile(
+      value: userDisplaySetting,
+      title: Text(
+        'Activate priority display',
+        style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 16),
+      ),
+      onChanged: (value) {
+        HapticFeedback.lightImpact();
+        ref.read(userDataProvider.notifier).changePriorityDisplaySettings(value);
       },
     );
 
@@ -133,6 +145,10 @@ class _ProfilScreenState extends ConsumerState<ProfilScreen> {
                 height: 32,
               ),
               settingScheduledNotification,
+              const SizedBox(
+                height: 8,
+              ),
+              settingPriorityDisplay,
               const SizedBox(
                 height: 32,
               ),

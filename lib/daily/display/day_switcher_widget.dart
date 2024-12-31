@@ -27,7 +27,7 @@ class DailyUpperBarWidget extends ConsumerWidget {
       child: Row(
         children: [
           _DailyPages(),
-          _DailyScoreCard(),
+          Center(child: _DailyScoreCard()),
         ],
       ),
     );

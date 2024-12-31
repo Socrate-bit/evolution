@@ -85,7 +85,7 @@ class _FrequencyPickerWidgetState extends ConsumerState<FrequencyPickerWidget> {
 }
 
 class _TextDatePicker extends ConsumerWidget {
-  const _TextDatePicker({super.key});
+  const _TextDatePicker();
 
   String getTextDate(Schedule frequencyState) {
     String date = '';
@@ -146,7 +146,7 @@ class _ToggleFrequencyType extends ConsumerWidget {
 }
 
 class _PeriodPicker extends ConsumerWidget {
-  const _PeriodPicker({super.key});
+  const _PeriodPicker();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -409,17 +409,18 @@ class CustomContainerTight extends StatelessWidget {
 }
 
 class _OnceDatePicker extends ConsumerWidget {
-  const _OnceDatePicker({super.key});
+  const _OnceDatePicker();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Schedule frequencyState = ref.read(frequencyStateProvider);
-    String startDate = 'On the ${formater1.format(frequencyState.startDate ?? today)}';
+    DateTime startDate = frequencyState.startDate ?? today;
+    String startDateDisplay = 'On the ${formater1.format(startDate)}';
 
-    if (frequencyState.startDate == today ||
-        frequencyState.startDate == today.subtract(Duration(days: 1)) ||
-        frequencyState.startDate == today.add(Duration(days: 1))) {
-      startDate = displayedDate(frequencyState.startDate);
+    if (startDate == today ||
+        startDate == today.subtract(Duration(days: 1)) ||
+        startDate == today.add(Duration(days: 1))) {
+      startDateDisplay = displayedDate(startDate);
     }
 
     return GestureDetector(
@@ -429,7 +430,7 @@ class _OnceDatePicker extends ConsumerWidget {
         },
         child: CustomContainerTight(
             uniqueKey: UniqueKey(),
-            child: Text(startDate,
+            child: Text(startDateDisplay,
                 style: Theme.of(context)
                     .textTheme
                     .titleSmall!
@@ -438,12 +439,13 @@ class _OnceDatePicker extends ConsumerWidget {
 }
 
 class _MonthDatePicker extends ConsumerWidget {
-  const _MonthDatePicker({super.key});
+  const _MonthDatePicker();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Schedule frequencyState = ref.read(frequencyStateProvider);
-    String suffix = getOrdinalSuffix(frequencyState.startDate?.day ?? today.day);
+    String suffix =
+        getOrdinalSuffix(frequencyState.startDate?.day ?? today.day);
     String startDate =
         'On every ${formater2.format(frequencyState.startDate ?? today)}$suffix';
 

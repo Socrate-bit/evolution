@@ -94,6 +94,13 @@ void showModifyHabitDialog(
   showCupertinoDialog(
     context: context,
     builder: (BuildContext ctx) => CupertinoAlertDialog(
+      content: newSchedule.isMixedhour() && drag
+          ? Text('! Mixed times !',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge!
+                  .copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold))
+          : null,
       title: Text(
         'This is a repeating task',
         style: TextStyle(fontWeight: FontWeight.bold),

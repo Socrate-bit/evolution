@@ -2,12 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/authentification/data/userdata_model.dart';
+import 'package:tracker_v1/authentification/data/userdata_provider.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -42,12 +47,11 @@ class HabitWidget extends ConsumerStatefulWidget {
 }
 
 class _HabitWidgetState extends ConsumerState<HabitWidget> {
-    HabitRecap? trackedDay;
-    bool? pastCurrentTime;
-    String? currentStreak;
-    TimeOfDay? displayedTime;
-    late HabitStatusAppearance appearance;
-
+  HabitRecap? trackedDay;
+  bool? pastCurrentTime;
+  int? currentStreak;
+  TimeOfDay? displayedTime;
+  late HabitStatusAppearance appearance;
 
   void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
     if (habit.validationType == HabitType.unique) {
@@ -163,28 +167,6 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
     }
   }
 
-  String? _displayCurrentStreak(List<HabitRecap> trackedDays, ref) {
-    int streak = getCurrentStreak(widget.date!, widget.habit, ref);
-
-    if (streak < 1) {
-      return null;
-    } else if (streak < 7) {
-      return '🔥${streak.toString()}';
-    } else if (streak < 14) {
-      return '🔥🔥${streak.toString()}';
-    } else if (streak < 30) {
-      return '🔥🔥🔥${streak.toString()}';
-    } else if (streak < 61) {
-      return '🔥🔥🔥🔥${streak.toString()}';
-    } else if (streak < 122) {
-      return '🔥🔥🔥🔥🔥${streak.toString()}';
-    } else if (streak < 365) {
-      return '🔥🔥🔥🔥🔥🔥${streak.toString()}';
-    } else {
-      return '🔥🔥🔥🔥🔥🔥🔥${streak.toString()}';
-    }
-  }
-
   bool _isPastCurrentTime(TimeOfDay? time) {
     return time == null
         ? DateTime(
@@ -220,16 +202,34 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
                   ? const Color.fromARGB(255, 52, 52, 52)
                   : widget.habit.color.withOpacity(0.1),
           elementsColor: Colors.white,
-          icon: ref
-                  .read(habitProvider.notifier)
-                  .isHabitCurrentlyPaused(widget.habit)
-              ? const Icon(Icons.pause_circle_filled)
-              : null);
+          icon: _getIconInHabitList(widget.habit));
+    }
+  }
+
+  Widget? _getIconInHabitList(Habit habit) {
+    if (ref.read(habitProvider.notifier).isHabitCurrentlyPaused(habit)) {
+      return const Icon(Icons.pause_circle_outline_outlined);
+    } else if (ref.read(scheduleCacheProvider(null))[habit]?.startDate ==
+        null) {
+      return InkWell(
+          child: Icon(Icons.add_rounded, size: 30,),
+          onTap: () => {
+                HapticFeedback.lightImpact(),
+                showModalBottomSheet(
+                    isScrollControlled: true,
+                    context: context,
+                    builder: (context) {
+                      return NewHabitScreen(habit: habit);
+                    })
+              });
+    } else {
+      return null;
     }
   }
 
   void _initVariables(WidgetRef ref, context) {
-    Schedule? schedule = ref.watch(scheduleCacheProvider(widget.date))[widget.habit];
+    Schedule? schedule =
+        ref.watch(scheduleCacheProvider(widget.date))[widget.habit];
 
     if (!widget.habitList) {
       // Compute current streak
@@ -239,10 +239,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
             trackedDay.date == widget.date;
       });
 
-      currentStreak = _displayCurrentStreak(
-        trackedDays,
-        ref,
-      );
+      currentStreak = getCurrentStreak(widget.date ?? today, widget.habit, ref);
 
       // Compute displayed time
       displayedTime = schedule?.timesOfTheDay?[widget.date!.weekday - 1];
@@ -291,7 +288,6 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
         ),
         child: GestureDetector(
             onTap: () {
-              HapticFeedback.selectionClick();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (ctx) =>
@@ -311,7 +307,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
                   width: 8,
                 ),
                 Expanded(
-                  child: _HabitContainer(
+                  child: _HabitMainContainer(
                     habit: widget.habit,
                     appearance: appearance,
                     currentStreak: currentStreak,
@@ -329,7 +325,6 @@ class _HabitTimeFrame extends StatelessWidget {
     required this.timeMarker,
     required this.pastCurrentTime,
     required this.appearance,
-    super.key,
   });
 
   final TimeOfDay? time;
@@ -396,20 +391,18 @@ class _HabitTimeFrame extends StatelessWidget {
   }
 }
 
-class _HabitContainer extends StatelessWidget {
-  const _HabitContainer({
+class _HabitMainContainer extends ConsumerWidget {
+  final Habit habit;
+  final HabitStatusAppearance appearance;
+  final int? currentStreak;
+
+  const _HabitMainContainer({
     required this.habit,
     required this.appearance,
     required this.currentStreak,
-    super.key,
   });
 
-  final Habit habit;
-  final HabitStatusAppearance appearance;
-  final String? currentStreak;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget decoratedContainer({required Widget child}) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -420,24 +413,48 @@ class _HabitContainer extends StatelessWidget {
           shape: BoxShape.rectangle,
           color: appearance.backgroundColor,
           borderRadius: const BorderRadius.all(Radius.circular(10))),
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    UserData? userData = ref.watch(userDataProvider);
+
+    Widget habitName = Text(
+      habit.name.capitalizeString(),
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+          color: appearance.elementsColor,
+          decoration: appearance.lineThrough,
+          decorationThickness: 2.5,
+          decorationColor: appearance.elementsColor,
+          fontSize: 16),
+    );
+
+    return decoratedContainer(
       child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Icon(habit.icon, color: appearance.elementsColor),
         const SizedBox(
           width: 16,
         ),
         SizedBox(
-          width: 200,
-          child: Text(
-            habit.name,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                color: appearance.elementsColor,
-                decoration: appearance.lineThrough,
-                decorationThickness: 2.5,
-                decorationColor: appearance.elementsColor,
-                fontSize: 16),
-          ),
-        ),
+            width: 200,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.centerLeft,
+              children: [
+                if (userData != null && userData.priorityDisplay)
+                  Positioned(
+                      left: 2,
+                      top: 22,
+                      child: _PriorityDisplay(
+                        priority: habit.ponderation,
+                        appearance: appearance,
+                      )),
+                habitName,
+              ],
+            )),
         const Spacer(),
         if (appearance.icon != null)
           SizedBox(
@@ -452,14 +469,59 @@ class _HabitContainer extends StatelessWidget {
 }
 
 class _HabitStatusDisplay extends StatelessWidget {
-  final String? currentStreak;
+  final int? currentStreak;
   final HabitStatusAppearance appearance;
 
   const _HabitStatusDisplay({
     required this.currentStreak,
     required this.appearance,
-    super.key,
   });
+
+  Widget _displayCurrentStreak(int? currentStreak) {
+    if (currentStreak == null || currentStreak == 0) {
+      return const SizedBox();
+    }
+
+    int numberOfIcon = _getNumberOfStreakIcon(currentStreak);
+
+    Widget content = Row(
+      children: [
+        ...List.generate(
+            numberOfIcon,
+            (value) => Image.asset(
+                  'assets/images/streaks.png',
+                  height: 12,
+                  width: 12,
+                )),
+        Text(
+          currentStreak.toString(),
+          style: const TextStyle(
+              fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w900),
+        ),
+      ],
+    );
+    return content;
+  }
+
+  int _getNumberOfStreakIcon(int streak) {
+    if (streak < 1) {
+      return 0;
+    } else if (streak < 5) {
+      return 1;
+    } else if (streak < 10) {
+      return 2;
+    } else if (streak < 25) {
+      return 3;
+    } else if (streak < 50) {
+      return 4;
+    } else if (streak < 100) {
+      return 5;
+    } else if (streak < 200) {
+      return 6;
+    } else {
+      return 7;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -471,15 +533,39 @@ class _HabitStatusDisplay extends StatelessWidget {
           Positioned(
             top: -6,
             right: 18,
-            child: Text(
-              currentStreak!,
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w900),
-            ),
+            child: _displayCurrentStreak(currentStreak),
           ),
         appearance.icon!,
+      ],
+    );
+  }
+}
+
+class _PriorityDisplay extends StatelessWidget {
+  final int priority;
+  final HabitStatusAppearance appearance;
+
+  const _PriorityDisplay({required this.priority, required this.appearance});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        ...List.generate(
+            5,
+            (value) => Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 2.75,
+                      backgroundColor: appearance.elementsColor.withOpacity(
+                          priority > value
+                              ? appearance.elementsColor.a *
+                                  (appearance.icon != null ? 1 : 0.7)
+                              : appearance.elementsColor.a * 0.2),
+                    ),
+                    SizedBox(width: 4)
+                  ],
+                ))
       ],
     );
   }

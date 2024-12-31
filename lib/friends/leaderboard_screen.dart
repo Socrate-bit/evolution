@@ -273,7 +273,7 @@ class PodiumColumn extends StatelessWidget {
                 bottom:
                     (containerHeight) - (avatarRadius) * (shiftCircle - 1) - 3,
                 child: Image.asset(
-                  'assets/crown.png',
+                  'assets/images/crown.png',
                   width: 40,
                 ),
               ),

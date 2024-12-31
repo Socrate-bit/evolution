@@ -216,9 +216,7 @@ class WeeklyTable extends ConsumerWidget {
     List<TableRow> rows =
         buildTableRows(sortedHabits, ref, trackedDays, recapList, context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-      child: Column(
+    return Column(
         children: [
           Table(
             key: ObjectKey(offsetWeekDays.first),
@@ -245,7 +243,7 @@ class WeeklyTable extends ConsumerWidget {
               ),
             ),
         ],
-      ),
+      
     );
   }
 }

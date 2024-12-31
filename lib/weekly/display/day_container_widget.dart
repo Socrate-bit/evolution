@@ -42,7 +42,7 @@ class DayContainer extends StatelessWidget {
               )
             : element != null
                 ? Icon(element,
-                    size: 16,
+                    size: 25,
                     weight: 200,
                     color: Colors.white.withOpacity(0.45))
                 : null,

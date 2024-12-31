@@ -109,7 +109,7 @@ class ContainerController {
   // Determines the color based on the tracking status
   (Color, IconData?, double?) getFillColor() {
     if (trackingStatus == false) {
-      return (const Color.fromARGB(255, 52, 52, 52), null, null);
+      return (const Color.fromARGB(255, 62, 62, 62), null, null);
     } else if (trackingStatus == true) {
       return (colorScheme.surface, null, null);
     } else {
@@ -117,7 +117,7 @@ class ContainerController {
         return td.habitId == habit.habitId && td.date == date;
       });
       return (
-        trackedDay.getStatusAppearance(colorScheme).backgroundColor,
+        trackedDay.done == Validated.no ? colorScheme.surface : trackedDay.getStatusAppearance(colorScheme).backgroundColor,
         trackedDay.done == Validated.no ? Icons.close : null,
         trackedDay.done == Validated.notYet ? null : trackedDay.totalRating()
       );

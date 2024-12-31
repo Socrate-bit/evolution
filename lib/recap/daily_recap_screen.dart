@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
@@ -14,6 +12,7 @@ import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/recap/display/custom_toggle_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
+import 'package:tracker_v1/recap/logic/haptic_validation_logic.dart';
 
 class DailyRecapScreen extends ConsumerStatefulWidget {
   const DailyRecapScreen(this.date, this.habit,
@@ -173,7 +172,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
         altruism: textFieldValues['Help'],
         additionalMetrics: _additionalInputs);
 
-    HabitRecap trackedDay = HabitRecap(
+    HabitRecap newtTrackedDay = HabitRecap(
       trackedDayId: widget.oldTrackedDay?.trackedDayId,
       userId: FirebaseAuth.instance.currentUser!.uid,
       habitId: widget.habit.habitId,
@@ -182,22 +181,16 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
       dateOnValidation: widget.oldTrackedDay?.dateOnValidation ?? today,
     );
 
-    if (trackedDay.done == Validated.yes) {
-      EffectsService().playValidated();
-      HapticFeedback.heavyImpact();
-    } else if (trackedDay.done == Validated.no) {
-      EffectsService().playFaillure();
-      HapticFeedback.lightImpact();
-    }
+    validationHaptic(newtTrackedDay, widget.oldTrackedDay);
 
     if (widget.oldDailyRecap == null) {
       ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
 
-      ref.read(trackedDayProvider.notifier).addTrackedDay(trackedDay);
+      ref.read(trackedDayProvider.notifier).addTrackedDay(newtTrackedDay);
     } else {
       ref.read(recapDayProvider.notifier).updateRecapDay(newRecapDay);
       if (widget.oldTrackedDay != null) {
-        ref.read(trackedDayProvider.notifier).updateTrackedDay(trackedDay);
+        ref.read(trackedDayProvider.notifier).updateTrackedDay(newtTrackedDay);
       }
     }
   }

@@ -57,7 +57,7 @@ class _PictureAvatarState extends State<PictureAvatar> {
             backgroundImage: widget.profilPicture != null
                 ? CachedNetworkImageProvider(widget.profilPicture!)
                 : _pickedProfilPicture == null
-                    ? AssetImage('assets/default.jpg')
+                    ? AssetImage('assets/images/default.jpg')
                     : FileImage(_pickedProfilPicture!),
             child: Icon(
               color: _pickedProfilPicture == null

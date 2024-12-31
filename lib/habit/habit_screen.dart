@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/daily/daily_screen.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
@@ -15,9 +14,10 @@ import 'package:tracker_v1/habit/display/heatmap_widget.dart';
 import 'package:tracker_v1/habit/display/recap_list_widget.dart';
 
 class HabitScreen extends ConsumerWidget {
-  const HabitScreen(this.initialHabit, {this.dateOpened, super.key});
+  const HabitScreen(this.initialHabit, {this.dateOpened, super.key, this.isAddHabit = false});
   final Habit initialHabit;
   final DateTime? dateOpened;
+  final bool isAddHabit;
 
   void _showNewHabit(Habit targetHabit, context) {
     showModalBottomSheet(

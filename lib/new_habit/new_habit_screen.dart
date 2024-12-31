@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
@@ -54,6 +56,10 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           ref
               .read(frequencyStateProvider.notifier)
               .setState(oldSchedule!.copyWith());
+
+          if (oldSchedule?.startDate == null) {
+            ref.read(frequencyStateProvider.notifier).setStartDate(today);
+          }
         }
 
         if (widget.dateOpened != null) {
@@ -70,6 +76,18 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
         ]);
       }
     });
+  }
+
+  String getSubmitText() {
+    String text;
+
+    if (widget.habit != null) {
+      text = oldSchedule?.startDate == null ? 'Add task' : 'Edit';
+    } else {
+      text = 'Create';
+    }
+
+    return text;
   }
 
   @override
@@ -90,7 +108,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           _getColorPicker(habitState),
           const SizedBox(height: 12),
           _getDescriptionField(habitState),
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
           _getHabitType(habitState),
           SizedBox(
               height: habitState.validationType == HabitType.recap ? 32 : 16),
@@ -108,7 +126,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
               child: habitState.validationType == HabitType.recap
                   ? _getImprovementField(habitState)
                   : null),
-          SizedBox(height: habitState.validationType == HabitType.recap ? 32 : 16),
+          SizedBox(
+              height: habitState.validationType == HabitType.recap ? 32 : 16),
           _getPriorityField(habitState),
           const SizedBox(height: 32),
           FrequencyPickerWidget(),
@@ -137,8 +156,23 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           CustomElevatedButton(
             color: habitState.color,
             submit: () => _submit(context),
-            text: widget.habit != null ? 'Edit' : 'Create',
-          )
+            text: getSubmitText(),
+          ),
+          SizedBox(height: 8),
+          if (widget.habit == null)
+            TextButton(
+              onPressed: () {
+                ref.read(frequencyStateProvider.notifier).setStartDate(null);
+                _submit(context);
+              },
+              child: Text('Plan later',
+                  maxLines: 2,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(color: ref.read(newHabitStateProvider).color)),
+            ),
+          SizedBox(height: 8),
         ],
       ),
     );
@@ -343,12 +377,21 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
       bool noScheduleChange =
           Schedule.compareSchedules(newSchedule, oldSchedule!);
       bool noHabitChange = Habit.compare(widget.habit!, newHabit);
-      if (!noScheduleChange) {
-        showModifyHabitDialog(context, ref, ref.read(frequencyStateProvider));
-      }
 
       if (!noHabitChange) {
         ref.read(habitProvider.notifier).updateHabit(widget.habit!, newHabit);
+      }
+
+      if (oldSchedule?.startDate == null) {
+        ref.read(scheduledProvider.notifier).updateSchedule(newSchedule);
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
+        return;
+      }
+
+      if (!noScheduleChange) {
+        showModifyHabitDialog(context, ref, ref.read(frequencyStateProvider));
       }
 
       if (noScheduleChange) {

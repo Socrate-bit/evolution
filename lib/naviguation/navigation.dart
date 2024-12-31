@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
+import 'package:tracker_v1/daily/to_plan_screen.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
@@ -99,55 +100,57 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
           displayedDate(ref.watch(dailyScreenStateProvider).selectedDate);
     }
 
-    return AppBar(
-      scrolledUnderElevation: 0,
-      leading: IconButton(
-        onPressed: () {
+    Widget leftButtons = IconButton(
+      onPressed: () {
+        HapticFeedback.selectionClick();
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (ctx) => const AllHabitsPage()));
+      },
+      icon: const Icon(
+        Icons.list,
+        size: 30,
+      ),
+    );
+
+    Widget rightButtons = InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
           HapticFeedback.selectionClick();
           Navigator.of(context)
-              .push(MaterialPageRoute(builder: (ctx) => const AllHabitsPage()));
+              .push(MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
         },
-        icon: const Icon(
-          Icons.list,
-          size: 30,
-        ),
-      ),
-      title: GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            onTitleTap(ref);
-          },
-          child: AnimatedSwitcher(
-            duration: Duration(milliseconds: 200),
-            child: Text(
-              pageTitle,
-              key: ValueKey<String>(pageTitle),
+        child: Hero(
+          tag: userData.userId!,
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.transparent,
+            backgroundImage: CachedNetworkImageProvider(
+              (userData.profilPicture),
             ),
-          )),
+          ),
+        ));
+
+    Widget title = GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          onTitleTap(ref);
+        },
+        child: AnimatedSwitcher(
+          duration: Duration(milliseconds: 200),
+          child: Text(
+            pageTitle,
+            key: ValueKey<String>(pageTitle),
+          ),
+        ));
+
+    return AppBar(
+      scrolledUnderElevation: 0,
+      titleSpacing: 0,
+      leading: leftButtons,
+      title: title,
+      actions: [rightButtons],
       titleTextStyle: Theme.of(context).textTheme.titleLarge,
       centerTitle: true,
-      actions: [
-        InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (ctx) => const ProfilScreen()));
-            },
-            child: Hero(
-              tag: userData.userId!,
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.transparent,
-                backgroundImage: CachedNetworkImageProvider(
-                  (userData.profilPicture),
-                ),
-              ),
-            )),
-        const SizedBox(
-          width: 8,
-        )
-      ],
     );
   }
 }

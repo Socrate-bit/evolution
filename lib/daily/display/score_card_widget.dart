@@ -25,9 +25,9 @@ String getDisplayedScore(double? score, {bool elloge = false}) {
     displayedScore += '/10';
   }
   if (score >= 10 && elloge) {
-    displayedScore += ' 🥇';
+    displayedScore += '🥇';
   } else if (score >= 8 && elloge) {
-    displayedScore += ' 🎉';
+    displayedScore += '🎉';
   }
 
   return displayedScore;
@@ -39,8 +39,7 @@ Color getScoreCardColor(WidgetRef ref, bool isFull, TimeOfDay? time,
   DateTime selectedDayNight = DateTime(
       today.year, today.month, today.day, time?.hour ?? 0, time?.minute ?? 0);
 
-  bool habitListIsEmpty =
-      ref.watch(scheduleCacheProvider(selectedDay)).isEmpty;
+  bool habitListIsEmpty = ref.watch(scheduleCacheProvider(selectedDay)).isEmpty;
   bool todayAndNotEnded = DateTime.now().isBefore(selectedDayNight) &&
       selectedDay == today &&
       !isFull;
@@ -68,25 +67,21 @@ class ScoreCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Expanded(
-      child: Center(
-        child: Container(
-          height: 32,
-          width: 88,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: getScoreCardColor(ref, full, time, _selectedDay, _score)),
-          alignment: Alignment.center,
-          child: Text(
-            !_selectedDay.isAfter(_today)
-                ? getDisplayedScore(_score, elloge: true)
-                : '-',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
+    return Container(
+      height: 32,
+      width: 90,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: getScoreCardColor(ref, full, time, _selectedDay, _score)),
+      alignment: Alignment.center,
+      child: Text(
+        !_selectedDay.isAfter(_today)
+            ? getDisplayedScore(_score, elloge: true)
+            : '-',
+        style: Theme.of(context)
+            .textTheme
+            .titleMedium!
+            .copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

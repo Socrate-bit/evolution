@@ -68,9 +68,9 @@ class EmotionTable extends ConsumerWidget {
 
       return recapTrackingStatus[e.key]
           ? emotionMark == null
-              ? Theme.of(context).colorScheme.surfaceBright
+              ? Theme.of(context).colorScheme.surface
               : RatingDisplayUtility.ratingToColor(emotionMark)
-          : Theme.of(context).colorScheme.surface;
+          : const Color.fromARGB(255, 62, 62, 62);
     }).toList();
 
     return statusColors;

@@ -59,7 +59,9 @@ class AdditionalMetricsTable extends ConsumerWidget {
     List<bool> isTrackedFilter = range.map((index) {
       return ref
           .read(scheduledProvider.notifier)
-          .getHabitTrackingStatusWithSchedule(metric.$1.habitId, offsetWeekDays[index]).$1;
+          .getHabitTrackingStatusWithSchedule(
+              metric.$1.habitId, offsetWeekDays[index])
+          .$1;
     }).toList();
 
     if (metric.$1.validationType == HabitType.recapDay) {
@@ -111,8 +113,8 @@ class AdditionalMetricsTable extends ConsumerWidget {
         ...metricList.map((index) {
           return Container(
             color: index != false
-                ? Theme.of(context).colorScheme.surfaceBright
-                : Theme.of(context).colorScheme.surface,
+                ? Theme.of(context).colorScheme.surface
+                : const Color.fromARGB(255, 62, 62, 62),
             height: 30,
             width: double.infinity,
             child: Center(
@@ -139,39 +141,35 @@ class AdditionalMetricsTable extends ConsumerWidget {
     final List<(Habit, String)> additionalMetrics =
         ref.read(habitProvider.notifier).getAllAdditionalMetrics();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-      child: Column(
-        children: [
-          Table(
-            key: ObjectKey(offsetWeekDays.first),
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            columnWidths: const {0: FixedColumnWidth(100)},
-            border: TableBorder.all(
-                color: const Color.fromARGB(255, 62, 62, 62),
-                width: 2,
-                borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20))),
-            children: [
-              _buildTableHeader(),
-              ...additionalMetrics.map((entry) => _buildHabitRow(
-                  entry,
-                  context,
-                  _getDayTrackingStatus(
-                      entry, offsetWeekDays, trackedDays, recapDays, ref))),
-            ],
-          ),
-          if (additionalMetrics.isEmpty)
-            Container(
-              alignment: Alignment.center,
-              height: 400,
-              child: const Center(
-                child: Text('You don\'t track additional metrics yet !'),
-              ),
+    return Column(
+      children: [
+        Table(
+          key: ObjectKey(offsetWeekDays.first),
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: const {0: FixedColumnWidth(100)},
+          border: TableBorder.all(
+              color: const Color.fromARGB(255, 62, 62, 62),
+              width: 2,
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+          children: [
+            _buildTableHeader(),
+            ...additionalMetrics.map((entry) => _buildHabitRow(
+                entry,
+                context,
+                _getDayTrackingStatus(
+                    entry, offsetWeekDays, trackedDays, recapDays, ref))),
+          ],
+        ),
+        if (additionalMetrics.isEmpty)
+          Container(
+            alignment: Alignment.center,
+            height: 400,
+            child: const Center(
+              child: Text('You don\'t track additional metrics yet !'),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

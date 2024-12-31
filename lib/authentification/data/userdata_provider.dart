@@ -6,8 +6,6 @@ import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
-import 'package:tracker_v1/notifications/logic/local_notification_service.dart';
-import 'package:tracker_v1/notifications/logic/scheduled_notification_service.dart';
 import 'package:tracker_v1/statistics/data/user_stats.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
 
@@ -83,7 +81,7 @@ class AuthNotifier extends StateNotifier<UserData?> {
   }
 
   // Update user data
-  Future<void> changeUserDataSettings(bool notificationActivated) async {
+  Future<void> changeNotificationSettings(bool notificationActivated) async {
     if (!notificationActivated) {
       ref.read(notificationsProvider.notifier).cancelNotifications();
     } else {
@@ -99,6 +97,17 @@ class AuthNotifier extends StateNotifier<UserData?> {
 
     // Update local state with the new notificationActivated value
     state = state!.copy()..notificationActivated = notificationActivated;
+  }
+
+  Future<void> changePriorityDisplaySettings(bool priorityDisplayActivated) async {
+    // Update the user data in Firestore using the toJson method
+    await firestore
+        .collection('user_data')
+        .doc(state!.userId)
+        .update({'priorityDisplayActivated': priorityDisplayActivated});
+
+    // Update local state with the new priorityDisplayActivated value
+    state = state!.copy()..priorityDisplay = priorityDisplayActivated;
   }
 
   // Method to update existing user data in Firestore

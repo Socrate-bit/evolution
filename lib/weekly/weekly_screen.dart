@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tracker_v1/global/display/custom_surface_container.dart';
+import 'package:tracker_v1/new_habit/display/frequency_picker2_widget.dart';
 import 'package:tracker_v1/weekly/display/additional_metrics_table_widget.dart';
 import 'package:tracker_v1/weekly/display/emotions_table_widget.dart';
-import 'package:tracker_v1/weekly/display/shift_week_widget.dart';
+import 'package:tracker_v1/weekly/display/week_shifter_widget.dart';
 import 'package:tracker_v1/weekly/display/weekly_table_widget.dart';
 
 class WeeklyScreen extends ConsumerStatefulWidget {
@@ -45,11 +47,15 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
   @override
   Widget build(BuildContext context) {
     final List<DateTime> offsetWeekDays = _getOffsetWeekDays;
+    final List<Widget> pages = [
+      WeeklyTable(offsetWeekDays: offsetWeekDays),
+      AdditionalMetricsTable(offsetWeekDays: offsetWeekDays),
+      EmotionTable(offsetWeekDays: offsetWeekDays),
+    ];
 
     return Container(
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
-      child: Column(
-        children: [
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+        child: Column(children: [
           WeekShifter(
             dateFormatter: _dateFormatter,
             offsetWeekDays: offsetWeekDays,
@@ -65,30 +71,21 @@ class _MainScreenState extends ConsumerState<WeeklyScreen>
             onTap: (value) => HapticFeedback.selectionClick(),
           ),
           Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: TabBarView(controller: tabController, children: [
-                    SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: WeeklyTable(offsetWeekDays: offsetWeekDays),
-                    ),
-                    SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: AdditionalMetricsTable(
-                          offsetWeekDays: offsetWeekDays),
-                    ),
-                    SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: EmotionTable(offsetWeekDays: offsetWeekDays),
-                    ),
-                  ]),
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
+              child: TabBarView(controller: tabController, children: [
+            ...pages.map(
+              (table) => SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Container(
+                  decoration: BoxDecoration(
+    
+                      borderRadius: BorderRadius.circular(20)),
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 16.0),
+                  child: table,
+                ),
+              ),
+            )
+          ]))
+        ]));
   }
 }

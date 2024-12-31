@@ -36,8 +36,7 @@ class ScheduleCacheNotifier
             .read(scheduledProvider.notifier)
             .getHabitDefaultSchedule(habit.habitId);
 
-        if (defaultSchedule != null &&
-            defaultSchedule.type != FrequencyType.Once) {
+        if (defaultSchedule != null) {
           habitsWithSchedule.add((habit, defaultSchedule));
         }
       } else {

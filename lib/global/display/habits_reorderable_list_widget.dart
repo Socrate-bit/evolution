@@ -224,6 +224,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
       margin: const EdgeInsets.all(8),
       child: Listener(
         onPointerDown: (event) {
+          _computedDraggedTime = null;
           _updatePointerCorrection(event);
         },
         onPointerMove: (event) {
