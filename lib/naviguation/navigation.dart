@@ -2,9 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
-import 'package:tracker_v1/daily/to_plan_screen.dart';
+import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
@@ -14,9 +15,9 @@ import 'package:tracker_v1/daily/daily_screen.dart';
 import 'package:tracker_v1/daily/habit_list_screen.dart';
 import 'package:tracker_v1/friends/leaderboard_screen.dart';
 import 'package:tracker_v1/profil/profil_screen.dart';
-import 'package:tracker_v1/weekly/weekly_screen.dart';
 import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/statistics/statistics_screen.dart';
+import 'package:tracker_v1/widget/display/home_widget_actual_Task.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -26,12 +27,22 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  static const List<Widget> _pagesList = [
-    DailyScreen(),
-    WeeklyScreen(),
-    StatisticsScreen(),
-    LeaderboardScreen(),
-  ];
+  late List<Widget> _pagesList;
+  static const String appGroupId = 'group.productive';
+
+  @override
+  void initState() {
+    dynamic todayHabit = ref.read(scheduleCacheProvider(today));
+    HomeWidget.setAppGroupId(appGroupId);
+
+    _pagesList = [
+      DailyScreen(),
+      ColorFillProgress(todayHabitsSchedulesMap: todayHabit),
+      StatisticsScreen(),
+      LeaderboardScreen(),
+    ];
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,6 @@ import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
-import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
@@ -55,11 +54,8 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
 
   void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
     if (habit.validationType == HabitType.unique) {
-      HabitRecap? trackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
-        (td) {
-          return td.habitId == habit.habitId && td.date == widget.date;
-        },
-      );
+      HabitRecap? trackedDay =
+          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
 
       if (trackedDay != null) {
         ref.read(trackedDayProvider.notifier).updateTrackedDay(trackedDay);
@@ -77,9 +73,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
       ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
     } else if (habit.validationType == HabitType.simple) {
       HabitRecap? oldTrackedDay =
-          ref.read(trackedDayProvider).firstWhereOrNull((td) {
-        return td.habitId == habit.habitId && td.date == widget.date;
-      });
+          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
@@ -96,9 +90,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
       );
     } else if (habit.validationType == HabitType.recap) {
       HabitRecap? oldTrackedDay =
-          ref.read(trackedDayProvider).firstWhereOrNull((td) {
-        return td.habitId == habit.habitId && td.date == widget.date;
-      });
+          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
       showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
@@ -111,11 +103,8 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
                 : Validated.yes),
       );
     } else if (habit.validationType == HabitType.recapDay) {
-      HabitRecap? oldTrackedDay = ref.read(trackedDayProvider).firstWhereOrNull(
-        (td) {
-          return td.habitId == habit.habitId && td.date == widget.date;
-        },
-      );
+      HabitRecap? oldTrackedDay =
+          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
 
       RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
         return td.date == widget.date;
@@ -209,10 +198,13 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
   Widget? _getIconInHabitList(Habit habit) {
     if (ref.read(habitProvider.notifier).isHabitCurrentlyPaused(habit)) {
       return const Icon(Icons.pause_circle_outline_outlined);
-    } else if (ref.read(scheduleCacheProvider(null))[habit]?.startDate ==
+    } else if (ref.read(scheduleCacheProvider(null))[habit]?.$1.startDate ==
         null) {
       return InkWell(
-          child: Icon(Icons.add_rounded, size: 30,),
+          child: Icon(
+            Icons.add_rounded,
+            size: 30,
+          ),
           onTap: () => {
                 HapticFeedback.lightImpact(),
                 showModalBottomSheet(
@@ -229,15 +221,13 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
 
   void _initVariables(WidgetRef ref, context) {
     Schedule? schedule =
-        ref.watch(scheduleCacheProvider(widget.date))[widget.habit];
+        ref.watch(scheduleCacheProvider(widget.date))[widget.habit]?.$1;
 
     if (!widget.habitList) {
       // Compute current streak
       List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
-      trackedDay = trackedDays.firstWhereOrNull((trackedDay) {
-        return trackedDay.habitId == widget.habit.habitId &&
-            trackedDay.date == widget.date;
-      });
+      trackedDay =
+          ref.read(scheduleCacheProvider(widget.date))[widget.habit]?.$2;
 
       currentStreak = getCurrentStreak(widget.date ?? today, widget.habit, ref);
 

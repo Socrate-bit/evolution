@@ -20,6 +20,7 @@ class NewHabitState extends StateNotifier<Habit> {
           startDate: today,
           endDate: null,
           timeOfTheDay: null,
+          duration: Duration(minutes: 1),
           additionalMetrics: [],
           orderIndex: ref.read(habitProvider).length,
           ponderation: 3,
@@ -92,6 +93,22 @@ class NewHabitState extends StateNotifier<Habit> {
 
   void setColor(Color color) {
     state = state.copy(color: color);
+  }
+
+  void setDuration(Duration duration) {
+    state = state.copy(duration: duration);
+  }
+
+  static const List<Duration> preMadeDuration = [
+    Duration(minutes: 1),
+    Duration(minutes: 5),
+    Duration(minutes: 30),
+    Duration(hours: 1),
+    Duration(hours: 2)
+  ];
+
+  bool isCustomDuration() {
+    return preMadeDuration.contains(state.duration);
   }
 
   void setState(Habit habit) {

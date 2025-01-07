@@ -10,6 +10,7 @@ import 'package:tracker_v1/naviguation/navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:upgrader/upgrader.dart';
 import 'firebase_options.dart';
+import 'package:home_widget/home_widget.dart';
 import 'dart:io' show Platform;
 
 void main() async {
@@ -45,35 +46,36 @@ class MyApp extends ConsumerWidget {
       home: Platform.isIOS || Platform.isAndroid
           ? UpgradeAlert(
               dialogStyle: UpgradeDialogStyle.cupertino,
-              child: MyStreamBuilder())
+              child: MyHomeWidget())
           : MyStreamBuilder(),
     );
   }
 }
 
-class MyHomeWidget extends StatefulWidget {
+class MyHomeWidget extends ConsumerStatefulWidget {
   const MyHomeWidget({super.key});
 
   @override
-  State<MyHomeWidget> createState() => _MyHomeWidgetState();
+  ConsumerState<MyHomeWidget> createState() => _MyHomeWidgetState();
 }
 
-class _MyHomeWidgetState extends State<MyHomeWidget> {
-  // static const String appGroupId = 'group.productive'; // Add from here
-  // static const String iOSWidgetName = 'test_homeExtension';
+class _MyHomeWidgetState extends ConsumerState<MyHomeWidget> {
+  static const String appGroupId = 'group.productive'; // Add from here
   // static const String androidWidgetName = 'test_homeExtension';
 
   @override
   void initState() {
-    // HomeWidget.setAppGroupId(appGroupId);
+    HomeWidget.setAppGroupId(appGroupId);
     super.initState();
   }
 
-  // void updateHomeWidget() {
-  //   HomeWidget.saveWidgetData('title', 'I am a home widget :)');
-  //   HomeWidget.updateWidget(
-  //       iOSName: iOSWidgetName, androidName: androidWidgetName);
-  // }
+  void updateTitleWidget() {
+    HomeWidget.saveWidgetData('title_test', 'I m a wonderful widget');
+    HomeWidget.updateWidget(
+      name: 'home_widget_test',
+      iOSName: 'home_widget_test',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

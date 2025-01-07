@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:tracker_v1/habit/data/habit_status_appearance.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
@@ -101,6 +103,67 @@ class HabitRecap {
             elementsColor: Colors.white);
     }
   }
+
+  factory HabitRecap.fromJson(Map<String, dynamic> json,
+      {String? trackedDayId}) {
+    Validated validatedCorrectionV1(dynamic value) {
+      if (value.toString() != 'true' && value.toString() != 'false') {
+        return Validated.values
+            .firstWhere((e) => e.name.toString() == value as String);
+      }
+      if (!value) return Validated.no;
+      if (value) return Validated.yes;
+      return Validated.yes;
+    }
+
+    return HabitRecap(
+      trackedDayId: json['trackedDayId'] ?? trackedDayId,
+      userId: json['userId'] as String,
+      habitId: json['habitId'] as String,
+      date: DateTime.parse(json['date'] as String),
+      done: validatedCorrectionV1(json['done']),
+      notation: json['notation_showUp'] == null
+          ? null
+          : Rating(
+              quantity: json['notation_showUp'] as double,
+              quality: json['notation_investment'] as double,
+              result: json['notation_result'] as double,
+              weeklyFocus: json['notation_goal'] as double,
+              dailyGoal: json['notation_extra'] as double,
+            ),
+      recap: json['recap'] as String?,
+      improvements: json['improvements'] as String?,
+      additionalMetrics: json['additionalMetrics'] != null
+          ? jsonDecode(json['additionalMetrics'] as String)
+          : null,
+      synced: json['synced'] as bool,
+      dateOnValidation: json['dateOnValidation'] != null
+          ? DateTime.parse(json['dateOnValidation'] as String)
+          : DateTime.parse(json['date'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'trackedDayId': trackedDayId,
+      'userId': userId,
+      'habitId': habitId,
+      'date': date.toIso8601String(),
+      'done': done.toString().split('.').last,
+      'notation_showUp': notation?.quantity,
+      'notation_investment': notation?.quality,
+      'notation_result': notation?.result,
+      'notation_goal': notation?.weeklyFocus,
+      'notation_extra': notation?.dailyGoal,
+      'recap': recap,
+      'improvements': improvements,
+      'additionalMetrics':
+          additionalMetrics != null ? jsonEncode(additionalMetrics) : null,
+      'synced': synced ? true : false,
+      'dateOnValidation': dateOnValidation?.toIso8601String()
+    };
+  }
+
 }
 
 class Rating {

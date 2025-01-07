@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -17,6 +16,7 @@ import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/new_habit/display/additional_metrics_widget.dart';
+import 'package:tracker_v1/new_habit/display/duration_picker_widget.dart';
 import 'package:tracker_v1/new_habit/display/frequency_picker2_widget.dart';
 import 'package:tracker_v1/global/display/elevated_button_widget.dart';
 import 'package:tracker_v1/global/modal_bottom_sheet.dart';
@@ -49,7 +49,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.habit != null) {
         oldSchedule =
-            ref.read(scheduleCacheProvider(widget.dateOpened))[widget.habit!];
+            ref.read(scheduleCacheProvider(widget.dateOpened))[widget.habit!]!.$1;
         ref.read(newHabitStateProvider.notifier).setState(widget.habit!.copy());
 
         if (oldSchedule != null) {
@@ -109,6 +109,8 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           const SizedBox(height: 12),
           _getDescriptionField(habitState),
           const SizedBox(height: 32),
+          DurationPickerWidget(),
+          const SizedBox(height: 48),
           _getHabitType(habitState),
           SizedBox(
               height: habitState.validationType == HabitType.recap ? 32 : 16),

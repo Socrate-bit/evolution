@@ -1,11 +1,31 @@
 import 'package:intl/intl.dart';
 
-DateTime now = DateTime.now();
-DateTime today = DateTime(now.year, now.month, now.day);
-DateTime yesterday = DateTime(now.year, now.month, now.day - 1);
-DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
-DateTime inTwoDays = DateTime(now.year, now.month, now.day + 2);
-DateTime inThreeDays = DateTime(now.year, now.month, now.day + 3);
+DateTime get now {return  DateTime.now();}
+
+DateTime get today {
+  DateTime currentNow = now;
+  return DateTime(currentNow.year, currentNow.month, currentNow.day);
+}
+
+DateTime get yesterday {
+  DateTime currentNow = now;
+  return DateTime(currentNow.year, currentNow.month, currentNow.day - 1);
+}
+
+DateTime get tomorrow {
+  DateTime currentNow = now;
+  return DateTime(currentNow.year, currentNow.month, currentNow.day + 1);
+}
+
+DateTime get inTwoDays {
+  DateTime currentNow = now;
+  return DateTime(currentNow.year, currentNow.month, currentNow.day + 2);
+}
+
+DateTime get inThreeDays {
+  DateTime currentNow = now;
+  return DateTime(currentNow.year, currentNow.month, currentNow.day + 3);
+}
 
 final formater1 = DateFormat('d MMM');
 final formater2 = DateFormat('d');

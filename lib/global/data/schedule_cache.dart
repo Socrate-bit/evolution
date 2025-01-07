@@ -1,16 +1,22 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:collection/collection.dart';
+import 'package:home_widget/home_widget.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/global/logic/time_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/recap/data/daily_recap_model.dart';
+import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 
 class ScheduleCacheNotifier
-    extends StateNotifier<LinkedHashMap<Habit, Schedule>> {
+    extends StateNotifier<LinkedHashMap<Habit, (Schedule, HabitRecap?)>> {
   ScheduleCacheNotifier(this.ref, {this.date}) : super(LinkedHashMap()) {
     initCache();
     _instances.add(this);
@@ -20,14 +26,16 @@ class ScheduleCacheNotifier
   Ref ref;
   DateTime? date;
 
-  void cacheSchedule(LinkedHashMap<Habit, Schedule> todayHabits) {
+  void cacheSchedule(
+      LinkedHashMap<Habit, (Schedule, HabitRecap?)> todayHabits) {
     state = todayHabits;
   }
 
   void initCache() {
     List<Habit> habits = ref.read(habitProvider);
     List<(Habit, Schedule)> habitsWithSchedule = [];
-    LinkedHashMap<Habit, Schedule> habitWithScheduleSortedMap = LinkedHashMap();
+    LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitWithScheduleSortedMap =
+        LinkedHashMap();
 
     for (Habit habit in habits) {
       // Conditional logic for habit list or daily screen
@@ -55,16 +63,23 @@ class ScheduleCacheNotifier
         b.$2.timesOfTheDay?[(date?.weekday ?? 1) - 1]));
 
     for (var habitWithSchedule in habitsWithSchedule) {
-      habitWithScheduleSortedMap[habitWithSchedule.$1] = habitWithSchedule.$2;
+      List<HabitRecap> recapDayList = ref
+          .read(trackedDayProvider.notifier)
+          .getHabitTrackedDaysInPeriod(
+              habitWithSchedule.$1.habitId, date, date);
+      HabitRecap? recapDay =
+          recapDayList.isNotEmpty ? recapDayList.first : null;
+      habitWithScheduleSortedMap[habitWithSchedule.$1] =
+          (habitWithSchedule.$2, recapDay);
     }
 
     state = habitWithScheduleSortedMap;
   }
 
   TimeOfDay? getLastTimeOfTheDay(DateTime date) {
-    LinkedHashMap<Habit, Schedule> todayHabit = state;
+    LinkedHashMap<Habit, (Schedule, HabitRecap?)> todayHabit = state;
     List<TimeOfDay?> timeOfDayList = todayHabit.entries
-        .map((e) => e.value.timesOfTheDay?[date.weekday - 1])
+        .map((e) => e.value.$1.timesOfTheDay?[date.weekday - 1])
         .whereNotNull()
         .toList();
 
@@ -98,6 +113,30 @@ class ScheduleCacheNotifier
     );
   }
 
+  String toJson() {
+    return jsonEncode(state.entries
+        .map((e) => {
+              'habit': e.key.toJson2(),
+              'schedule': e.value.$1.toJson(),
+              'validated': e.value.$2?.done == null
+                  ? null
+                  : e.value.$2?.done != Validated.notYet
+                      ? true
+                      : null,
+            })
+        .toList());
+  }
+
+  void updateTitleWidget(ref) {
+    String todayHabitJson =
+        ref.read(scheduleCacheProvider(today).notifier).toJson();
+    HomeWidget.saveWidgetData('todayHabitJson', todayHabitJson);
+    HomeWidget.updateWidget(
+      name: 'home_widget_test',
+      iOSName: 'home_widget_test',
+    );
+  }
+
   static void cleanAll() {
     for (var instance in _instances) {
       instance.state = LinkedHashMap();
@@ -107,7 +146,7 @@ class ScheduleCacheNotifier
 
 final scheduleCacheProvider = StateNotifierProvider.family<
     ScheduleCacheNotifier,
-    LinkedHashMap<Habit, Schedule>,
+    LinkedHashMap<Habit, (Schedule, HabitRecap?)>,
     DateTime?>((ref, date) {
   ScheduleCacheNotifier notifier = ScheduleCacheNotifier(ref, date: date);
   notifier.scheduleCacheResetListener();

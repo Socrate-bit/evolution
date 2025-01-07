@@ -1,15 +1,10 @@
-import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tracker_v1/global/logic/time_utility.dart';
-import 'dart:convert';
-import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
@@ -73,31 +68,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   Future<void> addHabit(Habit newHabit) async {
     state = [...state, newHabit];
 
-    await _firestore.collection('habits').doc(newHabit.habitId).set({
-      'userId': newHabit.userId,
-      'icon': newHabit.icon.codePoint.toString(),
-      'name': newHabit.name,
-      'description': newHabit.description,
-      'newHabit': newHabit.newHabit,
-      'frequency': newHabit.frequency,
-      'weekdays':
-          jsonEncode(newHabit.weekdays?.map((day) => day.toString()).toList()),
-      'validationType': newHabit.validationType.toString(),
-      'startDate': newHabit.startDate?.toIso8601String(),
-      'endDate': newHabit.endDate?.toIso8601String(),
-      'timeOfTheDay': newHabit.timeOfTheDay != null
-          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
-          : null,
-      'additionalMetrics': newHabit.additionalMetrics != null
-          ? jsonEncode(newHabit.additionalMetrics)
-          : null,
-      'orderIndex': newHabit.orderIndex,
-      'ponderation': newHabit.ponderation,
-      'color': newHabit.color.value,
-      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-          ?.map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-      'synced': newHabit.synced ?? false ? true : false,
-    });
+    await _firestore
+        .collection('habits')
+        .doc(newHabit.habitId)
+        .set(newHabit.toJson());
   }
 
   // Delete a Habit from state and Firestore
@@ -125,31 +99,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     newState.insert(index, newHabit);
     state = newState;
 
-    await _firestore.collection('habits').doc(newHabit.habitId).set({
-      'userId': newHabit.userId,
-      'icon': newHabit.icon.codePoint.toString(),
-      'name': newHabit.name,
-      'description': newHabit.description,
-      'newHabit': newHabit.newHabit,
-      'frequency': newHabit.frequency,
-      'weekdays':
-          jsonEncode(newHabit.weekdays?.map((day) => day.toString()).toList()),
-      'validationType': newHabit.validationType.toString(),
-      'startDate': newHabit.startDate?.toIso8601String(),
-      'endDate': newHabit.endDate?.toIso8601String(),
-      'timeOfTheDay': newHabit.timeOfTheDay != null
-          ? '${newHabit.timeOfTheDay!.hour.toString()}:${newHabit.timeOfTheDay!.minute.toString()}'
-          : null,
-      'additionalMetrics': newHabit.additionalMetrics != null
-          ? jsonEncode(newHabit.additionalMetrics)
-          : null,
-      'ponderation': newHabit.ponderation,
-      'color': newHabit.color.value,
-      'orderIndex': newHabit.orderIndex,
-      'frequencyChanges': jsonEncode(newHabit.frequencyChanges
-          ?.map((date, freq) => MapEntry(date.toIso8601String(), freq))),
-      'synced': false,
-    });
+    await _firestore
+        .collection('habits')
+        .doc(newHabit.habitId)
+        .set(newHabit.toJson());
   }
 
   Future<void> togglePause(Habit targetHabit, bool paused) async {
@@ -173,43 +126,7 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     if (snapshot.docs.isEmpty) return;
 
     final List<Habit> loadedData = snapshot.docs.map((doc) {
-      final data = doc.data();
-
-      return Habit(
-        habitId: doc.id,
-        userId: data['userId'] as String,
-        icon: IconData(int.parse(data['icon'] as String),
-            fontFamily: 'MaterialIcons'),
-        name: data['name'] as String,
-        description: data['description'] as String?,
-        newHabit: data['newHabit'] as String?,
-        frequency: data['frequency'] as int,
-        weekdays: (jsonDecode(data['weekdays'] as String) as List)
-            .map((day) => WeekDay.values.firstWhere((e) => e.toString() == day))
-            .toList(),
-        validationType: HabitType.values
-            .firstWhere((e) => e.toString() == data['validationType']),
-        startDate: DateTime.parse(data['startDate'] as String),
-        endDate: data['endDate'] != null
-            ? DateTime.parse(data['endDate'] as String)
-            : null,
-        timeOfTheDay: data['timeOfTheDay'] != null
-            ? stringToTimeOfDay(data['timeOfTheDay'] as String)
-            : null,
-        additionalMetrics: data['additionalMetrics'] != null
-            ? List<String>.from(jsonDecode(data['additionalMetrics'] as String))
-            : null,
-        ponderation: data['ponderation'] as int,
-        color: Color(data['color'] as int? ?? 4281611316),
-        orderIndex: data['orderIndex'] as int,
-        frequencyChanges: data['frequencyChanges'] != null
-            ? (jsonDecode(data['frequencyChanges'] as String)
-                    as Map<String, dynamic>)
-                .map(
-                    (key, value) => MapEntry(DateTime.parse(key), value as int))
-            : {},
-        synced: data['synced'] == true,
-      );
+      return Habit.fromJson(doc.data(), habitId: doc.id);
     }).toList();
 
     state = loadedData;
@@ -218,7 +135,6 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   void cleanState() {
     state = [];
   }
-
 
   bool isHabitListEmpty() {
     return state.isEmpty;

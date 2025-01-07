@@ -51,7 +51,7 @@ dependencies:
   cloud_firestore: ^5.4.1
   flutter_heatmap_calendar: ^1.0.5
   flutter_colorpicker: ^1.1.0
-  fl_chart: ^0.69.0
+  fl_chart: ^0.70.0
   dotted_border: ^2.1.0
   syncfusion_flutter_datepicker: ^28.1.36
   reorderable_grid_view: ^2.2.8

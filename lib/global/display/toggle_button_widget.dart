@@ -6,7 +6,9 @@ class CustomToggleButton extends StatelessWidget {
     required this.pageNames,
     required this.selected,
     required this.onPressed,
+    this.fillLower = false,
     this.color,
+    this.selectedTest,
     super.key,
   });
 
@@ -14,6 +16,8 @@ class CustomToggleButton extends StatelessWidget {
   final int selected;
   final Function(int) onPressed;
   final Color? color;
+  final bool fillLower;
+  final String? selectedTest;
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +49,30 @@ class CustomToggleButton extends StatelessWidget {
                       HapticFeedback.selectionClick();
                       onPressed(index);
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.horizontal(
+                          left: index == 0 ? Radius.circular(10) : Radius.zero,
+                          right: index == selected
+                              ? Radius.circular(10)
+                              : Radius.zero,
+                        ),
+                        color: fillLower && index <= selected
+                            ? color?.withOpacity(0.25) ??
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.25)
+                            : Colors.transparent,
+                      ),
                       height: 40,
                       width: buttonWidth,
                       alignment: Alignment.center,
                       child: Text(
-                        pageNames[index],
+                        (selectedTest != null && index == selected)
+                            ? selectedTest!
+                            : pageNames[index],
                         style: Theme.of(context).textTheme.titleSmall!.copyWith(
                             fontWeight:
                                 selected == index ? FontWeight.bold : null,

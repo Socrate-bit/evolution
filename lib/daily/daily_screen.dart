@@ -12,9 +12,7 @@ import 'package:tracker_v1/daily/display/day_switcher_widget.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
-import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
-import 'package:tracker_v1/notifications/data/basic_notification_model.dart';
-import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 
@@ -57,7 +55,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
   }
 
   Widget setCondionnalContent(DailyScreenState dailyScreenState) {
-    final LinkedHashMap<Habit, Schedule> habitScheduleMap =
+    final LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitScheduleMap =
         ref.watch(scheduleCacheProvider(dailyScreenState.selectedDate));
 
     content = habitScheduleMap.isNotEmpty

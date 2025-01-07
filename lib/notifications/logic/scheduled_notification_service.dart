@@ -6,15 +6,16 @@ import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/notifications/data/basic_notification_model.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class ScheduledHabitNotificationService {
   Future<List<BasicNotification>> getNextScheduledNotifications(ref) async {
     List<BasicNotification> allScheduledNotification = [];
 
     // Get habit schedule 2 days ahead
-    LinkedHashMap<Habit, Schedule> todayHabitScheduleMap =
+    LinkedHashMap<Habit, (Schedule, HabitRecap?)> todayHabitScheduleMap =
         ref.read(scheduleCacheProvider(today));
-    LinkedHashMap<Habit, Schedule> tomorrowHabitScheduleMap =
+    LinkedHashMap<Habit, (Schedule, HabitRecap?)> tomorrowHabitScheduleMap =
         ref.read(scheduleCacheProvider(tomorrow));
 
     // Get today and tomorrow notifications
@@ -37,15 +38,15 @@ class ScheduledHabitNotificationService {
   }
 
   List<BasicNotification> _getNotificationFromSchedules(
-      LinkedHashMap<Habit, Schedule> schedules, DateTime date) {
+      LinkedHashMap<Habit, (Schedule, HabitRecap?)> schedules, DateTime date) {
     List<BasicNotification> notifications = [];
 
     // Loop through each schedule
-    for (MapEntry<Habit, Schedule> schedule in schedules.entries) {
+    for (MapEntry<Habit, (Schedule, HabitRecap?)> schedule in schedules.entries) {
       Habit habit = schedule.key;
-      Schedule todaySchedule = schedule.value;
+      Schedule todaySchedule = schedule.value.$1;
       TimeOfDay? todayHabitTime =
-          schedule.value.timesOfTheDay?[date.weekday - 1];
+          schedule.value.$1.timesOfTheDay?[date.weekday - 1];
       List<int>? habitNotification = todaySchedule.notification;
 
       if (habitNotification == null ||

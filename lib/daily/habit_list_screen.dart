@@ -7,6 +7,7 @@ import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class AllHabitsPage extends ConsumerStatefulWidget {
   const AllHabitsPage({super.key});
@@ -26,19 +27,19 @@ class _MyWidgetState extends ConsumerState<AllHabitsPage>
   ];
   int _selectedPage1 = 0;
 
-  LinkedHashMap<Habit, Schedule> filterList(
-      LinkedHashMap<Habit, Schedule> allHabitsList) {
+  LinkedHashMap<Habit, (Schedule, HabitRecap?)> filterList(
+      LinkedHashMap<Habit, (Schedule, HabitRecap?)> allHabitsList) {
     if (_selectedPage1 == 0) {
       return LinkedHashMap.from(allHabitsList)
         ..removeWhere((key, value) =>
-            value.startDate == null || value.type == FrequencyType.Once);
+            value.$1.startDate == null || value.$1.type == FrequencyType.Once);
     } else if (_selectedPage1 == 2) {
       return LinkedHashMap.from(allHabitsList)
-        ..removeWhere((key, value) => value.startDate != null);
+        ..removeWhere((key, value) => value.$1.startDate != null);
     } else {
       return LinkedHashMap.from(allHabitsList)
         ..removeWhere((key, value) =>
-            value.startDate == null || value.type != FrequencyType.Once);
+            value.$1.startDate == null || value.$1.type != FrequencyType.Once);
     }
   }
 
@@ -57,7 +58,7 @@ class _MyWidgetState extends ConsumerState<AllHabitsPage>
   @override
   Widget build(BuildContext context) {
     final allHabitsList = ref.watch(scheduleCacheProvider(null));
-    final LinkedHashMap<Habit, Schedule> filteredHabitsList =
+    final LinkedHashMap<Habit, (Schedule, HabitRecap?)> filteredHabitsList =
         filterList(allHabitsList);
 
     Widget content;

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/logic/first_where_or_null.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -69,8 +70,12 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
   }
 
   List<HabitRecap> getHabitTrackedDaysInPeriod(
-      String habitId, DateTime start, DateTime end,
+      String habitId, DateTime? start, DateTime? end,
       {bool doneOnly = false}) {
+    if (start == null || end == null) {
+      return [];
+    }
+
     return state
         .where((td) =>
             td.habitId == habitId &&
@@ -136,6 +141,11 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
 
   void cleanState() {
     state = [];
+  }
+
+  HabitRecap? getTargetDayHabitRecap(DateTime date, Habit habit) {
+    return state.firstWhereOrNull(
+        (td) => td.date.isAtSameMomentAs(date) && td.habitId == habit.habitId);
   }
 }
 

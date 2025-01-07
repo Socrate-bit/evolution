@@ -51,13 +51,13 @@
 //   List<(String, NotificationSchedule)> todayScheduledNotification = [];
 
 //   // Get habit schedule 2 days ahead
-//   LinkedHashMap<Habit, Schedule> todayHabitScheduleMap =
+//   LinkedHashMap<Habit, (Schedule, HabitRecap?)> todayHabitScheduleMap =
 //       ref.read(scheduleCacheProvider(today));
-//   LinkedHashMap<Habit, Schedule> tomorrowHabitScheduleMap =
+//   LinkedHashMap<Habit, (Schedule, HabitRecap?)> tomorrowHabitScheduleMap =
 //       ref.read(scheduleCacheProvider(tomorrow));
 
 //   // Loop through each schedule
-//   for (MapEntry<Habit, Schedule> schedule in todayHabitScheduleMap.entries) {
+//   for (MapEntry<Habit, (Schedule, HabitRecap?)> schedule in todayHabitScheduleMap.entries) {
 //     // Get habit
 //     Habit habit = schedule.key;
 

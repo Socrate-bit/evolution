@@ -1,14 +1,14 @@
-import 'package:background_fetch/background_fetch.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/convert_habitV1.dart';
+import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
-import 'package:tracker_v1/notifications/logic/background_fetch.dart';
 import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/statistics/data/statistics_provider.dart';
@@ -129,6 +129,7 @@ class DataManager {
     await FirebaseAuth.instance.signOut();
   }
 
+
   Future<void> loadData() async {
     try {
       await ref.read(userDataProvider.notifier).loadData();
@@ -138,6 +139,7 @@ class DataManager {
       }
 
       ref.read(notificationsProvider);
+      listenToScheduleProvider(ref);
 
       await Future.wait([
         ref.read(habitProvider.notifier).loadData(),
@@ -152,11 +154,28 @@ class DataManager {
       await v1Converter(ref.read(habitProvider), ref);
 
       ref.read(allUserStatsProvider);
-
     } catch (error) {
       signOut();
     }
   }
 }
+
+void updateTitleWidget(ref) async {
+    String todayHabitJson = ref.read(scheduleCacheProvider(today).notifier).toJson();
+    HomeWidget.saveWidgetData('todayHabitJson', todayHabitJson);
+    print(todayHabitJson);
+    HomeWidget.updateWidget(
+      name: 'home_widget_test',
+      iOSName: 'home_widget_test',
+    );
+  }
+
+  void listenToScheduleProvider(ref) {
+    ref.listen(scheduleCacheProvider(today), (previous, next) {
+      updateTitleWidget(ref);
+    });
+  }
+
+
 
 final firestoreUploadProvider = StateProvider<bool>((ref) => false);

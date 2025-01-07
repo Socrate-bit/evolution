@@ -202,8 +202,8 @@ class CustomPicker extends picker.CommonPickerModel {
 
   CustomPicker({DateTime? currentTime, super.locale}) {
     this.currentTime = currentTime ?? DateTime.now();
-    setLeftIndex(0);
-    setMiddleIndex(0);
+    setLeftIndex(currentTime?.hour ?? 0);
+    setMiddleIndex(currentTime?.minute ??0);
     setRightIndex(0);
   }
 

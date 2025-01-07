@@ -12,12 +12,13 @@ import 'package:tracker_v1/global/logic/time_of_day_extent.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/daily/display/habit_item_widget.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class HabitReorderableList extends ConsumerStatefulWidget {
   const HabitReorderableList(
       {required this.habitScheduleMap, this.selectedDate, super.key});
 
-  final LinkedHashMap<Habit, Schedule> habitScheduleMap;
+  final LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitScheduleMap;
   final DateTime? selectedDate;
 
   @override
@@ -61,7 +62,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
   double? _getTimeCursor(List<Habit> todayHabit, int index) {
     TimeOfDay clockNow = TimeOfDay.now();
     TimeOfDay? currentItemTime = widget
-        .habitScheduleMap[_sortedHabitList[index]]!
+        .habitScheduleMap[_sortedHabitList[index]]!.$1
         .getTimeOfTargetDay(widget.selectedDate);
 
     if (todayHabit.length == index + 1) {
@@ -69,7 +70,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
     }
 
     TimeOfDay? nextItemTime = widget
-        .habitScheduleMap[_sortedHabitList[index + 1]]!
+        .habitScheduleMap[_sortedHabitList[index + 1]]!.$1
         .getTimeOfTargetDay(widget.selectedDate);
 
     if (currentItemTime == null || nextItemTime == null) {
@@ -127,13 +128,13 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
     if (cursorIndexPosition + 1 < sortedHabitList.length &&
         cursorIndexPosition >= -1) {
       timeIndexPlusOne = widget
-          .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]
+          .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]?.$1
           ?.getTimeOfTargetDay(widget.selectedDate);
     }
 
     if (cursorIndexPosition > -1 &&
         cursorIndexPosition < sortedHabitList.length) {
-      timeIndex = widget.habitScheduleMap[_sortedHabitList[cursorIndexPosition]]
+      timeIndex = widget.habitScheduleMap[_sortedHabitList[cursorIndexPosition]]?.$1
           ?.getTimeOfTargetDay(widget.selectedDate);
     }
 
@@ -201,7 +202,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
   void _onReorderEnd(HabitNotifier habitsNotifier) {
     Schedule? oldSchedule =
         ref.read(scheduleCacheProvider(widget.selectedDate))[
-            _sortedHabitList[_draggedInitialIndex!]];
+            _sortedHabitList[_draggedInitialIndex!]]!.$1;
 
     if (oldSchedule == null) {
       return;
@@ -246,7 +247,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
           onReorderEnd: (newIndex) {
             HapticFeedback.lightImpact();
             TimeOfDay? initialTime = widget
-                .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!
+                .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!.$1
                 .timesOfTheDay?[(widget.selectedDate?.weekday ?? 1) - 1];
             _inDragging = false;
             if (_computedDraggedTime != initialTime &&
