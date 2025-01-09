@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,6 +88,10 @@ class StatNotifier extends StateNotifier<List<Stat>> {
     }
   }
 
+  String toJson() {
+    return jsonEncode(state.map((stat) => stat.toJson()).toList());
+  }
+
   void cleanState() {
     state = [];
   }
@@ -122,20 +128,4 @@ final List<Stat> _basicStats = [
       formulaType: BasicHabitSubtype.completion,
       color: Color.fromARGB(255, 20, 20, 20),
       maxY: 100),
-  Stat(
-      index: 3,
-      users: userId,
-      type: StatType.basic,
-      name: 'Habits validated',
-      formulaType: BasicHabitSubtype.habitsValidated,
-      color: Color.fromARGB(255, 20, 20, 20),
-      maxY: null),
-  Stat(
-      index: 4,
-      users: userId,
-      type: StatType.basic,
-      name: 'SumStreaks',
-      formulaType: BasicHabitSubtype.bsumStreaks,
-      color: Color.fromARGB(255, 20, 20, 20),
-      maxY: null),
 ];

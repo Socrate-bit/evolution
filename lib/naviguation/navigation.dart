@@ -5,9 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
-import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
+import 'package:tracker_v1/global/display/quick_add_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
+import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
+import 'package:tracker_v1/new_habit/display/frequency_picker2_widget.dart';
+import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
 import 'package:tracker_v1/authentification/data/userdata_provider.dart';
@@ -15,9 +19,8 @@ import 'package:tracker_v1/daily/daily_screen.dart';
 import 'package:tracker_v1/daily/habit_list_screen.dart';
 import 'package:tracker_v1/friends/leaderboard_screen.dart';
 import 'package:tracker_v1/profil/profil_screen.dart';
-import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/statistics/statistics_screen.dart';
-import 'package:tracker_v1/widget/display/home_widget_actual_Task.dart';
+import 'package:tracker_v1/weekly/weekly_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -32,12 +35,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void initState() {
-    dynamic todayHabit = ref.read(scheduleCacheProvider(today));
     HomeWidget.setAppGroupId(appGroupId);
 
     _pagesList = [
       DailyScreen(),
-      ColorFillProgress(todayHabitsSchedulesMap: todayHabit),
+      WeeklyScreen(),
       StatisticsScreen(),
       LeaderboardScreen(),
     ];
@@ -65,7 +67,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
       );
     }
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.surfaceBright,
@@ -114,8 +115,10 @@ class _TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
     Widget leftButtons = IconButton(
       onPressed: () {
         HapticFeedback.selectionClick();
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (ctx) => const AllHabitsPage()));
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (ctx) => const AllHabitsPage(
+                  habitListNavigation: HabitListNavigation.habitList,
+                )));
       },
       icon: const Icon(
         Icons.list,
@@ -200,15 +203,41 @@ class _MyBottomAppBar extends ConsumerWidget {
 
 class _MyFloatingActionButton extends ConsumerWidget {
   const _MyFloatingActionButton();
+  static final GlobalKey btnKey = GlobalKey();
 
-  void _openNewHabitScreen(context, DateTime selectedDate) {
-    showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        builder: (ctx) => NewHabitScreen(
-              dateOpened: selectedDate,
-            ));
+  List<ModalContainerItem> getNewHabitItems(DateTime selectedDate) {
+    return [
+      ModalContainerItem(
+        icon: Icons.list_rounded,
+        title: 'Existing',
+        onTap: (context) {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (ctx) => AllHabitsPage(
+                  habitListNavigation: HabitListNavigation.addHabit)));
+        },
+      ),
+      ModalContainerItem(
+        icon: Icons.add_rounded,
+        title: 'New',
+        onTap: (context) {
+          showModalBottomSheet(
+            isScrollControlled: true,
+            context: context,
+            builder: (ctx) => FractionallySizedBox(
+                heightFactor: 0.925, // Limits the height to 90% of the screen
+                child: NewHabitScreen(dateOpened: selectedDate)),
+          );
+        },
+      ),
+      ModalContainerItem(
+        icon: Icons.diamond_rounded,
+        title: 'Bank',
+        onTap: (context) {
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (ctx) => AllHabitsPage()));
+        },
+      ),
+    ];
   }
 
   @override
@@ -222,12 +251,16 @@ class _MyFloatingActionButton extends ConsumerWidget {
           ? const Duration(milliseconds: 300)
           : const Duration(milliseconds: 180),
       child: FloatingActionButton(
+        key: btnKey,
         elevation: 6,
         shape: const CircleBorder(),
         onPressed: () {
           HapticFeedback.mediumImpact();
-          _openNewHabitScreen(
-              context, ref.read(dailyScreenStateProvider).selectedDate);
+          showActionsDialog(
+
+              context,
+              getNewHabitItems(
+                  ref.read(dailyScreenStateProvider).selectedDate), title: 'New Task');
         },
         child: const Icon(
           Icons.add_rounded,

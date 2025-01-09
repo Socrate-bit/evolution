@@ -5,7 +5,7 @@ class HabitStatusAppearance {
       : lineThrough = lineThroughCond ? TextDecoration.lineThrough : null;
 
   final Color backgroundColor;
-  final Color elementsColor;
+  Color elementsColor;
   Widget? icon;
   final TextDecoration? lineThrough;
 }

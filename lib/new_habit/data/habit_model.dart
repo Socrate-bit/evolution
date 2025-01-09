@@ -10,8 +10,8 @@ const idGenerator = Uuid();
 enum HabitType { simple, recap, unique, recapDay }
 
 const Map<HabitType, String> habitTypeDescriptions = {
-  HabitType.simple: 'Simple task',
-  HabitType.recap: 'Evaluation',
+  HabitType.simple: 'Simple Task',
+  HabitType.recap: 'Intentional',
   HabitType.unique: 'Unique task',
   HabitType.recapDay: 'Journaling',
 };

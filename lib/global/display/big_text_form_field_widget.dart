@@ -80,7 +80,7 @@ class _BigTextFormFieldState extends State<BigTextFormField> {
           },
           maxLength: widget.maxLenght,
           style: Theme.of(context).textTheme.bodyMedium,
-          cursorColor: widget.color,
+          cursorColor: widget.color ?? Theme.of(context).primaryColor,
           decoration: InputDecoration(
             filled: true,
             focusedBorder: UnderlineInputBorder(

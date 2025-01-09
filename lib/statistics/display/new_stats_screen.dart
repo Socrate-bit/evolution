@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -27,12 +28,13 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
   StatType _type = StatType.habit;
   dynamic _ref;
   String? _name;
-  Color _color = Colors.grey;
+  Color? _color;
   dynamic _subType;
 
   @override
   void initState() {
     super.initState();
+
     if (widget.stat != null) {
       _type = widget.stat!.type;
       _ref = widget.stat!.ref;
@@ -42,8 +44,142 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
     }
   }
 
+  Widget _buildRowWithToolTip({
+    required String title,
+    required String content,
+    required Widget child,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        CustomToolTipTitle(title: title, content: content),
+        Expanded(child: Center(child: child)),
+      ],
+    );
+  }
+
+  void _submit(WidgetRef ref) {
+    if (!_formKey.currentState!.validate()) return;
+    if (_ref == null && _type != StatType.basic) return;
+
+    _formKey.currentState!.save();
+
+    final newStat = Stat(
+      users: FirebaseAuth.instance.currentUser!.uid,
+      statId: widget.stat?.statId,
+      type: _type,
+      formulaType: _subType,
+      ref: _ref,
+      name: _name ?? '',
+      color: _color!,
+      maxY: _determineMaxY(_type, _subType),
+      index: widget.stat?.index ?? ref.read(statNotiferProvider).length,
+    );
+
+    if (widget.stat != null) {
+      ref.read(statNotiferProvider.notifier).updateStat(newStat);
+    } else {
+      ref.read(statNotiferProvider.notifier).addStat(newStat);
+    }
+
+    Navigator.of(context).pop();
+  }
+
+  double? _determineMaxY(StatType type, dynamic subType) {
+    if (type == StatType.emotion) {
+      return 5;
+    } else if (subType == HabitVisualisationType.rating) {
+      return 10;
+    } else if (subType == HabitVisualisationType.percentCompletion) {
+      return 100;
+    } else if (subType == BasicHabitSubtype.completion) {
+      return 100;
+    } else if (subType == BasicHabitSubtype.evaluation) {
+      return 10;
+    } else {
+      return null;
+    }
+  }
+
+  void _showColorPicker() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.black,
+        content: BlockPicker(
+          pickerColor: _color,
+          onColorChanged: (selectedColor) {
+            setState(() {
+              _color = selectedColor;
+              Navigator.pop(context);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Map<dynamic, String> _generateSubTypeOptions() {
+    switch (_type) {
+      case StatType.habit:
+        return Map.fromEntries(
+            HabitVisualisationType.values.map((type) => MapEntry(
+                  type,
+                  habitVisualisationTypeNames[type]!,
+                )));
+      case StatType.additionalMetrics:
+        return Map.fromEntries(
+            AdditionalMetricsSubType.values.map((type) => MapEntry(
+                  type,
+                  additionalMetricsSubTypeNames[type]!,
+                )));
+      default:
+        return {};
+    }
+  }
+
+  dynamic _initializeDefaultSubType(StatType type) {
+    switch (type) {
+      case StatType.habit:
+        return HabitVisualisationType.rating;
+      case StatType.additionalMetrics:
+        return AdditionalMetricsSubType.average;
+      case StatType.basic:
+        return BasicHabitSubtype.score;
+      default:
+        return null;
+    }
+  }
+
+  void _onSelectSearchBarValue(item) {
+    setState(() {
+      _name = _type == StatType.additionalMetrics ? item.$1.$2 : item.$2;
+      _ref = _type == StatType.basic ? null : item.$1;
+      _subType = _type == StatType.basic ? item.$1 : _subType;
+    });
+  }
+
+  void _showDialogMessage() {
+    showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+                actions: [
+                  CustomElevatedButton(
+                      submit: () {
+                        Navigator.of(ctx).pop();
+                      },
+                      text: 'Ok')
+                ],
+                contentPadding: EdgeInsets.all(16),
+                content: Text(
+                  '''You can add a created stat on your home screen! \n\n1. Click and hold 3 seconds on your home screen \n2. Click on the edit on the top left of the screen \n3. Select add widget \n4. Click on PeakYou and choose the widget you wanna add !
+                ''',
+                )));
+  }
+
   @override
   Widget build(BuildContext context) {
+    _color ??= _color = Theme.of(context).colorScheme.primary;
     _subType ??= _initializeDefaultSubType(_type);
 
     return CustomModalBottomSheet(
@@ -95,7 +231,7 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
             child: InkWell(
               onTap: () {
                 HapticFeedback.selectionClick();
-                _showColorPicker;
+                _showColorPicker();
               },
               child: CircleAvatar(
                 backgroundColor: _color,
@@ -105,128 +241,28 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
           ),
           const SizedBox(height: 32),
           CustomElevatedButton(
+            color: _color,
             submit: () {
               _submit(ref);
             },
             text: widget.stat != null ? 'Edit Stat' : 'Create Stat',
           ),
+          SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              _showDialogMessage();
+            },
+            child: Text('Add On Home Screen',
+                maxLines: 2,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(color: _color)),
+          ),
+          SizedBox(height: 8)
         ],
       ),
     );
-  }
-
-  Widget _buildRowWithToolTip({
-    required String title,
-    required String content,
-    required Widget child,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        CustomToolTipTitle(title: title, content: content),
-        Expanded(child: Center(child: child)),
-      ],
-    );
-  }
-
-  void _submit(WidgetRef ref) {
-    if (!_formKey.currentState!.validate()) return;
-    if (_ref == null && _type != StatType.basic) return;
-
-    _formKey.currentState!.save();
-
-    final newStat = Stat(
-      users: FirebaseAuth.instance.currentUser!.uid,
-      statId: widget.stat?.statId,
-      type: _type,
-      formulaType: _subType,
-      ref: _ref,
-      name: _name ?? '',
-      color: _color,
-      maxY: _determineMaxY(_type, _subType),
-      index: widget.stat?.index ?? ref.read(statNotiferProvider).length,
-    );
-
-    if (widget.stat != null) {
-      ref.read(statNotiferProvider.notifier).updateStat(newStat);
-    } else {
-      ref.read(statNotiferProvider.notifier).addStat(newStat);
-    }
-
-    Navigator.of(context).pop();
-  }
-
-  double? _determineMaxY(StatType type, dynamic subType) {
-    if (type == StatType.emotion) {
-      return 5;
-    } else if (subType == HabitVisualisationType.rating) {
-      return 10;
-    } else if (subType == HabitVisualisationType.percentCompletion) {
-      return 100;
-    } else if (subType == BasicHabitSubtype.completion) {
-      return 100;
-    } else if (subType == BasicHabitSubtype.evaluation) {
-      return 10;
-    } else {
-      return null;
-    }
-  }
-
-  void _showColorPicker() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.black,
-        content: BlockPicker(
-          pickerColor: _color,
-          onColorChanged: (selectedColor) {
-            setState(() {
-              _color = selectedColor;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  Map<dynamic, String> _generateSubTypeOptions() {
-    switch (_type) {
-      case StatType.habit:
-        return Map.fromEntries(
-            HabitVisualisationType.values.map((type) => MapEntry(
-                  type,
-                  habitVisualisationTypeNames[type]!,
-                )));
-      case StatType.additionalMetrics:
-        return Map.fromEntries(
-            AdditionalMetricsSubType.values.map((type) => MapEntry(
-                  type,
-                  additionalMetricsSubTypeNames[type]!,
-                )));
-      default:
-        return {};
-    }
-  }
-
-  dynamic _initializeDefaultSubType(StatType type) {
-    switch (type) {
-      case StatType.habit:
-        return HabitVisualisationType.rating;
-      case StatType.additionalMetrics:
-        return AdditionalMetricsSubType.average;
-      case StatType.basic:
-        return BasicHabitSubtype.score;
-      default:
-        return null;
-    }
-  }
-
-  void _onSelectSearchBarValue(item) {
-    setState(() {
-      _name = _type == StatType.additionalMetrics ? item.$1.$2 : item.$2;
-      _ref = _type == StatType.basic ? null : item.$1;
-      _subType = _type == StatType.basic ? item.$1 : _subType;
-    });
   }
 }
 
@@ -298,43 +334,6 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Autocomplete(
-      optionsMaxHeight: double.infinity,
-      optionsBuilder: (textEditingValue) {
-        return _suggestions.where((item) {
-          return item.$2
-              .toLowerCase()
-              .contains(textEditingValue.text.toLowerCase());
-        }).toList();
-      },
-      displayStringForOption: (option) => option.$2,
-      optionsViewBuilder: (context, onSelected, options) {
-        if (!_suggestions.contains(options.first)) {
-          options = _suggestions;
-        }
-        return _buildMaterial(options, onSelected);
-      },
-      onSelected: (option) {
-        setState(() {
-          widget.selectValue(option);
-        });
-      },
-      fieldViewBuilder:
-          (context, textEditingController, focusNode, onFieldSubmitted) {
-        return TextField(
-          focusNode: focusNode,
-          controller: textEditingController,
-          decoration: const InputDecoration(
-            hintText: 'Search for a stat',
-            border: OutlineInputBorder(),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildMaterial(options, onSelected) {
     return Material(
       color: Colors.black,
@@ -394,5 +393,42 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
     }
 
     return suggestions;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Autocomplete(
+      optionsMaxHeight: double.infinity,
+      optionsBuilder: (textEditingValue) {
+        return _suggestions.where((item) {
+          return item.$2
+              .toLowerCase()
+              .contains(textEditingValue.text.toLowerCase());
+        }).toList();
+      },
+      displayStringForOption: (option) => option.$2,
+      optionsViewBuilder: (context, onSelected, options) {
+        if (!_suggestions.contains(options.first)) {
+          options = _suggestions;
+        }
+        return _buildMaterial(options, onSelected);
+      },
+      onSelected: (option) {
+        setState(() {
+          widget.selectValue(option);
+        });
+      },
+      fieldViewBuilder:
+          (context, textEditingController, focusNode, onFieldSubmitted) {
+        return TextField(
+          focusNode: focusNode,
+          controller: textEditingController,
+          decoration: const InputDecoration(
+            hintText: 'Search for a stat',
+            border: OutlineInputBorder(),
+          ),
+        );
+      },
+    );
   }
 }

@@ -98,7 +98,11 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
   DateTime? getHabitStartDate(String habitId) {
     List<Schedule> sortedSchedule = sortSchedules(getHabitAllSchedule(habitId));
 
-    return sortedSchedule.first.startDate;
+    if (sortedSchedule.isEmpty) {
+      return null;
+    }
+    
+    return sortedSchedule.elementAt(0).startDate;
   }
 
   Schedule? getHabitDefaultSchedule(String habitId, {DateTime? date}) {

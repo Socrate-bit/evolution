@@ -240,7 +240,7 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
 }
 
 // Custom stats
-(double?, int) _additionalMetricsSumLenght(List<DateTime> dates, WidgetRef ref,
+(double?, int) _additionalMetricsSumLenght(List<DateTime> dates, ref,
     {required (String, String) reference}) {
   List<dynamic> result = [];
   Habit habit =

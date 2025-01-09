@@ -55,7 +55,7 @@ class HabitRecap {
             backgroundColor: const Color.fromARGB(255, 51, 51, 51),
             elementsColor: Colors.white.withOpacity(0.45),
             lineThroughCond: true,
-            icon: Icon(Icons.close,
+            icon: Icon(Icons.close_rounded,
                 size: 30, weight: 200, color: Colors.white.withOpacity(0.45)));
 
       case Validated.notYet:
@@ -70,7 +70,7 @@ class HabitRecap {
             backgroundColor: colorScheme.secondary,
             elementsColor: Colors.white.withOpacity(0.45),
             lineThroughCond: true,
-            icon: Icon(Icons.check,
+            icon: Icon(Icons.check_rounded,
                 size: 30, weight: 200, color: Colors.white.withOpacity(0.45)),
           );
         } else {
@@ -82,17 +82,13 @@ class HabitRecap {
             backgroundColor: statusColor,
             lineThroughCond: true,
             elementsColor: Colors.white.withOpacity(0.45),
-            icon: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(minWidth: 30), // Set minimum width
-              child: Text(
-                getDisplayedScore(totalRating()),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16),
-              ),
+            icon: Text(
+              getDisplayedScore(totalRating()),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.55),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16),
             ),
           );
         }
@@ -164,6 +160,33 @@ class HabitRecap {
     };
   }
 
+  HabitRecap copyWith({
+    String? trackedDayId,
+    String? userId,
+    String? habitId,
+    DateTime? date,
+    Validated? done,
+    Rating? notation,
+    String? recap,
+    String? improvements,
+    Map<String, dynamic>? additionalMetrics,
+    bool? synced,
+    DateTime? dateOnValidation,
+  }) {
+    return HabitRecap(
+      trackedDayId: trackedDayId ?? this.trackedDayId,
+      userId: userId ?? this.userId,
+      habitId: habitId ?? this.habitId,
+      date: date ?? this.date,
+      done: done ?? this.done,
+      notation: notation ?? this.notation,
+      recap: recap ?? this.recap,
+      improvements: improvements ?? this.improvements,
+      additionalMetrics: additionalMetrics ?? this.additionalMetrics,
+      synced: synced ?? this.synced,
+      dateOnValidation: dateOnValidation ?? this.dateOnValidation,
+    );
+  }
 }
 
 class Rating {

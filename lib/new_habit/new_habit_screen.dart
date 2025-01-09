@@ -5,6 +5,7 @@ import 'package:flutter_iconpicker/Models/configuration.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/display/animations.dart';
 import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
@@ -48,8 +49,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.habit != null) {
-        oldSchedule =
-            ref.read(scheduleCacheProvider(widget.dateOpened))[widget.habit!]!.$1;
+        oldSchedule = ref
+            .read(scheduleCacheProvider(widget.dateOpened))[widget.habit!]!
+            .$1;
         ref.read(newHabitStateProvider.notifier).setState(widget.habit!.copy());
 
         if (oldSchedule != null) {
@@ -96,7 +98,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     Schedule scheduleState = ref.watch(frequencyStateProvider);
 
     return CustomModalBottomSheet(
-      title: widget.habit != null ? 'Edit Habit' : 'New Habit',
+      title: widget.habit != null ? 'Edit Task' : 'New Task',
       formKey: formKey,
       content: Column(
         children: [
@@ -114,20 +116,9 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
           _getHabitType(habitState),
           SizedBox(
               height: habitState.validationType == HabitType.recap ? 32 : 16),
-          AnimatedSwitcher(
-              transitionBuilder: (switcherChild, animation) {
-                return SizeTransition(
-                  sizeFactor: animation,
-                  child: FadeTransition(
-                    opacity: animation,
-                    child: switcherChild,
-                  ),
-                );
-              },
-              duration: Duration(milliseconds: 300),
-              child: habitState.validationType == HabitType.recap
-                  ? _getImprovementField(habitState)
-                  : null),
+          SwitcherAnimation(habitState.validationType == HabitType.recap
+              ? _getImprovementField(habitState)
+              : null),
           SizedBox(
               height: habitState.validationType == HabitType.recap ? 32 : 16),
           _getPriorityField(habitState),
@@ -300,7 +291,7 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
     List<HabitType> habitTypeList = _generateHabitTypeList();
     return Row(
       children: [
-        const CustomToolTipTitle(title: 'Habit type:', content: 'Item type'),
+        const CustomToolTipTitle(title: 'Task Type:', content: 'Item type'),
         Spacer(),
         Center(
           child: Container(

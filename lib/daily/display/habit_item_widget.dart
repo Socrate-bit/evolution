@@ -6,12 +6,12 @@ import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/authentification/data/userdata_provider.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/effects/effects_service.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
-import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
@@ -33,6 +33,7 @@ class HabitWidget extends ConsumerStatefulWidget {
       this.isLastItem = false,
       this.timeMarker,
       this.habitList = false,
+      this.habitListNavigation,
       super.key});
 
   final Habit habit;
@@ -40,6 +41,7 @@ class HabitWidget extends ConsumerStatefulWidget {
   final double? timeMarker;
   final DateTime? date;
   final bool habitList;
+  final HabitListNavigation? habitListNavigation;
 
   @override
   ConsumerState<HabitWidget> createState() => _HabitWidgetState();
@@ -172,7 +174,7 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
 
   HabitStatusAppearance _getStatusAppearance(
       HabitRecap? trackedDay, bool? pastCurrentTime, context, ref) {
-    if (!widget.habitList) {
+    if (widget.habitListNavigation == HabitListNavigation.dailyScreen) {
       return trackedDay != null && trackedDay.done != Validated.notYet
           ? trackedDay.getStatusAppearance(Theme.of(context).colorScheme)
           : HabitStatusAppearance(
@@ -195,25 +197,17 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
     }
   }
 
+  void quickAdd() {}
+
   Widget? _getIconInHabitList(Habit habit) {
-    if (ref.read(habitProvider.notifier).isHabitCurrentlyPaused(habit)) {
+    if (widget.habitListNavigation == HabitListNavigation.addHabit ||
+        ref.read(scheduleCacheProvider(null))[habit]?.$1.startDate == null) {
+      return Icon(
+        Icons.add_rounded,
+        size: 30,
+      );
+    } else if (ref.read(habitProvider.notifier).isHabitCurrentlyPaused(habit)) {
       return const Icon(Icons.pause_circle_outline_outlined);
-    } else if (ref.read(scheduleCacheProvider(null))[habit]?.$1.startDate ==
-        null) {
-      return InkWell(
-          child: Icon(
-            Icons.add_rounded,
-            size: 30,
-          ),
-          onTap: () => {
-                HapticFeedback.lightImpact(),
-                showModalBottomSheet(
-                    isScrollControlled: true,
-                    context: context,
-                    builder: (context) {
-                      return NewHabitScreen(habit: habit);
-                    })
-              });
     } else {
       return null;
     }

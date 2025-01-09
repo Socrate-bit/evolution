@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
@@ -16,10 +17,11 @@ import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class HabitReorderableList extends ConsumerStatefulWidget {
   const HabitReorderableList(
-      {required this.habitScheduleMap, this.selectedDate, super.key});
+      {required this.habitScheduleMap, this.selectedDate, this.navigation, super.key});
 
   final LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitScheduleMap;
   final DateTime? selectedDate;
+  final HabitListNavigation? navigation;
 
   @override
   ConsumerState<HabitReorderableList> createState() =>
@@ -129,13 +131,13 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
         cursorIndexPosition >= -1) {
       timeIndexPlusOne = widget
           .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]?.$1
-          ?.getTimeOfTargetDay(widget.selectedDate);
+          .getTimeOfTargetDay(widget.selectedDate);
     }
 
     if (cursorIndexPosition > -1 &&
         cursorIndexPosition < sortedHabitList.length) {
       timeIndex = widget.habitScheduleMap[_sortedHabitList[cursorIndexPosition]]?.$1
-          ?.getTimeOfTargetDay(widget.selectedDate);
+          .getTimeOfTargetDay(widget.selectedDate);
     }
 
     if (_draggedItemPosition == null) {
@@ -259,6 +261,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
           itemCount: _sortedHabitList.length,
           itemBuilder: (ctx, item) {
             return HabitWidget(
+                habitListNavigation: widget.navigation,
                 key: ObjectKey(_sortedHabitList[item]),
                 date: widget.selectedDate,
                 habitList: !(widget.selectedDate != null),

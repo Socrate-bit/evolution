@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/habits_reorderable_list_widget.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
@@ -10,7 +11,9 @@ import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class AllHabitsPage extends ConsumerStatefulWidget {
-  const AllHabitsPage({super.key});
+  const AllHabitsPage({super.key, this.dateOpened, this.habitListNavigation});
+  final DateTime? dateOpened;
+  final HabitListNavigation? habitListNavigation; 
 
   @override
   ConsumerState<AllHabitsPage> createState() => _MyWidgetState();
@@ -22,8 +25,8 @@ class _MyWidgetState extends ConsumerState<AllHabitsPage>
   static const List<String> _pageNames1 = ['Routines', 'Once', 'To Do'];
   static const List<String> _noItemText = [
     'No habits yet, create one!',
-    'No unique tasks yet, create one!',
-    'No unique things to plan yet, create one!'
+    'No unique tasks yet!',
+    'Nothing to plan yet!'
   ];
   int _selectedPage1 = 0;
 
@@ -45,7 +48,6 @@ class _MyWidgetState extends ConsumerState<AllHabitsPage>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     tabController = TabController(length: 3, vsync: this);
     tabController.addListener(() {
@@ -64,7 +66,11 @@ class _MyWidgetState extends ConsumerState<AllHabitsPage>
     Widget content;
 
     if (filteredHabitsList.isNotEmpty) {
-      content = HabitReorderableList(habitScheduleMap: filteredHabitsList);
+      content = HabitReorderableList(
+        habitScheduleMap: filteredHabitsList,
+        navigation: widget.habitListNavigation,
+        selectedDate: widget.dateOpened,
+      );
     } else {
       content = Align(child: Text(_noItemText[_selectedPage1]));
     }

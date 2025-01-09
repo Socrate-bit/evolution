@@ -1,6 +1,8 @@
 import 'package:intl/intl.dart';
 
-DateTime get now {return  DateTime.now();}
+DateTime get now {
+  return DateTime.now();
+}
 
 DateTime get today {
   DateTime currentNow = now;
@@ -48,7 +50,7 @@ String getOrdinalSuffix(int day) {
   }
 }
 
-String displayedDate(date) {
+String displayedDate(date, {DateFormat? formater}) {
   if (today == date) {
     return 'Today';
   } else if (today.add(Duration(days: 1)) == date) {
@@ -56,6 +58,6 @@ String displayedDate(date) {
   } else if (today.subtract(Duration(days: 1)) == date) {
     return 'Yesterday';
   } else {
-    return formater1.format(date);
+    return formater?.format(date) ?? formater1.format(date);
   }
 }

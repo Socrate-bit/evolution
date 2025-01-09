@@ -10,8 +10,6 @@ import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
-import 'package:tracker_v1/recap/data/daily_recap_model.dart';
-import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 
@@ -125,16 +123,6 @@ class ScheduleCacheNotifier
                       : null,
             })
         .toList());
-  }
-
-  void updateTitleWidget(ref) {
-    String todayHabitJson =
-        ref.read(scheduleCacheProvider(today).notifier).toJson();
-    HomeWidget.saveWidgetData('todayHabitJson', todayHabitJson);
-    HomeWidget.updateWidget(
-      name: 'home_widget_test',
-      iOSName: 'home_widget_test',
-    );
   }
 
   static void cleanAll() {

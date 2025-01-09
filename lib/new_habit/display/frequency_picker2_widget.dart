@@ -403,6 +403,7 @@ class CustomContainerTight extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             color: Theme.of(context).colorScheme.surfaceBright),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [if (child != null) child!],
         ));
   }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
+enum CustomModalType { actionDialog, fullPage }
+
 class CustomModalBottomSheet extends StatelessWidget {
   const CustomModalBottomSheet(
       {this.title,
       required this.content,
       this.formKey,
       this.function,
+      this.modalType = CustomModalType.fullPage,
       super.key});
 
   final String? title;
   final Widget content;
   final GlobalKey<FormState>? formKey;
+  final CustomModalType modalType;
   final Function()? function;
 
   @override
@@ -28,16 +32,20 @@ class CustomModalBottomSheet extends StatelessWidget {
             child: Form(
               key: formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      SizedBox(
+                        width: modalType == CustomModalType.fullPage ? 0 : 12,
+                      ),
                       if (title != null)
                         Text(
                           title!,
                           style: Theme.of(context).textTheme.titleLarge!,
                         ),
+                      Spacer(),
                       IconButton(
                         iconSize: 30,
                         onPressed: () {
@@ -50,7 +58,10 @@ class CustomModalBottomSheet extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                  if (modalType == CustomModalType.actionDialog)
+                    Divider(color: Colors.grey.withOpacity(0.25)),
+                  SizedBox(
+                      height: modalType == CustomModalType.fullPage ? 32 : 16),
                   content
                 ],
               ),

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,10 +7,14 @@ import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/global/logic/offset_days.dart';
+import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/rating_display_utility.dart';
 import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
+import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
+import 'package:tracker_v1/recap_display/daily_recap_synthesis.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 import 'package:tracker_v1/daily/display/score_card_widget.dart';
 
@@ -110,6 +116,22 @@ class _DailyPagesState extends ConsumerState<_DailyPages> {
                   ref
                       .read(dailyScreenStateProvider.notifier)
                       .updateSelectedDate(weeklyDayList[item]);
+                },
+                onLongPress: () {
+                  HapticFeedback.mediumImpact();
+                  LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitList =
+                      ref.read(scheduleCacheProvider(weeklyDayList[item]));
+                  List<MapEntry<Habit, HabitRecap?>> entries = habitList.entries
+                      .map((e) => MapEntry(e.key, e.value.$2))
+                      .toList();
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (ctx) => DailySynthesis(
+                                date: weeklyDayList[item],
+                                entries: entries,
+                              )));
                 },
                 child: _DailyItem(
                   weeklyDay: weeklyDayList[item],

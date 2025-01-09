@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/effects/effects_service.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/daily/display/day_switcher_widget.dart';
@@ -61,7 +62,8 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
     content = habitScheduleMap.isNotEmpty
         ? HabitReorderableList(
             habitScheduleMap: habitScheduleMap,
-            selectedDate: dailyScreenState.selectedDate)
+            selectedDate: dailyScreenState.selectedDate,
+            navigation: HabitListNavigation.dailyScreen,)
         : SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -88,7 +90,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
       children: [
         ConfettiWidget(
           blastDirectionality: BlastDirectionality.explosive,
-          blastDirection: -pi / 2, // radial value - RIGHT
+          blastDirection: -pi / 2, 
           emissionFrequency: 1,
           minimumSize: const Size(10, 10),
           maximumSize: const Size(20, 20),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -11,11 +13,13 @@ import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
 import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
+import 'package:tracker_v1/statistics/data/statistics_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
 import 'package:tracker_v1/authentification/data/userdata_provider.dart';
 import 'package:tracker_v1/friends/data/alluserstats_provider.dart';
+import 'package:tracker_v1/statistics/logic/statistics_service.dart';
 
 final dataManagerProvider = Provider((ref) => DataManager(ref));
 
@@ -129,7 +133,6 @@ class DataManager {
     await FirebaseAuth.instance.signOut();
   }
 
-
   Future<void> loadData() async {
     try {
       await ref.read(userDataProvider.notifier).loadData();
@@ -140,6 +143,7 @@ class DataManager {
 
       ref.read(notificationsProvider);
       listenToScheduleProvider(ref);
+      listenToStatsProvider(ref);
 
       await Future.wait([
         ref.read(habitProvider.notifier).loadData(),
@@ -161,21 +165,60 @@ class DataManager {
 }
 
 void updateTitleWidget(ref) async {
-    String todayHabitJson = ref.read(scheduleCacheProvider(today).notifier).toJson();
-    HomeWidget.saveWidgetData('todayHabitJson', todayHabitJson);
-    print(todayHabitJson);
-    HomeWidget.updateWidget(
-      name: 'home_widget_test',
-      iOSName: 'home_widget_test',
-    );
+  String todayHabitJson =
+      ref.read(scheduleCacheProvider(today).notifier).toJson();
+  HomeWidget.saveWidgetData('todayHabitJson', todayHabitJson);
+  HomeWidget.updateWidget(
+    name: 'home_widget_test',
+    iOSName: 'home_widget_test',
+  );
+}
+
+void updatePerformanceWidget(ref) async {
+  String jsonStats = ref.read(statNotiferProvider.notifier).toJson();
+  if (jsonStats.isEmpty || jsonStats == '[]') return;
+
+  HomeWidget.saveWidgetData('available_stats', jsonStats);
+  updatePerformanceDataWidget(ref);
+
+  HomeWidget.updateWidget(
+    name: 'performance_widget',
+    iOSName: 'performance_widget',
+  );
+}
+
+void updatePerformanceDataWidget(ref) async {
+  List<Stat> statsList = ref.read(statNotiferProvider);
+  List<String> statsDataList = getContainerStats(ref, statsList, 0, 0, null, null);
+  List<String> statsDataListLastWeek = getContainerStats(ref, statsList, 1, 0, null, null);
+
+  for (int index in List.generate(statsList.length, (index) => index)) {
+    Map<String, String> jsonStatsData = {
+      'actualValue': statsDataList[index],
+      'maxValue': statsDataListLastWeek[index],
+      'color': statsList.elementAt(index).color.value.toString(),
+    };
+
+    HomeWidget.saveWidgetData(statsList[index].statId, jsonEncode(jsonStatsData));
   }
 
-  void listenToScheduleProvider(ref) {
-    ref.listen(scheduleCacheProvider(today), (previous, next) {
-      updateTitleWidget(ref);
-    });
-  }
+  HomeWidget.updateWidget(
+    name: 'performance_data_widget',
+    iOSName: 'performance_data_widget',
+  );
+}
 
+void listenToStatsProvider(ref) {
+  ref.listen(statNotiferProvider, (previous, next) {
+    updatePerformanceWidget(ref);
+  });
+}
 
+void listenToScheduleProvider(ref) {
+  ref.listen(scheduleCacheProvider(today), (previous, next) {
+    updateTitleWidget(ref);
+    updatePerformanceWidget(ref);
+  });
+}
 
 final firestoreUploadProvider = StateProvider<bool>((ref) => false);

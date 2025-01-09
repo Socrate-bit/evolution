@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:tracker_v1/global/display/custom_surface_container.dart';
+import 'package:tracker_v1/global/display/quick_add_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/statistics/data/statistics_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_state.dart';
@@ -14,8 +15,6 @@ import 'package:tracker_v1/statistics/display/new_stats_screen.dart';
 import 'package:tracker_v1/statistics/logic/statistics_service.dart';
 import 'package:tracker_v1/statistics/data/statistics_provider.dart';
 import 'package:tracker_v1/theme.dart';
-import 'package:tracker_v1/global/display/elevated_button_widget.dart';
-import 'package:tracker_v1/global/display/outlined_button_widget.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
   const StatisticsScreen({super.key});
@@ -113,8 +112,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
                   title: 'Statistics',
                   child: Column(
                     children: [
-                      DateShift(),
-                      StatsGrid(),
+                      _DateShift(),
+                      _StatsGrid(),
+                      SizedBox(
+                        height: 12,
+                      )
                     ],
                   ),
                 ),
@@ -127,72 +129,101 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   }
 }
 
-class StatsGrid extends ConsumerStatefulWidget {
-  const StatsGrid({super.key});
+class _StatsGrid extends ConsumerStatefulWidget {
+  const _StatsGrid({super.key});
 
   @override
-  ConsumerState<StatsGrid> createState() => _StatsGridState();
+  ConsumerState<_StatsGrid> createState() => _StatsGridState();
 }
 
-class _StatsGridState extends ConsumerState<StatsGrid> {
-  void _showEditMenu(context, WidgetRef ref, Stat stat) {
-    dynamic action1 = CustomElevatedButton(
-        submit: () {
-          Navigator.of(context).pop();
-          showModalBottomSheet(
-              isScrollControlled: true,
-              context: context,
-              builder: (ctx) => NewStatScreen(
-                    stat: stat,
-                  ));
-        },
-        text: 'EDIT');
-    dynamic action2 = CustomOutlinedButton(
-        submit: () {
-          ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
-          ref.read(statNotiferProvider.notifier).deleteStat(stat);
-          Navigator.of(context).pop();
-        },
-        text: 'DELETE');
+class _StatsGridState extends ConsumerState<_StatsGrid> {
+  void showNewStatScreen({Stat? stat}) {
+    showModalBottomSheet(
+        isScrollControlled: true,
+        context: context,
+        builder: (ctx) => NewStatScreen(
+              stat: stat,
+            ));
+  }
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        actions: [
-          action1,
-          SizedBox(
-            height: 8,
-          ),
-          action2
-        ],
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
+  void deleteStat(Stat stat, bool isMainSelected, bool isSecondarySelected) {
+    if (isMainSelected) {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
+    }
+
+    if (isSecondarySelected) {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
+    }
+    ref.read(statNotiferProvider.notifier).deleteStat(stat);
+  }
+
+  List<ModalContainerItem> getNewHabitItems(
+      WidgetRef ref, int index, StatisticsState screenState, Stat stat) {
+    bool isMainSelected = screenState.selectedStat == index;
+    bool isSecondarySelected = screenState.selectedStat2 == index;
+
+    void mainSelection() {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat(index);
+      if (isSecondarySelected) {
+        ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
+      }
+    }
+
+    void secondarySelection() {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(index);
+      if (isMainSelected) {
+        ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
+      }
+    }
+
+    return [
+      if (!isMainSelected)
+        ModalContainerItem(
+          icon: Icons.show_chart_rounded,
+          title: 'Select',
+          onTap: (context) {
+            mainSelection();
+          },
         ),
+      if (!isMainSelected && !isSecondarySelected)
+        ModalContainerItem(
+          icon: Icons.auto_graph_rounded,
+          title: 'Compare',
+          onTap: (context) {
+            secondarySelection();
+          },
+        ),
+      ModalContainerItem(
+        icon: Icons.delete_outline_rounded,
+        title: 'Delete',
+        onTap: (context) {
+          deleteStat(stat, isMainSelected, isMainSelected);
+        },
       ),
-    );
+      ModalContainerItem(
+        icon: Icons.edit_rounded,
+        title: 'Edit',
+        onTap: (context) {
+          showNewStatScreen(stat: stat);
+        },
+      )
+    ];
+  }
+
+  void selectMain(WidgetRef ref, int index, StatisticsState screenState) {
+    if (screenState.selectedStat2 == index) {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
+    }
+    ref.read(statisticsStateProvider.notifier).updateSelectedStat(index);
   }
 
   void onTap(WidgetRef ref, int index, StatisticsState screenState, Stat stat) {
-    if (screenState.selectedStat != index) {
-      if (screenState.selectedStat2 == index) {
-        ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
-      }
-      ref.read(statisticsStateProvider.notifier).updateSelectedStat(index);
-    } else {
-      _showEditMenu(context, ref, stat);
-    }
+    showActionsDialog(context, getNewHabitItems(ref, index, screenState, stat),
+        title: stat.name);
   }
 
-  void onTap2(WidgetRef ref, int index, StatisticsState screenState) {
-    if (screenState.selectedStat == index) {
-      return;
-    }
-    if (screenState.selectedStat2 != index) {
-      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(index);
-    } else {
-      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
-    }
+  void onDoubleTap(WidgetRef ref, int index, StatisticsState screenState) {
+    selectMain(ref, index, screenState);
   }
 
   @override
@@ -232,20 +263,20 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
                   context: context,
                   builder: (ctx) => NewStatScreen());
             },
-            child: AddStatContainer(title: 'Add new stat')),
+            child: _AddStatContainer(title: 'Add new stat')),
       ],
       children: [
         ...screenState.allStats.asMap().entries.map((entry) => InkWell(
               key: ObjectKey(entry),
               onDoubleTap: () {
                 HapticFeedback.lightImpact();
-                onTap2(ref, entry.key, screenState);
+                onDoubleTap(ref, entry.key, screenState);
               },
               onTap: () {
                 HapticFeedback.selectionClick();
                 onTap(ref, entry.key, screenState, entry.value);
               },
-              child: StatContainer(
+              child: _StatContainer(
                 title: entry.value.name,
                 stats: entry.value,
                 computedStat: computedStats[entry.key],
@@ -257,13 +288,13 @@ class _StatsGridState extends ConsumerState<StatsGrid> {
   }
 }
 
-class StatContainer extends ConsumerWidget {
+class _StatContainer extends ConsumerWidget {
   final String title;
   final Stat stats;
   final String computedStat;
   final int index;
 
-  const StatContainer({
+  const _StatContainer({
     super.key,
     required this.title,
     required this.stats,
@@ -312,9 +343,9 @@ class StatContainer extends ConsumerWidget {
   }
 }
 
-class AddStatContainer extends StatelessWidget {
+class _AddStatContainer extends StatelessWidget {
   final String title;
-  const AddStatContainer({super.key, required this.title});
+  const _AddStatContainer({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -351,8 +382,8 @@ class AddStatContainer extends StatelessWidget {
   }
 }
 
-class DateShift extends ConsumerWidget {
-  const DateShift({super.key});
+class _DateShift extends ConsumerWidget {
+  const _DateShift({super.key});
 
   String getDatePickerText(WidgetRef ref, StatisticsState screenState) {
     DateTime? pickedStartDate =
@@ -446,12 +477,16 @@ class DateShift extends ConsumerWidget {
               icon: const Icon(Icons.arrow_left_rounded, size: 60),
             ),
             InkWell(
-              onLongPress: () {
+              onTap: () {
                 HapticFeedback.lightImpact();
                 _showDatePicker(context, ref);
               },
               child: Text(getDatePickerText(ref, screenState),
-                  style: Theme.of(context).textTheme.titleMedium),
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(fontSize: 18)),
             ),
             IconButton(
               padding: EdgeInsets.zero,
