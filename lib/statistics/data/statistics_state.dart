@@ -68,7 +68,8 @@ class StatisticsNotifier extends StateNotifier<StatisticsState> {
   Ref ref;
 
   void updateSelectedPeriod(int index) => state =
-      state.copyWith(selectedPeriod: index, offset: 0, selectedStat2: null);
+      state.copyWith(selectedPeriod: index, offset: 0);
+
   void updateOffset(int value) =>
       state = state.copyWith(offset: state.offset + value);
   void updateSelectedStat(int index) =>

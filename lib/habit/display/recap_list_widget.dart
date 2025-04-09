@@ -43,7 +43,7 @@ class RecapList extends ConsumerWidget {
             oldTrackedDay: oldTrackedDay, validated: oldTrackedDay.done),
       );
     } else if (habit.validationType == HabitType.recapDay) {
-      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
+      DailyRecap? oldRecapDay = ref.read(dailyRecapProvider).firstWhereOrNull((td) {
         return td.date == date;
       });
       showModalBottomSheet(
@@ -61,7 +61,7 @@ class RecapList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     List<HabitRecap> trackedDays =
-        ref.watch(trackedDayProvider).where((trackedDay) {
+        ref.watch(habitRecapProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
     }).toList()
           ..sort((a, b) => a.date.isAfter(b.date) ? -1 : 1);

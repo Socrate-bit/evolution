@@ -8,6 +8,10 @@ import 'package:home_widget/home_widget.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/logic/convert_habitV1.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
+import 'package:tracker_v1/habit_bank/data/habit_category_provider.dart';
+import 'package:tracker_v1/habit_bank/data/shared_habit_stats_provider.dart';
+import 'package:tracker_v1/habit_bank/data/shared_habit_stats_state.dart';
+import 'package:tracker_v1/habit_bank/data/shared_habits_provider.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/notifications/data/scheduled_notifications_state.dart';
@@ -31,8 +35,8 @@ class DataManager {
   Future<void> cleanData() async {
     ref.read(userDataProvider.notifier).cleanState();
     ref.read(habitProvider.notifier).cleanState();
-    ref.read(trackedDayProvider.notifier).cleanState();
-    ref.read(recapDayProvider.notifier).cleanState();
+    ref.read(habitRecapProvider.notifier).cleanState();
+    ref.read(dailyRecapProvider.notifier).cleanState();
     ref.read(scheduledProvider.notifier).cleanState();
     ref.read(navigationStateProvider.notifier).cleanState();
     ref.read(notificationsProvider.notifier).deleteNotifications();
@@ -147,15 +151,16 @@ class DataManager {
 
       await Future.wait([
         ref.read(habitProvider.notifier).loadData(),
-        ref.read(trackedDayProvider.notifier).loadData(),
-        ref.read(recapDayProvider.notifier).loadData(),
+        ref.read(habitRecapProvider.notifier).loadData(),
+        ref.read(dailyRecapProvider.notifier).loadData(),
         ref.read(userStatsProvider.notifier).loadUserStats(),
         ref.read(statNotiferProvider.notifier).loadData(),
         ref.read(habitProvider.notifier).loadData(),
         ref.read(scheduledProvider.notifier).loadData(),
+        ref.read(habitCategoryProvider.notifier).loadData(),
+        ref.read(sharedHabitsProvider.notifier).loadSharedHabits(),
+        ref.read(sharedHabitStatsProvider.notifier).loadData(),
       ]);
-
-      await v1Converter(ref.read(habitProvider), ref);
 
       ref.read(allUserStatsProvider);
     } catch (error) {
@@ -189,8 +194,10 @@ void updatePerformanceWidget(ref) async {
 
 void updatePerformanceDataWidget(ref) async {
   List<Stat> statsList = ref.read(statNotiferProvider);
-  List<String> statsDataList = getContainerStats(ref, statsList, 0, 0, null, null);
-  List<String> statsDataListLastWeek = getContainerStats(ref, statsList, 1, 0, null, null);
+  List<String> statsDataList =
+      getContainerStats(ref, statsList, 0, 0, null, null);
+  List<String> statsDataListLastWeek =
+      getContainerStats(ref, statsList, 1, 0, null, null);
 
   for (int index in List.generate(statsList.length, (index) => index)) {
     Map<String, String> jsonStatsData = {
@@ -199,7 +206,8 @@ void updatePerformanceDataWidget(ref) async {
       'color': statsList.elementAt(index).color.value.toString(),
     };
 
-    HomeWidget.saveWidgetData(statsList[index].statId, jsonEncode(jsonStatsData));
+    HomeWidget.saveWidgetData(
+        statsList[index].statId, jsonEncode(jsonStatsData));
   }
 
   HomeWidget.updateWidget(

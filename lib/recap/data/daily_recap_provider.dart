@@ -4,13 +4,13 @@ import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
-class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
+class RecapDayNotifier extends StateNotifier<List<DailyRecap>> {
   RecapDayNotifier(this.ref) : super([]);
   final Ref ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Add a new RecapDay to the state and Firestore
-  Future<void> addRecapDay(RecapDay newRecapDay) async {
+  Future<void> addRecapDay(DailyRecap newRecapDay) async {
     state = [...state, newRecapDay];
 
     await _firestore.collection('RecapDay').doc(newRecapDay.recapId).set({
@@ -42,7 +42,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
   }
 
   // Delete a RecapDay from state and Firestore
-  Future<void> deleteRecapDay(RecapDay? targetRecapDay) async {
+  Future<void> deleteRecapDay(DailyRecap? targetRecapDay) async {
     if (targetRecapDay == null) return;
     state =
         state.where((day) => day.recapId != targetRecapDay.recapId).toList();
@@ -54,7 +54,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
   }
 
   // Update a RecapDay by deleting and re-adding it
-  Future<void> updateRecapDay(RecapDay updatedRecapDay) async {
+  Future<void> updateRecapDay(DailyRecap updatedRecapDay) async {
     await deleteRecapDay(updatedRecapDay);
     await addRecapDay(updatedRecapDay);
   }
@@ -90,9 +90,9 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
 
     if (snapshot.docs.isEmpty) return;
 
-    final List<RecapDay> loadedData = snapshot.docs.map((doc) {
+    final List<DailyRecap> loadedData = snapshot.docs.map((doc) {
       final data = doc.data();
-      return RecapDay(
+      return DailyRecap(
         recapId: doc.id,
         userId: data['userId'] as String,
         date: DateTime.parse(data['date'] as String),
@@ -131,7 +131,7 @@ class RecapDayNotifier extends StateNotifier<List<RecapDay>> {
 }
 
 // Riverpod provider for RecapDayNotifier
-final recapDayProvider =
-    StateNotifierProvider<RecapDayNotifier, List<RecapDay>>(
+final dailyRecapProvider =
+    StateNotifierProvider<RecapDayNotifier, List<DailyRecap>>(
   (ref) => RecapDayNotifier(ref),
 );

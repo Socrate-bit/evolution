@@ -73,9 +73,9 @@ class _HabitRecapScreenState extends ConsumerState<BasicRecapScreen> {
     validationHaptic(newTrackedDay, widget.oldTrackedDay);
 
     if (widget.oldTrackedDay == null) {
-      ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
+      ref.read(habitRecapProvider.notifier).addTrackedDay(newTrackedDay);
     } else {
-      ref.read(trackedDayProvider.notifier).updateTrackedDay(newTrackedDay);
+      ref.read(habitRecapProvider.notifier).updateTrackedDay(newTrackedDay);
     }
   }
 

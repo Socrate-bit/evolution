@@ -1,99 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/global/display/elevated_button_widget.dart';
-import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 import 'package:tracker_v1/new_habit/data/frequency_state.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/new_habit/data/new_habit_state.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
+import 'package:tracker_v1/new_habit/display/card_list_widget.dart';
 
 class NotificationField extends ConsumerWidget {
   const NotificationField({super.key});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    Schedule scheduleState = ref.watch(frequencyStateProvider);
-    int notificationLength = (scheduleState.notification?.length ?? 0) + 1;
+  List<TitledCardItem> _getTitlesCardItems(Schedule scheduleState,
+      Habit habitState, BuildContext context, WidgetRef ref) {
+    String getNotificationString(int hour, int minute) {
+      return hour == 0 && minute == 0
+          ? 'At start of habit'
+          : '${(hour == 0 ? '' : '${hour}h ')}${(minute == 0 ? '' : '${minute}min ')}before start';
+    }
 
-    return SizedBox(
-      child: Column(
-        children: [
-          CustomToolTipTitle(title: 'Notifications:', content: 'Notification'),
-          const SizedBox(height: 6),
-          ListView.separated(
-            shrinkWrap: true,
-            itemCount: notificationLength,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (ctx, item) {
-              if (item == notificationLength - 1) {
-                return _NewNotificationCard();
-              }
-              return _NotificationCard(
-                item: item,
-              );
-            },
-          ),
-        ],
-      ),
-    );
+    if (scheduleState.notification == null) {
+      return [];
+    }
+
+    return scheduleState.notification!.map((notification) {
+      int hour = notification ~/ 60;
+      int minute = notification % 60;
+
+      Icon icon = Icon(
+        Icons.notifications,
+        color: habitState.color,
+      );
+
+      Text text = Text(
+        getNotificationString(hour, minute),
+        softWrap: true,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyLarge,
+      );
+
+      IconButton iconButton = IconButton(
+          onPressed: () {
+            int index = scheduleState.notification!.indexOf(notification);
+            HapticFeedback.selectionClick();
+            ref.read(frequencyStateProvider.notifier).deleteNotification(index);
+          },
+          icon: const Icon(
+            Icons.delete,
+            size: 20,
+            color: Colors.grey,
+          ));
+
+      return TitledCardItem(leading: icon, title: text, trailing: iconButton);
+    }).toList();
   }
-}
 
-class _NotificationCard extends ConsumerWidget {
-  final int item;
-
-  const _NotificationCard({
-    required this.item,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    Schedule scheduleState = ref.watch(frequencyStateProvider);
-    Habit habitState = ref.watch(newHabitStateProvider);
-    List<int>? notifications = scheduleState.notification;
-    int hour = notifications![item] ~/ 60;
-    int minute = notifications[item] % 60;
-    String time = hour == 0 && minute == 0
-        ? 'At start of habit'
-        : '${(hour == 0 ? '' : '${hour}h ')}${(minute == 0 ? '' : '${minute}min ')}before start';
-
-    return BasicCard(
-      child: ListTile(
-        leading: Icon(
-          Icons.notifications,
-          color: habitState.color,
-        ),
-        title: Text(
-          time,
-          softWrap: true,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-        trailing: IconButton(
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              ref
-                  .read(frequencyStateProvider.notifier)
-                  .deleteNotification(item);
-            },
-            icon: const Icon(
-              Icons.delete,
-              size: 20,
-              color: Colors.grey,
-            )),
-      ),
-    );
-  }
-}
-
-class _NewNotificationCard extends ConsumerWidget {
-  const _NewNotificationCard();
-
-  void _addNotification(context, WidgetRef ref) {
+  void _addNotification(BuildContext context, WidgetRef ref) {
     picker.DatePicker.showPicker(
       context,
       theme: picker.DatePickerTheme(
@@ -119,78 +83,17 @@ class _NewNotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Habit habitState = ref.watch(newHabitStateProvider);
     Schedule scheduleState = ref.watch(frequencyStateProvider);
+    Habit habitState = ref.watch(newHabitStateProvider);
 
-    if (scheduleState.notification != null &&
-        scheduleState.notification!.length >= 5) {
-      return BasicCard(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_off,
-              size: 20,
-              color: Colors.grey,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Max notifications reached',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge!
-                  .copyWith(color: Colors.grey, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
+    return TitledCardList(
+      title: 'Notifications:',
+      items: _getTitlesCardItems(scheduleState, habitState, context, ref),
+      addTap: () {
         _addNotification(context, ref);
       },
-      child: BasicCard(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_box_rounded,
-              size: 20,
-              color: habitState.color,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Add Notification',
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: habitState.color, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class BasicCard extends StatelessWidget {
-  final Widget child;
-
-  const BasicCard({
-    required this.child,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-          height: 55,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceBright,
-              borderRadius: BorderRadius.circular(10)),
-          child: child),
+      addColor: habitState.color,
+      addTitle: 'Add Notification',
     );
   }
 }
@@ -203,7 +106,7 @@ class CustomPicker extends picker.CommonPickerModel {
   CustomPicker({DateTime? currentTime, super.locale}) {
     this.currentTime = currentTime ?? DateTime.now();
     setLeftIndex(currentTime?.hour ?? 0);
-    setMiddleIndex(currentTime?.minute ??0);
+    setMiddleIndex(currentTime?.minute ?? 0);
     setRightIndex(0);
   }
 

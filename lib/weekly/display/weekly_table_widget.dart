@@ -69,7 +69,7 @@ class WeeklyTable extends ConsumerWidget {
   }
 
   TableRow? _buildHabitRow(Habit habit, BuildContext context, WidgetRef ref,
-      List<HabitRecap> trackedDays, List<RecapDay> recapList) {
+      List<HabitRecap> trackedDays, List<DailyRecap> recapList) {
     final trackingStatusList =
         _getDayTrackingStatus(habit, offsetWeekDays, trackedDays, ref);
     if (trackingStatusList.every((element) => element == false)) {
@@ -178,7 +178,7 @@ class WeeklyTable extends ConsumerWidget {
   }
 
   List<TableRow> buildTableRows(List<Habit> activeHabits, WidgetRef ref,
-      List<HabitRecap> trackedDays, List<RecapDay> recapList, context) {
+      List<HabitRecap> trackedDays, List<DailyRecap> recapList, context) {
     return activeHabits
         .map((habit) =>
             _buildHabitRow(habit, context, ref, trackedDays, recapList))
@@ -193,20 +193,20 @@ class WeeklyTable extends ConsumerWidget {
       ..sort((a, b) {
         Schedule? aSchedule = ref
             .read(scheduledProvider.notifier)
-            .getHabitDefaultSchedule(a.habitId)!;
+            .getHabitDefaultSchedule(a.habitId);
         Schedule? bSchedule = ref
             .read(scheduledProvider.notifier)
-            .getHabitDefaultSchedule(b.habitId)!;
+            .getHabitDefaultSchedule(b.habitId);
         return compareTimeOfDay(
-            aSchedule.timesOfTheDay?.first, bSchedule.timesOfTheDay?.first);
+            aSchedule?.timesOfTheDay?.first, bSchedule?.timesOfTheDay?.first);
       });
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allHabits = ref.watch(habitProvider);
-    final trackedDays = ref.watch(trackedDayProvider);
-    final recapList = ref.watch(recapDayProvider);
+    final trackedDays = ref.watch(habitRecapProvider);
+    final recapList = ref.watch(dailyRecapProvider);
 
     double? ratioValidated = completionComputing(
         offsetWeekDays.where((d) => !d.isAfter(today)).toList(), ref);

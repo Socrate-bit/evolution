@@ -6,11 +6,10 @@ import 'package:home_widget/home_widget.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
 import 'package:tracker_v1/global/data/page_enum.dart';
-import 'package:tracker_v1/global/display/quick_add_habit_dialog.dart';
+import 'package:tracker_v1/global/display/actions_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
-import 'package:tracker_v1/global/modal_bottom_sheet.dart';
+import 'package:tracker_v1/habit_bank/habit_bank_screen.dart';
 import 'package:tracker_v1/naviguation/naviguation_state.dart';
-import 'package:tracker_v1/new_habit/display/frequency_picker2_widget.dart';
 import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
 import 'package:tracker_v1/friends/data/user_stats_provider.dart';
@@ -38,7 +37,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     HomeWidget.setAppGroupId(appGroupId);
 
     _pagesList = [
-      DailyScreen(),
+      HabitsBankScreen(),
       WeeklyScreen(),
       StatisticsScreen(),
       LeaderboardScreen(),
@@ -55,7 +54,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     Widget selectedPage = _pagesList[selectedIndex];
 
     // Listener to update streaks
-    ref.listen(trackedDayProvider, (t1, t2) {
+    ref.listen(habitRecapProvider, (t1, t2) {
       ref.read(userStatsProvider.notifier).updateStreaks();
     });
 
@@ -205,37 +204,46 @@ class _MyFloatingActionButton extends ConsumerWidget {
   const _MyFloatingActionButton();
   static final GlobalKey btnKey = GlobalKey();
 
-  List<ModalContainerItem> getNewHabitItems(DateTime selectedDate) {
+  List<(ModalContainerItem, bool)> getNewHabitItems(DateTime selectedDate) {
     return [
-      ModalContainerItem(
-        icon: Icons.list_rounded,
-        title: 'Existing',
-        onTap: (context) {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (ctx) => AllHabitsPage(
-                  habitListNavigation: HabitListNavigation.addHabit)));
-        },
+      (
+        ModalContainerItem(
+          icon: Icons.diamond_rounded,
+          title: 'Bank',
+          onTap: (context) {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (ctx) => AllHabitsPage()));
+          },
+        ),
+        false
       ),
-      ModalContainerItem(
-        icon: Icons.add_rounded,
-        title: 'New',
-        onTap: (context) {
-          showModalBottomSheet(
-            isScrollControlled: true,
-            context: context,
-            builder: (ctx) => FractionallySizedBox(
-                heightFactor: 0.925, // Limits the height to 90% of the screen
-                child: NewHabitScreen(dateOpened: selectedDate)),
-          );
-        },
+      (
+        ModalContainerItem(
+          icon: Icons.add_rounded,
+          title: 'New',
+          onTap: (context) {
+            showModalBottomSheet(
+              isScrollControlled: true,
+              context: context,
+              builder: (ctx) => FractionallySizedBox(
+                  heightFactor: 0.925, // Limits the height to 90% of the screen
+                  child: NewHabitScreen(navigation: HabitListNavigation.addHabit)),
+            );
+          },
+        ),
+        false
       ),
-      ModalContainerItem(
-        icon: Icons.diamond_rounded,
-        title: 'Bank',
-        onTap: (context) {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (ctx) => AllHabitsPage()));
-        },
+      (
+        ModalContainerItem(
+          icon: Icons.list_rounded,
+          title: 'Existing',
+          onTap: (context) {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (ctx) => AllHabitsPage(
+                    habitListNavigation: HabitListNavigation.addHabit)));
+          },
+        ),
+        false
       ),
     ];
   }
@@ -256,11 +264,9 @@ class _MyFloatingActionButton extends ConsumerWidget {
         shape: const CircleBorder(),
         onPressed: () {
           HapticFeedback.mediumImpact();
-          showActionsDialog(
-
-              context,
-              getNewHabitItems(
-                  ref.read(dailyScreenStateProvider).selectedDate), title: 'New Task');
+          showActionsDialog(context,
+              getNewHabitItems(ref.read(dailyScreenStateProvider).selectedDate),
+              title: 'Add Task');
         },
         child: const Icon(
           Icons.add_rounded,

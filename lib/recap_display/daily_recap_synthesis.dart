@@ -223,7 +223,7 @@ class _TitleBlock extends ConsumerWidget {
             oldTrackedDay: oldTrackedDay, validated: oldTrackedDay.done),
       );
     } else if (habit.validationType == HabitType.recapDay) {
-      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
+      DailyRecap? oldRecapDay = ref.read(dailyRecapProvider).firstWhereOrNull((td) {
         return td.date == date;
       });
       showModalBottomSheet(
@@ -368,7 +368,7 @@ class _CustomTextFormFieldState extends ConsumerState<_CustomTextFormField> {
             improvements: widget.recap ? null : controller.text,
           );
 
-      ref.read(trackedDayProvider.notifier).updateTrackedDay(newRecap);
+      ref.read(habitRecapProvider.notifier).updateTrackedDay(newRecap);
     }
   }
 

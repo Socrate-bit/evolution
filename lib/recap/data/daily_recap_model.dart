@@ -30,8 +30,8 @@ const Map<Emotion, String> emotionDescriptions = {
   Emotion.lookingForwardToWakeUpTomorrow: 'Looking forward tomorrow',
 };
 
-class RecapDay {
-  RecapDay({
+class DailyRecap {
+  DailyRecap({
     recapId,
     required this.userId,
     required this.sleepQuality,

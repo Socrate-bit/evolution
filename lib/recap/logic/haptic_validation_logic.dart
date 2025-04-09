@@ -3,13 +3,19 @@ import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 void validationHaptic(HabitRecap newTrackedDay, HabitRecap? oldTrackedDay) {
-  if (newTrackedDay.done == Validated.yes &&
-      oldTrackedDay?.done != Validated.yes) {
+  if (oldTrackedDay?.done != Validated.yes &&
+      newTrackedDay.done == Validated.yes) {
     EffectsService().playValidated();
     HapticFeedback.heavyImpact();
-  } else if (newTrackedDay.done == Validated.no &&
-      oldTrackedDay?.done != Validated.no) {
+  } else if (oldTrackedDay?.done != Validated.no &&
+      newTrackedDay.done == Validated.no) {
     EffectsService().playFaillure();
+    HapticFeedback.heavyImpact();
+  } else if (oldTrackedDay?.done != Validated.notYet &&
+      newTrackedDay.done == Validated.notYet) {
+    EffectsService().playUnvalided();
+    HapticFeedback.lightImpact();
+  } else {
     HapticFeedback.lightImpact();
   }
 }

@@ -38,7 +38,7 @@ class CustomHeatMap extends ConsumerWidget {
   Map<DateTime, int> getHeatMapDataSet(WidgetRef ref) {
     Map<DateTime, int> heatMapDataSet = {};
     List<HabitRecap> trackedDays =
-        ref.watch(trackedDayProvider).where((trackedDay) {
+        ref.watch(habitRecapProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId &&
           trackedDay.done == Validated.yes;
     }).toList();

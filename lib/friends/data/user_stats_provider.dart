@@ -38,7 +38,7 @@ class UserStatsNotifier extends StateNotifier<UserStats> {
         productivityScoreComputing(monthDays, ref, endDate: monthDays.first) ??
             0;
 
-    List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
+    List<HabitRecap> trackedDays = ref.watch(habitRecapProvider);
     if (trackedDays.isNotEmpty) {
       trackedDays
           .sort((HabitRecap a, HabitRecap b) => a.date.compareTo(b.date));

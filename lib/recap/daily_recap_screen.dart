@@ -10,7 +10,7 @@ import 'package:tracker_v1/global/modal_bottom_sheet.dart';
 import 'package:tracker_v1/global/display/big_text_form_field_widget.dart';
 import 'package:tracker_v1/recap/data/daily_recap_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_provider.dart';
-import 'package:tracker_v1/recap/display/custom_toggle_widget.dart';
+import 'package:tracker_v1/recap/display/custom_slider_toggle_widget.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 import 'package:tracker_v1/recap/logic/haptic_validation_logic.dart';
 
@@ -24,7 +24,7 @@ class DailyRecapScreen extends ConsumerStatefulWidget {
   final DateTime date;
   final Habit habit;
   final HabitRecap? oldTrackedDay;
-  final RecapDay? oldDailyRecap;
+  final DailyRecap? oldDailyRecap;
   final Validated validated;
 
   @override
@@ -149,7 +149,7 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
 
     formKey.currentState!.save();
 
-    RecapDay newRecapDay = RecapDay(
+    DailyRecap newRecapDay = DailyRecap(
         recapId: widget.oldDailyRecap?.recapId,
         userId: FirebaseAuth.instance.currentUser!.uid,
         wellBeing: values[0],
@@ -184,13 +184,13 @@ class _HabitRecapScreenState extends ConsumerState<DailyRecapScreen> {
     validationHaptic(newtTrackedDay, widget.oldTrackedDay);
 
     if (widget.oldDailyRecap == null) {
-      ref.read(recapDayProvider.notifier).addRecapDay(newRecapDay);
+      ref.read(dailyRecapProvider.notifier).addRecapDay(newRecapDay);
 
-      ref.read(trackedDayProvider.notifier).addTrackedDay(newtTrackedDay);
+      ref.read(habitRecapProvider.notifier).addTrackedDay(newtTrackedDay);
     } else {
-      ref.read(recapDayProvider.notifier).updateRecapDay(newRecapDay);
+      ref.read(dailyRecapProvider.notifier).updateRecapDay(newRecapDay);
       if (widget.oldTrackedDay != null) {
-        ref.read(trackedDayProvider.notifier).updateTrackedDay(newtTrackedDay);
+        ref.read(habitRecapProvider.notifier).updateTrackedDay(newtTrackedDay);
       }
     }
   }

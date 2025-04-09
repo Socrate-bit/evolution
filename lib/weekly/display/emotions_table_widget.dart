@@ -59,7 +59,7 @@ class EmotionTable extends ConsumerWidget {
     return isTrackedFilter;
   }
 
-  List<Color> _getStatusColor(String emotion, List<RecapDay> recapDays,
+  List<Color> _getStatusColor(String emotion, List<DailyRecap> recapDays,
       List<bool> recapTrackingStatus, context) {
     List<Color> statusColors = offsetWeekDays.asMap().entries.map((e) {
       double? emotionMark = recapDays
@@ -111,7 +111,7 @@ class EmotionTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<RecapDay> recapDays = [];
+    List<DailyRecap> recapDays = [];
     List<bool> recapTrackingStatus = [];
     Habit? habitRecap = ref
         .watch(habitProvider)
@@ -119,7 +119,7 @@ class EmotionTable extends ConsumerWidget {
 
     if (habitRecap != null) {
       recapDays = ref
-          .watch(recapDayProvider)
+          .watch(dailyRecapProvider)
           .where((r) =>
               r.userId == FirebaseAuth.instance.currentUser!.uid &&
               _isInTheWeek(r.date))

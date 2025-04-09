@@ -16,7 +16,7 @@ class ContainerController {
   final dynamic trackingStatus;
   final List<HabitRecap> trackedDays;
   final ColorScheme colorScheme;
-  final List<RecapDay> dailyRecaps;
+  final List<DailyRecap> dailyRecaps;
 
   ContainerController({
     required this.habit,
@@ -52,7 +52,7 @@ class ContainerController {
     } else {
       Future<void> onLongPress() async {
         await ref
-            .read(trackedDayProvider.notifier)
+            .read(habitRecapProvider.notifier)
             .deleteTrackedDay(trackedDay!);
       }
 
@@ -69,16 +69,16 @@ class ContainerController {
                 oldTrackedDay: trackedDay,
               ));
         case HabitType.recapDay:
-          RecapDay? recapDay = dailyRecaps.firstWhereOrNull((recapDay) {
+          DailyRecap? recapDay = dailyRecaps.firstWhereOrNull((recapDay) {
             return recapDay.date == date;
           });
           return ActionHandlers(
             () async {
               await ref
-                  .read(trackedDayProvider.notifier)
+                  .read(habitRecapProvider.notifier)
                   .deleteTrackedDay(trackedDay!);
               await ref
-                  .read(recapDayProvider.notifier)
+                  .read(dailyRecapProvider.notifier)
                   .deleteRecapDay(recapDay);
             },
             DailyRecapScreen(

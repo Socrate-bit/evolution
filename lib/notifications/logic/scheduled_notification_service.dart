@@ -13,9 +13,9 @@ class ScheduledHabitNotificationService {
     List<BasicNotification> allScheduledNotification = [];
 
     // Get habit schedule 2 days ahead
-    LinkedHashMap<Habit, (Schedule, HabitRecap?)> todayHabitScheduleMap =
+    LinkedHashMap<Habit, (Schedule?, HabitRecap?)> todayHabitScheduleMap =
         ref.read(scheduleCacheProvider(today));
-    LinkedHashMap<Habit, (Schedule, HabitRecap?)> tomorrowHabitScheduleMap =
+    LinkedHashMap<Habit, (Schedule?, HabitRecap?)> tomorrowHabitScheduleMap =
         ref.read(scheduleCacheProvider(tomorrow));
 
     // Get today and tomorrow notifications
@@ -38,15 +38,20 @@ class ScheduledHabitNotificationService {
   }
 
   List<BasicNotification> _getNotificationFromSchedules(
-      LinkedHashMap<Habit, (Schedule, HabitRecap?)> schedules, DateTime date) {
+      LinkedHashMap<Habit, (Schedule?, HabitRecap?)> schedules, DateTime date) {
     List<BasicNotification> notifications = [];
 
     // Loop through each schedule
-    for (MapEntry<Habit, (Schedule, HabitRecap?)> schedule in schedules.entries) {
+    for (MapEntry<Habit, (Schedule?, HabitRecap?)> schedule
+        in schedules.entries) {
+      if (schedule.value.$1 == null) {
+        continue;
+      }
+
       Habit habit = schedule.key;
-      Schedule todaySchedule = schedule.value.$1;
+      Schedule todaySchedule = schedule.value.$1!;
       TimeOfDay? todayHabitTime =
-          schedule.value.$1.timesOfTheDay?[date.weekday - 1];
+          schedule.value.$1!.timesOfTheDay?[date.weekday - 1];
       List<int>? habitNotification = todaySchedule.notification;
 
       if (habitNotification == null ||
@@ -73,9 +78,7 @@ class ScheduledHabitNotificationService {
           continue;
         }
 
-        notifications.add(BasicNotification(
-            notificationDailyTime,
-            habit.name,
+        notifications.add(BasicNotification(notificationDailyTime, habit.name,
             _getNotificationText(notificationShift, habit)));
       }
     }

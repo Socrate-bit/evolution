@@ -34,29 +34,35 @@ class CustomModalBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                        width: modalType == CustomModalType.fullPage ? 0 : 12,
-                      ),
-                      if (title != null)
-                        Text(
-                          title!,
-                          style: Theme.of(context).textTheme.titleLarge!,
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: modalType == CustomModalType.fullPage ? 0 : 12,
                         ),
-                      Spacer(),
-                      IconButton(
-                        iconSize: 30,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          function;
-                        },
-                        icon: const Icon(
-                          Icons.close_rounded,
+                        if (title != null)
+                          Expanded(
+                            child: Text(
+                              overflow: TextOverflow.ellipsis,
+                              title!,
+                              style: Theme.of(context).textTheme.titleLarge!,
+                            ),
+                          ),
+                        
+                        IconButton(
+                          iconSize: 30,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            function;
+                          },
+                          icon: const Icon(
+                            Icons.close_rounded,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   if (modalType == CustomModalType.actionDialog)
                     Divider(color: Colors.grey.withOpacity(0.25)),

@@ -7,19 +7,24 @@ import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
 import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
+import 'package:tracker_v1/new_habit/data/frequency_state.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/global/logic/time_utility.dart';
 import 'package:tracker_v1/global/logic/time_of_day_extent.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/daily/display/habit_item_widget.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
 
 class HabitReorderableList extends ConsumerStatefulWidget {
   const HabitReorderableList(
-      {required this.habitScheduleMap, this.selectedDate, this.navigation, super.key});
+      {required this.habitScheduleMap,
+      this.selectedDate,
+      this.navigation,
+      super.key});
 
-  final LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitScheduleMap;
+  final LinkedHashMap<Habit, (Schedule?, HabitRecap?)> habitScheduleMap;
   final DateTime? selectedDate;
   final HabitListNavigation? navigation;
 
@@ -65,7 +70,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
     TimeOfDay clockNow = TimeOfDay.now();
     TimeOfDay? currentItemTime = widget
         .habitScheduleMap[_sortedHabitList[index]]!.$1
-        .getTimeOfTargetDay(widget.selectedDate);
+        ?.getTimeOfTargetDay(widget.selectedDate);
 
     if (todayHabit.length == index + 1) {
       return null;
@@ -73,7 +78,7 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
 
     TimeOfDay? nextItemTime = widget
         .habitScheduleMap[_sortedHabitList[index + 1]]!.$1
-        .getTimeOfTargetDay(widget.selectedDate);
+        ?.getTimeOfTargetDay(widget.selectedDate);
 
     if (currentItemTime == null || nextItemTime == null) {
       return null;
@@ -131,13 +136,14 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
         cursorIndexPosition >= -1) {
       timeIndexPlusOne = widget
           .habitScheduleMap[_sortedHabitList[cursorIndexPosition + 1]]?.$1
-          .getTimeOfTargetDay(widget.selectedDate);
+          ?.getTimeOfTargetDay(widget.selectedDate);
     }
 
     if (cursorIndexPosition > -1 &&
         cursorIndexPosition < sortedHabitList.length) {
-      timeIndex = widget.habitScheduleMap[_sortedHabitList[cursorIndexPosition]]?.$1
-          .getTimeOfTargetDay(widget.selectedDate);
+      timeIndex = widget
+          .habitScheduleMap[_sortedHabitList[cursorIndexPosition]]?.$1
+          ?.getTimeOfTargetDay(widget.selectedDate);
     }
 
     if (_draggedItemPosition == null) {
@@ -202,21 +208,33 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
 
 // On reorder end function
   void _onReorderEnd(HabitNotifier habitsNotifier) {
-    Schedule? oldSchedule =
-        ref.read(scheduleCacheProvider(widget.selectedDate))[
-            _sortedHabitList[_draggedInitialIndex!]]!.$1;
+    Schedule? oldSchedule = ref
+        .read(scheduleCacheProvider(widget.selectedDate))[
+            _sortedHabitList[_draggedInitialIndex!]]
+        ?.$1;
+    Schedule? defaultSchedule = ref
+        .read(scheduleCacheProvider(null))[
+            _sortedHabitList[_draggedInitialIndex!]]
+        ?.$1;
 
-    if (oldSchedule == null) {
+    if (oldSchedule == null || defaultSchedule == null) {
       return;
     }
 
     Schedule newSchedule = oldSchedule.copyWith();
     newSchedule.startDate = widget.selectedDate ?? today;
 
-    showModifyHabitDialog(context, ref, newSchedule,
-        drag: true,
-        isHabitListPage: widget.selectedDate == null,
-        newTime: _computedDraggedTime);
+    if (defaultSchedule.type == FrequencyType.Once) {
+      newSchedule.resetScheduleId();
+      newSchedule = FrequencyNotifier.setTimesOfDayStatic(
+          _computedDraggedTime, newSchedule);
+      ref.read(scheduledProvider.notifier).modifyTodayOnly(newSchedule);
+    } else {
+      showModifyHabitDialog(context, ref, newSchedule,
+          drag: true,
+          isHabitListPage: widget.selectedDate == null,
+          newTime: _computedDraggedTime);
+    }
   }
 
   @override
@@ -249,8 +267,9 @@ class _HabitsReorderableListState extends ConsumerState<HabitReorderableList> {
           onReorderEnd: (newIndex) {
             HapticFeedback.lightImpact();
             TimeOfDay? initialTime = widget
-                .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!.$1
-                .timesOfTheDay?[(widget.selectedDate?.weekday ?? 1) - 1];
+                .habitScheduleMap[_sortedHabitList[_draggedInitialIndex!]]!
+                .$1
+                ?.timesOfTheDay?[(widget.selectedDate?.weekday ?? 1) - 1];
             _inDragging = false;
             if (_computedDraggedTime != initialTime &&
                 _cursorPosition != null) {

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/new_habit/data/habit_model.dart';
+import 'package:tracker_v1/new_habit/data/habit_model_old.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
 import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
 
-Schedule convertHabitToSchedule(Habit habit) {
+Schedule _convertHabitToSchedule(HabitOld habit) {
   return Schedule(
     habitId: habit.habitId,
     userId: habit.userId,
@@ -21,15 +21,16 @@ Schedule convertHabitToSchedule(Habit habit) {
   );
 }
 
-Future<bool> v1Converter(List<Habit> habits, Ref ref) async {
-  for (Habit habit in habits) {
+Future<bool> v1Converter(List<HabitOld> habits, Ref ref) async {
+  for (HabitOld habit in habits) {
     List<Schedule> scheduleList =
         ref.read(scheduledProvider.notifier).getHabitAllSchedule(habit.habitId);
 
     if (scheduleList.isEmpty &&
         habit.startDate != null &&
-        habit.weekdays != null) {
-      Schedule schedule = convertHabitToSchedule(habit);
+        habit.weekdays != null &&
+        habit.weekdays!.isNotEmpty) {
+      Schedule schedule = _convertHabitToSchedule(habit);
       await ref.read(scheduledProvider.notifier).addSchedule(schedule);
     }
   }

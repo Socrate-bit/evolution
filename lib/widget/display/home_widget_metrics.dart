@@ -137,7 +137,7 @@ class DisplayManager {
         in todayHabitsSchedule.entries) {
 
       HabitRecap? habitRecap = ref
-          .read(trackedDayProvider.notifier)
+          .read(habitRecapProvider.notifier)
           .getTargetDayHabitRecap(today, habitSchedule.key);
 
       if (habitRecap?.done != Validated.notYet) {

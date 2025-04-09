@@ -24,7 +24,7 @@ class DailyUpperBarWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(dailyScreenStateProvider);
-    ref.watch(trackedDayProvider);
+    ref.watch(habitRecapProvider);
 
     return Container(
       alignment: Alignment.center,
@@ -46,7 +46,7 @@ class _DailyScoreCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     DailyScreenState dailyScreenState = ref.read(dailyScreenStateProvider);
-    ref.watch(trackedDayProvider);
+    ref.watch(habitRecapProvider);
 
     double? score = evalutationComputing([dailyScreenState.selectedDate], ref);
     double? ratio = completionComputing([dailyScreenState.selectedDate], ref);
@@ -119,7 +119,7 @@ class _DailyPagesState extends ConsumerState<_DailyPages> {
                 },
                 onLongPress: () {
                   HapticFeedback.mediumImpact();
-                  LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitList =
+                  LinkedHashMap<Habit, (Schedule?, HabitRecap?)> habitList =
                       ref.read(scheduleCacheProvider(weeklyDayList[item]));
                   List<MapEntry<Habit, HabitRecap?>> entries = habitList.entries
                       .map((e) => MapEntry(e.key, e.value.$2))

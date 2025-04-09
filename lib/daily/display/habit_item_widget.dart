@@ -1,20 +1,25 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tracker_v1/authentification/data/userdata_model.dart';
 import 'package:tracker_v1/authentification/data/userdata_provider.dart';
 import 'package:tracker_v1/daily/data/daily_screen_state.dart';
-import 'package:tracker_v1/effects/effects_service.dart';
 import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/data/schedule_cache.dart';
+import 'package:tracker_v1/global/display/actions_dialog.dart';
+import 'package:tracker_v1/global/display/delete_habit_dialog.dart';
+import 'package:tracker_v1/global/display/modify_habit_dialog.dart';
 import 'package:tracker_v1/global/logic/capitalize_string.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
+import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/schedule_model.dart';
+import 'package:tracker_v1/new_habit/data/scheduled_provider.dart';
+import 'package:tracker_v1/new_habit/new_habit_screen.dart';
 import 'package:tracker_v1/recap/data/daily_recap_model.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 import 'package:tracker_v1/recap/data/habit_recap_model.dart';
+import 'package:tracker_v1/recap/logic/haptic_validation_logic.dart';
 import 'package:tracker_v1/statistics/logic/score_computing_service.dart';
 import 'package:tracker_v1/habit/data/habit_status_appearance.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
@@ -54,108 +59,351 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
   TimeOfDay? displayedTime;
   late HabitStatusAppearance appearance;
 
-  void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
-    if (habit.validationType == HabitType.unique) {
-      HabitRecap? trackedDay =
-          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(habitProvider);
+    _initVariables(ref, context);
 
-      if (trackedDay != null) {
-        ref.read(trackedDayProvider.notifier).updateTrackedDay(trackedDay);
-        return;
-      }
+    return Dismissible(
+        direction: !widget.habitList
+            ? DismissDirection.horizontal
+            : DismissDirection.none,
+        confirmDismiss: (direction) async {
+          if (direction == DismissDirection.startToEnd) {
+            HapticFeedback.lightImpact();
+            _startToEndSwiping(widget.habit, ref, context);
+          } else if (direction == DismissDirection.endToStart) {
+            HapticFeedback.lightImpact();
+            _endToStartSwiping(trackedDay, widget.habit, ref, context);
+          }
+          return false;
+        },
+        key: ObjectKey(widget.habit),
+        background: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+        ),
+        secondaryBackground: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.red,
+          ),
+        ),
+        child: GestureDetector(
+            onTap: _onTap,
+            child: Row(
+              children: [
+                _HabitTimeFrame(
+                    time: displayedTime,
+                    isLastItem: widget.isLastItem,
+                    timeMarker: widget.timeMarker,
+                    pastCurrentTime: pastCurrentTime,
+                    appearance: appearance),
+                const SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                  child: _HabitMainContainer(
+                    habit: widget.habit,
+                    appearance: appearance,
+                    currentStreak: currentStreak,
+                  ),
+                ),
+              ],
+            )));
+  }
 
-      HabitRecap newTrackedDay = HabitRecap(
-        userId: FirebaseAuth.instance.currentUser!.uid,
-        habitId: habit.habitId,
-        date: widget.date!,
-        done: Validated.yes,
-        dateOnValidation: today,
-      );
+  List<(ModalContainerItem, bool)> _getAddingDialogItems() {
+    DateTime selectedDate = ref.read(dailyScreenStateProvider).selectedDate;
 
-      ref.read(trackedDayProvider.notifier).addTrackedDay(newTrackedDay);
-    } else if (habit.validationType == HabitType.simple) {
-      HabitRecap? oldTrackedDay =
-          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
+    return [
+      (
+        ModalContainerItem(
+          icon: Icons.edit_rounded,
+          title: 'Edit',
+          onTap: (context) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) => HabitScreen(widget.habit, dateOpened: null),
+              ),
+            );
+          },
+        ),
+        false
+      ),
+      (
+        ModalContainerItem(
+          icon: Icons.add_rounded,
+          title: 'Add This Day',
+          onTap: (context) {
+            Schedule? oldSchedule =
+                ref.read(scheduleCacheProvider(null))[widget.habit]?.$1;
+
+            Schedule newSchedule = oldSchedule?.copyWith(
+                    active: true,
+                    daysOfTheWeek: [
+                      DaysOfTheWeekUtility
+                          .numberToWeekDay[selectedDate.weekday]!
+                    ],
+                    startDate: selectedDate,
+                    endDate: selectedDate) ??
+                Schedule(
+                    habitId: widget.habit.habitId,
+                    daysOfTheWeek: [
+                      DaysOfTheWeekUtility
+                          .numberToWeekDay[selectedDate.weekday]!
+                    ],
+                    startDate: selectedDate,
+                    endDate: selectedDate);
+            newSchedule.endDate = newSchedule.startDate;
+            newSchedule.resetScheduleId();
+
+            ref.read(scheduledProvider.notifier).modifyTodayOnly(newSchedule);
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        ),
+        ref.read(scheduleCacheProvider(selectedDate)).containsKey(widget.habit),
+      ),
+      (
+        ModalContainerItem(
+            icon: Icons.repeat_rounded,
+            title: 'Create Routine',
+            onTap: (context) {
+              showModalBottomSheet(
+                  useSafeArea: true,
+                  isScrollControlled: true,
+                  context: context,
+                  builder: (ctx) => NewHabitScreen(
+                        habit: widget.habit,
+                        navigation: widget.habitListNavigation,
+                      ));
+            }),
+        false
+      ),
+    ];
+  }
+
+  List<(ModalContainerItem, bool)> _getDailyScreenDialogItems() {
+    DateTime selectedDate = ref.read(dailyScreenStateProvider).selectedDate;
+    (Schedule?, HabitRecap?)? cachedHabit =
+        ref.read(scheduleCacheProvider(widget.date))[widget.habit];
+    HabitRecap? trackedDay = cachedHabit?.$2;
+
+    return [
+      (
+        ModalContainerItem(
+          icon: Icons.edit_rounded,
+          title: 'Edit',
+          onTap: (context) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) =>
+                    HabitScreen(widget.habit, dateOpened: widget.date),
+              ),
+            );
+          },
+        ),
+        false
+      ),
+      (
+        ModalContainerItem(
+            icon: Icons.check_circle_rounded,
+            title: trackedDay == null || trackedDay.done != Validated.yes
+                ? (trackedDay?.done != Validated.no ? 'Complete' : 'Reset')
+                : 'View Entry',
+            onTap: (context) {
+              Navigator.of(context).pop();
+              _startToEndSwiping(widget.habit, ref, context);
+            }),
+        false,
+      ),
+      (
+        ModalContainerItem(
+          icon: Icons.close_rounded,
+          title: trackedDay == null || trackedDay.done != Validated.no
+              ? (trackedDay?.done != Validated.yes ? 'Uncomplete' : 'Reset')
+              : 'View Entry',
+          onTap: (context) {
+            Navigator.of(context).pop();
+            _endToStartSwiping(trackedDay, widget.habit, ref, context);
+          },
+        ),
+        false
+      ),
+      (
+        ModalContainerItem(
+            icon: Icons.delete_rounded,
+            title: 'Delete',
+            onTap: (context) {
+              Schedule? defaultSchedule =
+                  ref.read(scheduleCacheProvider(null))[widget.habit]!.$1;
+              if (defaultSchedule?.type == FrequencyType.Once) {
+                ref
+                    .read(scheduledProvider.notifier)
+                    .deleteHabitSchedules(cachedHabit!.$1!.habitId!);
+                popUntilDailyScreen(context);
+              } else {
+                showDeleteHabitDialog(context, ref, cachedHabit!.$1!);
+              }
+            }),
+        false
+      ),
+    ];
+  }
+
+  void _onTap() {
+    if (widget.habitListNavigation == HabitListNavigation.addHabit) {
+      showActionsDialog(context, _getAddingDialogItems(),
+          title: widget.habit.name);
+    } else if (widget.habitListNavigation == HabitListNavigation.dailyScreen) {
+      showActionsDialog(context, _getDailyScreenDialogItems(),
+          title: widget.habit.name);
+    } else if (widget.habitListNavigation == HabitListNavigation.shareHabit) {
       showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        builder: (ctx) => BasicRecapScreen(
-          habit,
-          widget.date!,
-          oldTrackedDay: oldTrackedDay,
-          validated: oldTrackedDay?.done != null &&
-                  oldTrackedDay?.done != Validated.notYet
-              ? oldTrackedDay!.done
-              : Validated.yes,
+          useSafeArea: true,
+          isScrollControlled: true,
+          context: context,
+          builder: (ctx) => NewHabitScreen(
+                habit: widget.habit,
+                navigation: widget.habitListNavigation,
+              ));
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (ctx) => HabitScreen(widget.habit, dateOpened: widget.date),
         ),
       );
-    } else if (habit.validationType == HabitType.recap) {
-      HabitRecap? oldTrackedDay =
-          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
-      showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        builder: (ctx) => HabitRecapScreen(habit, widget.date!,
-            oldTrackedDay: oldTrackedDay,
-            validated: oldTrackedDay?.done != null &&
-                    oldTrackedDay?.done != Validated.notYet
-                ? oldTrackedDay!.done
-                : Validated.yes),
-      );
-    } else if (habit.validationType == HabitType.recapDay) {
-      HabitRecap? oldTrackedDay =
-          ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
-
-      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull((td) {
-        return td.date == widget.date;
-      });
-      showModalBottomSheet(
-        useSafeArea: true,
-        isScrollControlled: true,
-        context: context,
-        builder: (ctx) => DailyRecapScreen(widget.date!, habit,
-            oldDailyRecap: oldRecapDay,
-            oldTrackedDay: oldTrackedDay,
-            validated: oldTrackedDay?.done != null &&
-                    oldTrackedDay?.done != Validated.notYet
-                ? oldTrackedDay!.done
-                : Validated.yes),
-      );
     }
+  }
+
+  void _startToEndSwiping(Habit habit, WidgetRef ref, context) {
+    (Schedule?, HabitRecap?)? cachedHabit =
+        ref.read(scheduleCacheProvider(widget.date))[widget.habit];
+    HabitRecap? oldTrackedDay = cachedHabit?.$2;
+
+    Validated getValidationType() {
+      return trackedDay?.done == Validated.no
+          ? Validated.notYet
+          : Validated.yes;
+    }
+
+    if (oldTrackedDay?.done == Validated.no) {
+      _removeValidation(trackedDay!);
+      return;
+    }
+
+    _showHabitRecapScreen(
+        habit: habit,
+        oldTrackedDay: oldTrackedDay,
+        getValidationType: getValidationType);
+
+    // Avoid triggering confetti again if already full
     ref.read(dailyScreenStateProvider.notifier).updatePreviousRatio();
   }
 
   void _endToStartSwiping(
       HabitRecap? trackedDay, Habit habit, WidgetRef ref, context) {
-    if (trackedDay == null || trackedDay.done == Validated.notYet) {
-      showModalBottomSheet(
-          useSafeArea: true,
-          isScrollControlled: true,
-          context: context,
-          builder: (ctx) => BasicRecapScreen(
-                habit,
-                widget.date!,
-                oldTrackedDay: trackedDay,
-                validated: Validated.no,
-              ));
+    (Schedule?, HabitRecap?)? cachedHabit =
+        ref.read(scheduleCacheProvider(widget.date))[widget.habit];
+    HabitRecap? oldTrackedDay = cachedHabit?.$2;
+
+    Validated getValidationType() {
+      return trackedDay?.done == Validated.yes
+          ? Validated.notYet
+          : Validated.no;
+    }
+
+    if (oldTrackedDay?.done == Validated.yes) {
+      _removeValidation(trackedDay!);
       return;
     }
 
-    EffectsService().playUnvalided();
-    ref.read(trackedDayProvider.notifier).deleteTrackedDay(trackedDay);
+    _showHabitRecapScreen(
+        habit: habit,
+        oldTrackedDay: oldTrackedDay,
+        getValidationType: getValidationType);
 
-    if (habit.validationType == HabitType.recapDay) {
-      RecapDay? oldRecapDay = ref.read(recapDayProvider).firstWhereOrNull(
-        (td) {
-          return td.date == widget.date;
-        },
+    // Avoid triggering confetti again if already full
+    ref.read(dailyScreenStateProvider.notifier).updatePreviousRatio();
+  }
+
+  void _showHabitRecapScreen(
+      {required Habit habit,
+      required HabitRecap? oldTrackedDay,
+      required Function getValidationType}) {
+    void showModalBottomSheetCustom({required Widget screen}) {
+      showModalBottomSheet(
+        useSafeArea: true,
+        isScrollControlled: true,
+        context: context,
+        builder: (ctx) => screen,
       );
-      if (oldRecapDay != null) {
-        ref.read(recapDayProvider.notifier).deleteRecapDay(oldRecapDay);
-      }
     }
+
+    switch (habit.validationType) {
+      case HabitType.recap:
+        showModalBottomSheetCustom(
+            screen: HabitRecapScreen(habit, widget.date!,
+                oldTrackedDay: oldTrackedDay, validated: getValidationType()));
+
+      case HabitType.recapDay:
+        DailyRecap? oldRecapDay =
+            ref.read(dailyRecapProvider).firstWhereOrNull((td) {
+          return td.date == widget.date;
+        });
+        showModalBottomSheetCustom(
+            screen: DailyRecapScreen(widget.date!, habit,
+                oldDailyRecap: oldRecapDay,
+                oldTrackedDay: oldTrackedDay,
+                validated: getValidationType()));
+
+      default:
+        HabitRecap? oldTrackedDay =
+            ref.read(scheduleCacheProvider(widget.date))[habit]?.$2;
+
+        showModalBottomSheetCustom(
+            screen: BasicRecapScreen(
+          habit,
+          widget.date!,
+          oldTrackedDay: oldTrackedDay,
+          validated: getValidationType(),
+        ));
+    }
+  }
+
+  void _removeValidation(HabitRecap oldTrackedDay) {
+    HabitRecap newHabitRecap = oldTrackedDay.copyWith(done: Validated.notYet);
+    ref.read(habitRecapProvider.notifier).updateTrackedDay(newHabitRecap);
+    validationHaptic(newHabitRecap, oldTrackedDay);
+  }
+
+  void _initVariables(WidgetRef ref, context) {
+    Schedule? schedule =
+        ref.watch(scheduleCacheProvider(widget.date))[widget.habit]?.$1;
+
+    if (!widget.habitList) {
+      // Compute current streak
+      List<HabitRecap> trackedDays = ref.watch(habitRecapProvider);
+      trackedDay =
+          ref.read(scheduleCacheProvider(widget.date))[widget.habit]?.$2;
+
+      currentStreak = getCurrentStreak(widget.date ?? today, widget.habit, ref);
+
+      // Compute displayed time
+      displayedTime = schedule?.timesOfTheDay?[widget.date!.weekday - 1];
+      pastCurrentTime = _isPastCurrentTime(displayedTime);
+    } else {
+      displayedTime = schedule?.timesOfTheDay?[0];
+    }
+
+    appearance =
+        _getStatusAppearance(trackedDay, pastCurrentTime, context, ref);
   }
 
   bool _isPastCurrentTime(TimeOfDay? time) {
@@ -197,11 +445,9 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
     }
   }
 
-  void quickAdd() {}
-
   Widget? _getIconInHabitList(Habit habit) {
     if (widget.habitListNavigation == HabitListNavigation.addHabit ||
-        ref.read(scheduleCacheProvider(null))[habit]?.$1.startDate == null) {
+        ref.read(scheduleCacheProvider(null))[habit]?.$1?.startDate == null) {
       return Icon(
         Icons.add_rounded,
         size: 30,
@@ -211,94 +457,6 @@ class _HabitWidgetState extends ConsumerState<HabitWidget> {
     } else {
       return null;
     }
-  }
-
-  void _initVariables(WidgetRef ref, context) {
-    Schedule? schedule =
-        ref.watch(scheduleCacheProvider(widget.date))[widget.habit]?.$1;
-
-    if (!widget.habitList) {
-      // Compute current streak
-      List<HabitRecap> trackedDays = ref.watch(trackedDayProvider);
-      trackedDay =
-          ref.read(scheduleCacheProvider(widget.date))[widget.habit]?.$2;
-
-      currentStreak = getCurrentStreak(widget.date ?? today, widget.habit, ref);
-
-      // Compute displayed time
-      displayedTime = schedule?.timesOfTheDay?[widget.date!.weekday - 1];
-      pastCurrentTime = _isPastCurrentTime(displayedTime);
-    } else {
-      displayedTime = schedule?.timesOfTheDay?[0];
-    }
-
-    appearance =
-        _getStatusAppearance(trackedDay, pastCurrentTime, context, ref);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    ref.watch(habitProvider);
-    _initVariables(ref, context);
-
-    return Dismissible(
-        direction: !widget.habitList
-            ? DismissDirection.horizontal
-            : DismissDirection.none,
-        confirmDismiss: (direction) async {
-          if (direction == DismissDirection.startToEnd) {
-            HapticFeedback.lightImpact();
-            _startToEndSwiping(widget.habit, ref, context);
-          } else if (direction == DismissDirection.endToStart) {
-            HapticFeedback.lightImpact();
-            _endToStartSwiping(trackedDay, widget.habit, ref, context);
-          }
-          return false;
-        },
-        key: ObjectKey(widget.habit),
-        background: Container(
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-        ),
-        secondaryBackground: Container(
-          margin: const EdgeInsets.symmetric(vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.red,
-          ),
-        ),
-        child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (ctx) =>
-                      HabitScreen(widget.habit, dateOpened: widget.date),
-                ),
-              );
-            },
-            child: Row(
-              children: [
-                _HabitTimeFrame(
-                    time: displayedTime,
-                    isLastItem: widget.isLastItem,
-                    timeMarker: widget.timeMarker,
-                    pastCurrentTime: pastCurrentTime,
-                    appearance: appearance),
-                const SizedBox(
-                  width: 8,
-                ),
-                Expanded(
-                  child: _HabitMainContainer(
-                    habit: widget.habit,
-                    appearance: appearance,
-                    currentStreak: currentStreak,
-                  ),
-                ),
-              ],
-            )));
   }
 }
 

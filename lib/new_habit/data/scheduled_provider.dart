@@ -67,7 +67,8 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
 
     final List<Schedule> loadedData = snapshot.docs.map((doc) {
       final data = doc.data();
-      return Schedule.fromJson(data);
+      Schedule schedule = Schedule.fromJson(data);
+      return schedule;
     }).toList();
 
     state = loadedData;
@@ -101,7 +102,7 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
     if (sortedSchedule.isEmpty) {
       return null;
     }
-    
+
     return sortedSchedule.elementAt(0).startDate;
   }
 
@@ -118,12 +119,11 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
     // Default level 1
     List<Schedule> sortedSchedule = sortSchedules(allHabitSchedules);
     List<Schedule> filteredSchedules = sortedSchedule
-        .where((schedule) => schedule.endDate == null &&
-                schedule.startDate != null &&
-                schedule.type != FrequencyType.Once &&
-                (date != null
-            ? !schedule.startDate!.isAfter(date)
-            : true))
+        .where((schedule) =>
+            schedule.endDate == null &&
+            schedule.startDate != null &&
+            schedule.type != FrequencyType.Once &&
+            (date != null ? !schedule.startDate!.isAfter(date) : true))
         .toList();
 
     if (filteredSchedules.isNotEmpty) {
@@ -132,11 +132,10 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
 
     // Default level 2
     List<Schedule> filteredSchedules2 = sortedSchedule
-        .where((schedule) => schedule.startDate != null &&
-                schedule.type != FrequencyType.Once &&
-                (date != null
-            ? !schedule.startDate!.isAfter(date)
-            : true))
+        .where((schedule) =>
+            schedule.startDate != null &&
+            schedule.type != FrequencyType.Once &&
+            (date != null ? !schedule.startDate!.isAfter(date) : true))
         .toList();
 
     if (filteredSchedules2.isNotEmpty) {
@@ -158,6 +157,12 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
 
     List<Schedule> sortedSchedule = sortSchedules(filteredSchedules);
 
+    List<Schedule> inactiveSchedule =
+        sortedSchedule.where((s) => !s.active).toList();
+    if (inactiveSchedule.isNotEmpty) {
+      return inactiveSchedule.last;
+    }
+
     if (sortedSchedule.isEmpty) {
       return null;
     }
@@ -175,7 +180,7 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
     }
 
     // Common status logic
-    if (schedule.startDate == null) {
+    if (schedule.startDate == null || !schedule.active) {
       return (false, schedule);
     }
 
@@ -205,7 +210,7 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
           List<DateTime> weekDays =
               OffsetDays.getWeekDaysFromOffset(0, startDate: date);
           List<HabitRecap> trackedDays = ref
-              .read(trackedDayProvider.notifier)
+              .read(habitRecapProvider.notifier)
               .getHabitTrackedDaysInPeriod(
                   habitId, weekDays.first, weekDays.last);
           int validatedNumber = trackedDays.length;
@@ -230,7 +235,7 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
           List<DateTime> weekDays =
               OffsetDays.getOffsetMonthDays(0, startDate: date);
           List<HabitRecap> trackedDays = ref
-              .read(trackedDayProvider.notifier)
+              .read(habitRecapProvider.notifier)
               .getHabitTrackedDaysInPeriod(
                   habitId, weekDays.first, weekDays.last);
           int validatedNumber = trackedDays.length;
@@ -266,10 +271,11 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
         s.startDate == newSchedule.startDate &&
         (s.type == FrequencyType.Once || s.startDate == s.endDate));
 
+    await addSchedule(newSchedule);
+
     if (targetSchedule != null) {
       await deleteSchedule(targetSchedule);
     }
-    await addSchedule(newSchedule);
   }
 
   Future<void> modifyAll(Schedule newSchedule) async {
@@ -306,15 +312,17 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
     List<Schedule> todaySchedule = futureSchedules
         .where((s) =>
             s.startDate!.isAtSameMomentAs(schedule.startDate!) &&
-            s.type != FrequencyType.Once && s.startDate != s.endDate)
+            s.type != FrequencyType.Once &&
+            s.startDate != s.endDate)
         .toList();
 
-    // Case no default schedule starting today 
+    // Case no default schedule starting today
     if (todaySchedule.isEmpty) {
       Schedule? currentDefaultSchedule =
           getHabitDefaultSchedule(schedule.habitId!, date: schedule.startDate);
-      Schedule newCurrentDefaultSchedule =
-          currentDefaultSchedule!.copyWith(startDate: schedule.startDate, scheduleId: null)..resetScheduleId();
+      Schedule newCurrentDefaultSchedule = currentDefaultSchedule!
+          .copyWith(startDate: schedule.startDate, scheduleId: null)
+        ..resetScheduleId();
       addSchedule(newCurrentDefaultSchedule);
       futureSchedules.add(newCurrentDefaultSchedule);
     }
@@ -325,7 +333,8 @@ class ScheduledNotifier extends StateNotifier<List<Schedule>> {
     }
   }
 
-  Future<void> modifyAllTimeOfDay(TimeOfDay? newTimeOfDay, String habitId, Schedule schedule,
+  Future<void> modifyAllTimeOfDay(
+      TimeOfDay? newTimeOfDay, String habitId, Schedule schedule,
       {bool isHabitListPage = false}) async {
     final allHabitSchedules = getHabitAllSchedule(habitId);
 

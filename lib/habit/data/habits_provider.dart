@@ -42,8 +42,8 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     newHabitList.insert(newIndex, removedItem);
 
     // 2. Sort in the right order (In case time of the day doesn't match the drag index)
-    newHabitList
-        .sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
+    // newHabitList
+    //     .sort((a, b) => compareTimeOfDay(a.timeOfTheDay, b.timeOfTheDay));
 
     // 3. Update all the index properties with new list order
     newHabitList.asMap().forEach((int index, Habit habit) {
@@ -80,10 +80,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
         state.where((habit) => habit.habitId != targetHabit.habitId).toList();
     await _firestore.collection('habits').doc(targetHabit.habitId).delete();
 
-    ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(targetHabit);
+    ref.read(habitRecapProvider.notifier).deleteHabitTrackedDays(targetHabit);
 
     if (targetHabit.validationType == HabitType.recapDay) {
-      ref.read(recapDayProvider.notifier).deleteAllRecapDays();
+      ref.read(dailyRecapProvider.notifier).deleteAllRecapDays();
     }
 
     ref

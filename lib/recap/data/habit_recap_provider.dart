@@ -149,7 +149,7 @@ class TrackedDayNotifier extends StateNotifier<List<HabitRecap>> {
   }
 }
 
-final trackedDayProvider =
+final habitRecapProvider =
     StateNotifierProvider<TrackedDayNotifier, List<HabitRecap>>(
   (ref) {
     return TrackedDayNotifier(ref);

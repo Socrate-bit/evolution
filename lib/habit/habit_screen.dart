@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tracker_v1/global/data/page_enum.dart';
 import 'package:tracker_v1/global/display/custom_surface_container.dart';
 import 'package:tracker_v1/global/display/tool_tip_title_widget.dart';
 import 'package:tracker_v1/global/logic/first_where_or_null.dart';
@@ -36,7 +37,7 @@ class HabitScreen extends ConsumerWidget {
     }
 
     List<HabitRecap> trackedDays =
-        ref.watch(trackedDayProvider).where((trackedDay) {
+        ref.watch(habitRecapProvider).where((trackedDay) {
       return trackedDay.habitId == habit.habitId;
     }).toList()
           ..sort((a, b) => a.date.isAfter(b.date) ? -1 : 1);
@@ -143,17 +144,17 @@ class _HabitScreenButtons extends ConsumerWidget {
       context: context,
       builder: (ctx) => NewHabitScreen(
         habit: targetHabit,
-        dateOpened: dateOpened,
+        navigation: HabitListNavigation.habitList,
       ),
     );
   }
 
   void _resetData(WidgetRef ref, BuildContext context, Habit habit) {
     if (habit.validationType == HabitType.recapDay) {
-      ref.read(recapDayProvider.notifier).deleteAllRecapDays();
+      ref.read(dailyRecapProvider.notifier).deleteAllRecapDays();
     }
 
-    ref.read(trackedDayProvider.notifier).deleteHabitTrackedDays(habit);
+    ref.read(habitRecapProvider.notifier).deleteHabitTrackedDays(habit);
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('Data deleted')));

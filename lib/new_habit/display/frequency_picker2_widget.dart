@@ -390,8 +390,10 @@ class _CircleToggleDay extends ConsumerWidget {
 class CustomContainerTight extends StatelessWidget {
   final Widget? child;
   final Key? uniqueKey;
+  final Color? color;
 
-  const CustomContainerTight({super.key, this.child, this.uniqueKey});
+  const CustomContainerTight(
+      {super.key, this.child, this.uniqueKey, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +403,7 @@ class CustomContainerTight extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            color: Theme.of(context).colorScheme.surfaceBright),
+            color: color ?? Theme.of(context).colorScheme.surfaceBright),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [if (child != null) child!],
@@ -414,15 +416,7 @@ class _OnceDatePicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Schedule frequencyState = ref.read(frequencyStateProvider);
-    DateTime startDate = frequencyState.startDate ?? today;
-    String startDateDisplay = 'On the ${formater1.format(startDate)}';
-
-    if (startDate == today ||
-        startDate == today.subtract(Duration(days: 1)) ||
-        startDate == today.add(Duration(days: 1))) {
-      startDateDisplay = displayedDate(startDate);
-    }
+    String startDateDisplay = _getStartDateText(ref);
 
     return GestureDetector(
         onTap: () {
@@ -436,6 +430,23 @@ class _OnceDatePicker extends ConsumerWidget {
                     .textTheme
                     .titleSmall!
                     .copyWith(color: Colors.white))));
+  }
+
+  String _getStartDateText(ref) {
+    Schedule frequencyState = ref.read(frequencyStateProvider);
+    DateTime? startDate = frequencyState.startDate;
+
+    if (startDate == null) {
+      return 'Not planned';
+    }
+
+    if (startDate == today ||
+        startDate == today.subtract(Duration(days: 1)) ||
+        startDate == today.add(Duration(days: 1))) {
+      return displayedDate(startDate);
+    }
+
+    return 'On the ${formater1.format(startDate)}';
   }
 }
 

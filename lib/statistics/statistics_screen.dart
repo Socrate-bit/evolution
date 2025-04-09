@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:tracker_v1/global/display/custom_surface_container.dart';
-import 'package:tracker_v1/global/display/quick_add_habit_dialog.dart';
+import 'package:tracker_v1/global/display/actions_dialog.dart';
 import 'package:tracker_v1/global/logic/date_utility.dart';
 import 'package:tracker_v1/statistics/data/statistics_model.dart';
 import 'package:tracker_v1/statistics/data/statistics_state.dart';
@@ -137,7 +139,7 @@ class _StatsGrid extends ConsumerStatefulWidget {
 }
 
 class _StatsGridState extends ConsumerState<_StatsGrid> {
-  void showNewStatScreen({Stat? stat}) {
+  void _showNewStatScreen({Stat? stat}) {
     showModalBottomSheet(
         isScrollControlled: true,
         context: context,
@@ -146,7 +148,7 @@ class _StatsGridState extends ConsumerState<_StatsGrid> {
             ));
   }
 
-  void deleteStat(Stat stat, bool isMainSelected, bool isSecondarySelected) {
+  void _deleteStat(Stat stat, bool isMainSelected, bool isSecondarySelected) {
     if (isMainSelected) {
       ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
     }
@@ -157,73 +159,111 @@ class _StatsGridState extends ConsumerState<_StatsGrid> {
     ref.read(statNotiferProvider.notifier).deleteStat(stat);
   }
 
-  List<ModalContainerItem> getNewHabitItems(
-      WidgetRef ref, int index, StatisticsState screenState, Stat stat) {
-    bool isMainSelected = screenState.selectedStat == index;
-    bool isSecondarySelected = screenState.selectedStat2 == index;
-
-    void mainSelection() {
-      ref.read(statisticsStateProvider.notifier).updateSelectedStat(index);
-      if (isSecondarySelected) {
-        ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
-      }
+  void _selectSecondary(WidgetRef ref, int index, StatisticsState screenState) {
+    ref.read(statisticsStateProvider.notifier).updateSelectedStat2(index);
+    if (screenState.selectedStat == index) {
+      ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
     }
-
-    void secondarySelection() {
-      ref.read(statisticsStateProvider.notifier).updateSelectedStat2(index);
-      if (isMainSelected) {
-        ref.read(statisticsStateProvider.notifier).updateSelectedStat(0);
-      }
-    }
-
-    return [
-      if (!isMainSelected)
-        ModalContainerItem(
-          icon: Icons.show_chart_rounded,
-          title: 'Select',
-          onTap: (context) {
-            mainSelection();
-          },
-        ),
-      if (!isMainSelected && !isSecondarySelected)
-        ModalContainerItem(
-          icon: Icons.auto_graph_rounded,
-          title: 'Compare',
-          onTap: (context) {
-            secondarySelection();
-          },
-        ),
-      ModalContainerItem(
-        icon: Icons.delete_outline_rounded,
-        title: 'Delete',
-        onTap: (context) {
-          deleteStat(stat, isMainSelected, isMainSelected);
-        },
-      ),
-      ModalContainerItem(
-        icon: Icons.edit_rounded,
-        title: 'Edit',
-        onTap: (context) {
-          showNewStatScreen(stat: stat);
-        },
-      )
-    ];
   }
 
-  void selectMain(WidgetRef ref, int index, StatisticsState screenState) {
+  void _selectMain(WidgetRef ref, int index, StatisticsState screenState) {
     if (screenState.selectedStat2 == index) {
       ref.read(statisticsStateProvider.notifier).updateSelectedStat2(null);
     }
     ref.read(statisticsStateProvider.notifier).updateSelectedStat(index);
   }
 
-  void onTap(WidgetRef ref, int index, StatisticsState screenState, Stat stat) {
-    showActionsDialog(context, getNewHabitItems(ref, index, screenState, stat),
-        title: stat.name);
+  List<(ModalContainerItem, bool)> _getDialogItems(
+      WidgetRef ref, int index, StatisticsState screenState, Stat stat) {
+    bool isMainSelected = screenState.selectedStat == index;
+    bool isSecondarySelected = screenState.selectedStat2 == index;
+
+    return [
+      (
+        ModalContainerItem(
+          icon: Icons.edit_rounded,
+          title: 'Edit',
+          onTap: (context) {
+            _showNewStatScreen(stat: stat);
+          },
+        ),
+        false
+      ),
+      (
+        ModalContainerItem(
+          icon: Icons.show_chart_rounded,
+          title: 'Select',
+          onTap: (context) {
+            _selectMain(ref, index, screenState);
+          },
+        ),
+        isMainSelected
+      ),
+      (
+        ModalContainerItem(
+          icon: Icons.auto_graph_rounded,
+          title: 'Compare',
+          onTap: (context) {
+            _selectSecondary(ref, index, screenState);
+          },
+        ),
+        isSecondarySelected
+      ),
+      (
+        ModalContainerItem(
+          icon: Icons.delete_outline_rounded,
+          title: 'Delete',
+          onTap: (context) {
+            _deleteStat(stat, isMainSelected, isMainSelected);
+          },
+        ),
+        false
+      ),
+    ];
   }
 
-  void onDoubleTap(WidgetRef ref, int index, StatisticsState screenState) {
-    selectMain(ref, index, screenState);
+  int lastTap = DateTime.now().millisecondsSinceEpoch;
+  int consecutiveTaps = 0;
+  Timer? _tapTimer;
+
+  void tapManager(
+      {Function? simpleTap, Function? doubleTap, Function? trippleTap}) {
+    int now = DateTime.now().millisecondsSinceEpoch;
+
+    if (now - lastTap < 300) {
+      consecutiveTaps++;
+    } else {
+      consecutiveTaps = 0;
+    }
+
+    // Cancel the previous timer if it exists
+    _tapTimer?.cancel();
+
+    // Schedule a new timer to reset consecutiveTaps after 300ms
+    _tapTimer = Timer(Duration(milliseconds: 300), () {
+      switch (consecutiveTaps) {
+        case 0:
+          if (simpleTap != null) {
+            HapticFeedback.selectionClick();
+            simpleTap();
+          }
+          break;
+        case 1:
+          if (doubleTap != null) {
+            HapticFeedback.lightImpact();
+            doubleTap();
+          }
+          break;
+        case > 1:
+          if (trippleTap != null) {
+            HapticFeedback.lightImpact();
+            trippleTap();
+          }
+          break;
+      }
+    });
+
+    lastTap = now;
   }
 
   @override
@@ -268,13 +308,16 @@ class _StatsGridState extends ConsumerState<_StatsGrid> {
       children: [
         ...screenState.allStats.asMap().entries.map((entry) => InkWell(
               key: ObjectKey(entry),
-              onDoubleTap: () {
-                HapticFeedback.lightImpact();
-                onDoubleTap(ref, entry.key, screenState);
-              },
               onTap: () {
-                HapticFeedback.selectionClick();
-                onTap(ref, entry.key, screenState, entry.value);
+                tapManager(simpleTap: () {
+                  showActionsDialog(context,
+                      _getDialogItems(ref, entry.key, screenState, entry.value),
+                      title: entry.value.name);
+                }, doubleTap: () {
+                  _selectMain(ref, entry.key, screenState);
+                }, trippleTap: () {
+                  _selectSecondary(ref, entry.key, screenState);
+                });
               },
               child: _StatContainer(
                 title: entry.value.name,

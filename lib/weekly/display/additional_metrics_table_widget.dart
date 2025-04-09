@@ -53,7 +53,7 @@ class AdditionalMetricsTable extends ConsumerWidget {
       (Habit, String) metric,
       List<DateTime> offsetWeekDays,
       List<HabitRecap> trackedDays,
-      List<RecapDay> recapDays,
+      List<DailyRecap> recapDays,
       WidgetRef ref) {
     List<dynamic> result;
     List<bool> isTrackedFilter = range.map((index) {
@@ -135,8 +135,8 @@ class AdditionalMetricsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackedDays = ref.watch(trackedDayProvider);
-    final recapDays = ref.watch(recapDayProvider);
+    final trackedDays = ref.watch(habitRecapProvider);
+    final recapDays = ref.watch(dailyRecapProvider);
 
     final List<(Habit, String)> additionalMetrics =
         ref.read(habitProvider.notifier).getAllAdditionalMetrics();

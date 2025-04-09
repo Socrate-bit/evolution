@@ -1,1 +1,1 @@
-enum HabitListNavigation { habitList, addHabit, dailyScreen }
+enum HabitListNavigation { habitList, addHabit, dailyScreen, shareHabit }

@@ -43,7 +43,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
 
   void setConfettiTrigger(DailyScreenState dailyScreenState) {
     ref.listen(
-      trackedDayProvider,
+      habitRecapProvider,
       (prev, next) {
         if (completionComputing([dailyScreenState.selectedDate], ref) == 100 &&
             dailyScreenState.previousComputingRatio != 100) {
@@ -56,7 +56,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
   }
 
   Widget setCondionnalContent(DailyScreenState dailyScreenState) {
-    final LinkedHashMap<Habit, (Schedule, HabitRecap?)> habitScheduleMap =
+    final LinkedHashMap<Habit, (Schedule?, HabitRecap?)> habitScheduleMap =
         ref.watch(scheduleCacheProvider(dailyScreenState.selectedDate));
 
     content = habitScheduleMap.isNotEmpty
@@ -81,7 +81,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
   @override
   Widget build(BuildContext context) {
     DailyScreenState dailyScreenState = ref.watch(dailyScreenStateProvider);
-    ref.watch(trackedDayProvider);
+    ref.watch(habitRecapProvider);
 
     setConfettiTrigger(dailyScreenState);
     Widget content = setCondionnalContent(dailyScreenState);

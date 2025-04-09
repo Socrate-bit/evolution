@@ -21,7 +21,8 @@ class Schedule {
   final int period2;
   final List<WeekDay>? daysOfTheWeek;
   final List<TimeOfDay?>? timesOfTheDay;
-  final List<int>? notification; // New property
+  final List<int>? notification;
+  final bool active; // Add new property
 
   Schedule({
     scheduleId,
@@ -37,7 +38,8 @@ class Schedule {
     this.period2 = 1,
     this.daysOfTheWeek = const [...WeekDay.values],
     this.timesOfTheDay,
-    this.notification, // Initialize new property
+    this.notification,
+    this.active = true, // Initialize new property
   })  : scheduleId = scheduleId ?? idGenerator.v4(),
         userId = FirebaseAuth.instance.currentUser!.uid;
 
@@ -58,11 +60,11 @@ class Schedule {
           daysOfTheWeek?.map((day) => day.toString().split('.').last).toList(),
       'timesOfTheDay':
           timesOfTheDay?.map((time) => time != null ? '${time!.hour}:${time.minute}' : null).toList(),
-      'notification': notification, // Add new property to JSON
+      'notification': notification,
+      'active': active, // Add new property to JSON
     };
   }
 
-  // Create from JSON
   factory Schedule.fromJson(Map<String, dynamic> json) {
     return Schedule(
       scheduleId: json['scheduleId'],
@@ -89,11 +91,14 @@ class Schedule {
           .toList(),
       notification: (json['notification'] as List<dynamic>?)
           ?.map((e) => e as int)
-          .toList(), // Parse new property from JSON
+          .toList(),
+      active: json['active'] as bool? ?? true, // Parse new property from JSON
     );
   }
 
-  static bool compareSchedules(Schedule schedule1, Schedule schedule2) {
+  static bool compareSchedules(Schedule schedule1, Schedule? schedule2) {
+    if (schedule2 == null) return false;
+
     return schedule1.scheduleId == schedule2.scheduleId &&
         schedule1.userId == schedule2.userId &&
         schedule1.habitId == schedule2.habitId &&
@@ -110,7 +115,8 @@ class Schedule {
         schedule1.timesOfTheDay?.toString() ==
             schedule2.timesOfTheDay?.toString() &&
         schedule1.notification?.toString() ==
-            schedule2.notification?.toString(); // Compare new property
+            schedule2.notification?.toString() &&
+        schedule1.active == schedule2.active; // Compare new property
   }
 
   bool isMixedhour() {
@@ -139,7 +145,8 @@ class Schedule {
     int? period2,
     List<WeekDay>? daysOfTheWeek,
     List<TimeOfDay?>? timesOfTheDay,
-    List<int>? notification, // Add new property to copyWith method
+    List<int>? notification,
+    bool? active, // Add new property to copyWith method
     bool startDateNullInput = false,
     bool enDateNullInput = false,
     bool endingNullDateInput = false,
@@ -158,7 +165,8 @@ class Schedule {
       period2: period2 ?? this.period2,
       daysOfTheWeek: daysOfTheWeek ?? this.daysOfTheWeek,
       timesOfTheDay: timesOfTheDay ?? this.timesOfTheDay,
-      notification: notification ?? this.notification, // Initialize new property
+      notification: notification ?? this.notification,
+      active: active ?? this.active, // Initialize new property
     );
   }
 

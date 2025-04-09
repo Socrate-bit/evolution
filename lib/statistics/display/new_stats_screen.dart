@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -177,188 +176,11 @@ class _NewStatScreenState extends ConsumerState<NewStatScreen> {
                 )));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    _color ??= _color = Theme.of(context).colorScheme.primary;
-    _subType ??= _initializeDefaultSubType(_type);
-
-    return CustomModalBottomSheet(
-      title: widget.stat != null ? 'Edit Stat' : 'New Stat',
-      formKey: _formKey,
-      content: Column(
-        children: [
-          _buildRowWithToolTip(
-            title: 'Type:',
-            content: 'Select the type of stat',
-            child: DropDownMenu(
-              value: _type,
-              onChanged: (selectedType) {
-                if (selectedType == null) return;
-                setState(() {
-                  _type = selectedType;
-                  _subType = null;
-                });
-              },
-              options: Map.fromEntries(
-                statTypeNames.entries
-                    .where((entry) => entry.key != StatType.custom)
-                    .map((entry) => MapEntry(entry.key, entry.value)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          CustomSearchBar(_type, (item) => _onSelectSearchBarValue(item)),
-          const SizedBox(height: 16),
-          if (_type != StatType.emotion && _type != StatType.basic)
-            _buildRowWithToolTip(
-              title: 'Formula:',
-              content: 'Select the sub type of stat',
-              child: DropDownMenu(
-                value: _subType,
-                onChanged: (selectedSubType) {
-                  if (selectedSubType == null) return;
-                  setState(() {
-                    _subType = selectedSubType;
-                  });
-                },
-                options: _generateSubTypeOptions(),
-              ),
-            ),
-          const SizedBox(height: 16),
-          _buildRowWithToolTip(
-            title: 'Color:',
-            content: 'Select the color of the stat',
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _showColorPicker();
-              },
-              child: CircleAvatar(
-                backgroundColor: _color,
-                radius: 24,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          CustomElevatedButton(
-            color: _color,
-            submit: () {
-              _submit(ref);
-            },
-            text: widget.stat != null ? 'Edit Stat' : 'Create Stat',
-          ),
-          SizedBox(height: 8),
-          TextButton(
-            onPressed: () {
-              _showDialogMessage();
-            },
-            child: Text('Add On Home Screen',
-                maxLines: 2,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(color: _color)),
-          ),
-          SizedBox(height: 8)
-        ],
-      ),
-    );
-  }
-}
-
-class DropDownMenu extends StatelessWidget {
-  final dynamic value;
-  final ValueChanged<dynamic> onChanged;
-  final Map<dynamic, String> options;
-
-  const DropDownMenu({
-    super.key,
-    required this.value,
-    required this.onChanged,
-    required this.options,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceBright,
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: DropdownButton<dynamic>(
-        value: value,
-        icon: const Icon(Icons.arrow_drop_down),
-        isDense: true,
-        dropdownColor: Theme.of(context).colorScheme.surfaceBright,
-        items: options.entries
-            .map(
-              (item) => DropdownMenuItem(
-                value: item.key,
-                child: Text(item.value),
-              ),
-            )
-            .toList(),
-        onChanged: onChanged,
-      ),
-    );
-  }
-}
-
-class CustomSearchBar extends ConsumerStatefulWidget {
-  final StatType type;
-  final Function selectValue;
-
-  const CustomSearchBar(this.type, this.selectValue, {super.key});
-
-  @override
-  ConsumerState<CustomSearchBar> createState() => _CustomSearchBarState();
-}
-
-class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
-  late List<(dynamic, String)> _suggestions;
-
-  @override
-  void initState() {
-    super.initState();
-    _suggestions = _createSuggestion(ref);
-  }
-
-  @override
-  void didUpdateWidget(covariant CustomSearchBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.type != oldWidget.type) {
-      setState(() {
-        _suggestions = _createSuggestion(ref);
-      });
-    }
-  }
-
-  Widget _buildMaterial(options, onSelected) {
-    return Material(
-      color: Colors.black,
-      child: ListView.builder(
-        itemCount: options.length,
-        itemBuilder: (context, index) {
-          final option = options.toList()[index];
-          return ListTile(
-            title: Text(option.$2),
-            onTap: () {
-              HapticFeedback.selectionClick();
-              onSelected(option);
-              FocusScope.of(context).unfocus();
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  List<(dynamic, String)> _createSuggestion(ref) {
+  List<(dynamic, String)> _generateSuggestions(ref, type) {
     final List<(dynamic, String)> suggestions = [];
     final List<Habit> habits = ref.read(habitProvider);
 
-    switch (widget.type) {
+    switch (type) {
       case StatType.habit:
         suggestions
             .addAll(habits.map((e) => (e.habitId, e.name.capitalizeString())));
@@ -395,6 +217,206 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
     return suggestions;
   }
 
+  Widget _typeField() {
+    return _buildRowWithToolTip(
+      title: 'Type:',
+      content: 'Select the type of stat',
+      child: _DropDownMenu(
+        value: _type,
+        onChanged: (selectedType) {
+          if (selectedType == null) return;
+          setState(() {
+            _type = selectedType;
+            _subType = null;
+          });
+        },
+        options: Map.fromEntries(
+          statTypeNames.entries
+              .where((entry) => entry.key != StatType.custom)
+              .map((entry) => MapEntry(entry.key, entry.value)),
+        ),
+      ),
+    );
+  }
+
+  Widget _searchBarField() {
+    return CustomSearchBar(
+        selectValue: (item) => _onSelectSearchBarValue(item),
+        generateSuggestion: () {
+          return _generateSuggestions(ref, _type);
+        });
+  }
+
+  Widget _formulaField() {
+    return _buildRowWithToolTip(
+      title: 'Formula:',
+      content: 'Select the sub type of stat',
+      child: _DropDownMenu(
+        value: _subType,
+        onChanged: (selectedSubType) {
+          if (selectedSubType == null) return;
+          setState(() {
+            _subType = selectedSubType;
+          });
+        },
+        options: _generateSubTypeOptions(),
+      ),
+    );
+  }
+
+  Widget _colorField() {
+    return _buildRowWithToolTip(
+      title: 'Color:',
+      content: 'Select the color of the stat',
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _showColorPicker();
+        },
+        child: CircleAvatar(
+          backgroundColor: _color,
+          radius: 24,
+        ),
+      ),
+    );
+  }
+
+  Widget _submitButton() {
+    return CustomElevatedButton(
+      color: _color,
+      submit: () {
+        _submit(ref);
+      },
+      text: widget.stat != null ? 'Edit Stat' : 'Create Stat',
+    );
+  }
+
+  Widget _addToHomeScreenButton() {
+    return TextButton(
+      onPressed: () {
+        _showDialogMessage();
+      },
+      child: Text('Add On Home Screen',
+          maxLines: 2,
+          style:
+              Theme.of(context).textTheme.titleMedium!.copyWith(color: _color)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _color ??= _color = Theme.of(context).colorScheme.primary;
+    _subType ??= _initializeDefaultSubType(_type);
+
+    return CustomModalBottomSheet(
+      title: widget.stat != null ? 'Edit Stat' : 'New Stat',
+      formKey: _formKey,
+      content: Column(
+        children: [
+          _typeField(),
+          const SizedBox(height: 16),
+          _searchBarField(),
+          const SizedBox(height: 16),
+          if (_type != StatType.emotion && _type != StatType.basic)
+            _formulaField(),
+          const SizedBox(height: 16),
+          _colorField(),
+          const SizedBox(height: 32),
+          _submitButton(),
+          SizedBox(height: 8),
+          _addToHomeScreenButton(),
+          SizedBox(height: 8)
+        ],
+      ),
+    );
+  }
+}
+
+class _DropDownMenu extends StatelessWidget {
+  final dynamic value;
+  final ValueChanged<dynamic> onChanged;
+  final Map<dynamic, String> options;
+
+  const _DropDownMenu({
+    required this.value,
+    required this.onChanged,
+    required this.options,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceBright,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: DropdownButton<dynamic>(
+        value: value,
+        icon: const Icon(Icons.arrow_drop_down),
+        isDense: true,
+        dropdownColor: Theme.of(context).colorScheme.surfaceBright,
+        items: options.entries
+            .map(
+              (item) => DropdownMenuItem(
+                value: item.key,
+                child: Text(item.value),
+              ),
+            )
+            .toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+}
+
+class CustomSearchBar extends ConsumerStatefulWidget {
+  final void Function(dynamic selected) selectValue;
+  final List<(dynamic, String)> Function() generateSuggestion;
+
+  const CustomSearchBar(
+      {required this.selectValue, required this.generateSuggestion, super.key});
+
+  @override
+  ConsumerState<CustomSearchBar> createState() => _CustomSearchBarState();
+}
+
+class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
+  late List<(dynamic, String)> _suggestions;
+
+  @override
+  void initState() {
+    super.initState();
+    _suggestions = widget.generateSuggestion();
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _suggestions = widget.generateSuggestion();
+  }
+
+  Widget _buildMaterial(
+      List<(dynamic, String)> suggestions, Function onSelected) {
+    return Material(
+      color: Colors.black,
+      child: ListView.builder(
+        itemCount: suggestions.length,
+        itemBuilder: (context, index) {
+          final option = suggestions.toList()[index];
+          return ListTile(
+            title: Text(option.$2),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              onSelected(option);
+              FocusScope.of(context).unfocus();
+            },
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Autocomplete(
@@ -406,16 +428,16 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
               .contains(textEditingValue.text.toLowerCase());
         }).toList();
       },
-      displayStringForOption: (option) => option.$2,
-      optionsViewBuilder: (context, onSelected, options) {
-        if (!_suggestions.contains(options.first)) {
-          options = _suggestions;
+      displayStringForOption: (suggestion) => suggestion.$2,
+      optionsViewBuilder: (context, onSelected, suggestions) {
+        if (!_suggestions.contains(suggestions.first)) {
+          suggestions = _suggestions;
         }
-        return _buildMaterial(options, onSelected);
+        return _buildMaterial(suggestions.toList(), onSelected);
       },
-      onSelected: (option) {
+      onSelected: (suggestion) {
         setState(() {
-          widget.selectValue(option);
+          widget.selectValue(suggestion);
         });
       },
       fieldViewBuilder:
@@ -424,6 +446,7 @@ class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
           focusNode: focusNode,
           controller: textEditingController,
           decoration: const InputDecoration(
+            hintStyle: TextStyle(color: Colors.grey),
             hintText: 'Search for a stat',
             border: OutlineInputBorder(),
           ),

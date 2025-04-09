@@ -50,7 +50,8 @@ Color getScoreCardColor(WidgetRef ref, bool isFull, TimeOfDay? time,
           score == null)) {
     return const Color.fromARGB(255, 51, 51, 51);
   } else {
-    return RatingDisplayUtility.ratingToColor(score! / 2).withOpacity(0.5);
+    if (score == null) {return const Color.fromARGB(255, 51, 51, 51);}
+    return RatingDisplayUtility.ratingToColor(score / 2).withOpacity(0.5);
   }
 }
 

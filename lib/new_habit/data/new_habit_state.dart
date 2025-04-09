@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tracker_v1/global/logic/date_utility.dart';
-import 'package:tracker_v1/global/logic/day_of_the_week_utility.dart';
 import 'package:tracker_v1/habit/data/habits_provider.dart';
 import 'package:tracker_v1/new_habit/data/habit_model.dart';
 
@@ -14,18 +12,12 @@ class NewHabitState extends StateNotifier<Habit> {
           name: '',
           description: '',
           newHabit: '',
-          frequency: 7,
-          weekdays: [],
           validationType: HabitType.simple,
-          startDate: today,
-          endDate: null,
-          timeOfTheDay: null,
           duration: Duration(minutes: 1),
           additionalMetrics: [],
           orderIndex: ref.read(habitProvider).length,
           ponderation: 3,
           color: const Color.fromARGB(255, 248, 189, 51),
-          frequencyChanges: {},
         ));
 
   final Ref ref;
@@ -46,28 +38,8 @@ class NewHabitState extends StateNotifier<Habit> {
     state = state.copy(newHabit: mainImprovement);
   }
 
-  void setFrequency(int frequency) {
-    state = state.copy(frequency: frequency);
-  }
-
-  void setWeekdays(List<WeekDay> weekdays) {
-    state = state.copy(weekdays: weekdays);
-  }
-
   void setValidationType(HabitType validationType) {
     state = state.copy(validationType: validationType);
-  }
-
-  void setStartDate(DateTime startDate) {
-    state = state.copy(startDate: startDate);
-  }
-
-  void setEndDate(DateTime? endDate) {
-    state = state.copy(endDate: endDate);
-  }
-
-  void setTimeOfTheDay(TimeOfDay? timeOfTheDay) {
-    state = state.copy(timeOfTheDay: timeOfTheDay);
   }
 
   void setAdditionalMetrics(List<String> additionalMetrics) {
@@ -77,6 +49,10 @@ class NewHabitState extends StateNotifier<Habit> {
   void addAdditionalMetrics(String metric) {
     state =
         state.copy(additionalMetrics: [...state.additionalMetrics!, metric]);
+  }
+
+  void setShared() {
+    state = state.copy(shared: true);
   }
 
   void removeAdditionalMetrics(int index) {

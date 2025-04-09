@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 class FrequencyNotifier extends StateNotifier<Schedule> {
   FrequencyNotifier()
       : super(Schedule(
-          startDate: today,
           notification: [5, 0]
         ));
 
@@ -84,7 +83,7 @@ class FrequencyNotifier extends StateNotifier<Schedule> {
   }
 
   void setState(Schedule newSchedule) {
-    state = newSchedule.copyWith();
+    state = newSchedule.copyWith(active: state.active);
   }
 
   void setNotification(List<int> notification) {

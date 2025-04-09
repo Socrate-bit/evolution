@@ -59,7 +59,7 @@ List<HabitRecap> _fetchTargetTrackedDays(
   List<String> todayHabitIds = targetHabits.map((h) => h.habitId).toList();
 
   List<HabitRecap> todayTrackedDays = ref
-      .read(trackedDayProvider)
+      .read(habitRecapProvider)
       .where((t) =>
           date == t.date &&
           todayHabitIds.contains(t.habitId) &&
@@ -115,7 +115,7 @@ int getCurrentStreak(DateTime date, Habit habit, ref,
   int streak = score ? 0 : -1;
 
   List<HabitRecap> habitPastTrackedDays = ref
-      .read(trackedDayProvider)
+      .read(habitRecapProvider)
       .where((HabitRecap t) =>
           t.habitId == habit.habitId &&
           (score
@@ -247,9 +247,9 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
       ref.read(habitProvider).firstWhere((h) => h.habitId == reference.$1);
 
   if (habit.validationType == HabitType.recapDay) {
-    final List<RecapDay> recapDays = ref.read(recapDayProvider);
+    final List<DailyRecap> recapDays = ref.read(dailyRecapProvider);
     for (DateTime date in dates) {
-      final RecapDay? recapDay =
+      final DailyRecap? recapDay =
           recapDays.firstWhereOrNull((td) => td.date == date);
       if (recapDay != null) {
         double? convertedMetric =
@@ -260,7 +260,7 @@ String productivityScoreComputingFormatted(List<DateTime> dates, ref,
       }
     }
   } else {
-    final List<HabitRecap> trackedDays = ref.read(trackedDayProvider);
+    final List<HabitRecap> trackedDays = ref.read(habitRecapProvider);
     for (DateTime date in dates) {
       final HabitRecap? trackedDay = trackedDays.firstWhereOrNull(
           (td) => td.habitId == habit.habitId && td.date == date);
@@ -306,10 +306,10 @@ String additionalMetricsAverageFormatted(List<DateTime> dates, ref,
 double? emotionAverage(List<DateTime> dates, ref, {required String reference}) {
   List<dynamic> result = [];
 
-  final List<RecapDay> recapDays = ref.read(recapDayProvider);
+  final List<DailyRecap> recapDays = ref.read(dailyRecapProvider);
 
   for (DateTime date in dates) {
-    final RecapDay? recapDay =
+    final DailyRecap? recapDay =
         recapDays.firstWhereOrNull((td) => td.date == date);
     if (recapDay != null) {
       double emotionValue = recapDay.getProperty(reference) ?? 0;

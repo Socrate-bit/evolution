@@ -45,13 +45,18 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
         const SizedBox(height: 10),
         Center(
           child: ToggleButtons(
+            borderRadius: BorderRadius.horizontal(
+              left: const Radius.circular(10) ,
+              right: const Radius.circular(10) ,
+            ),
             constraints: const BoxConstraints(
               minHeight: 20, // Minimum height for the buttons
               minWidth: 50, // Minimum width for the buttons
             ),
             isSelected: List.generate(
                 5, (index) => index == ratingKeys.indexOf(controlledValue)),
-            fillColor: RatingDisplayUtility.ratingToColor(controlledValue.toDouble()),// Color for unselected
+            fillColor: RatingDisplayUtility.ratingToColor(
+                controlledValue.toDouble()), // Color for unselected
             onPressed: (index) {
               HapticFeedback.selectionClick();
               setState(() {
@@ -63,10 +68,11 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
             children: List.generate(5, (index) {
               return Container(
                 decoration: BoxDecoration(
-                    color: controlledValue > index +1
-                        ? RatingDisplayUtility.ratingToColor(
-                            controlledValue.toDouble())
-                        : null),
+                  color: controlledValue > index + 1
+                      ? RatingDisplayUtility.ratingToColor(
+                          controlledValue.toDouble())
+                      : null,
+                ),
                 width: 64, // Set a custom width
                 height: 20, // Set a custom height (less height)
                 alignment: Alignment.center, // Center the text inside
@@ -74,10 +80,10 @@ class _CustomToggleButtonsSliderState extends State<CustomToggleButtonsSlider> {
                   RatingDisplayUtility.ratingText.values
                       .toList()[index], // Button labels as 1 to 5
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: controlledValue > index +1
-                        ? RatingDisplayUtility.ratingToColor(
-                            controlledValue.toDouble())
-                        : Theme.of(context).colorScheme.background,
+                      color: controlledValue > index + 1
+                          ? RatingDisplayUtility.ratingToColor(
+                              controlledValue.toDouble())
+                          : Theme.of(context).colorScheme.background,
                       fontWeight: FontWeight.bold),
                 ),
               );
