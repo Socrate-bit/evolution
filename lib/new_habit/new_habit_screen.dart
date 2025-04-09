@@ -143,10 +143,10 @@ class _MainScreenState extends ConsumerState<NewHabitScreen> {
 
     Widget contentFull = Column(
       children: [
-        if (widget.navigation == HabitListNavigation.shareHabit) ...[
-          CategoryImpactField(),
-          const SizedBox(height: 8)
-        ],
+        // if (widget.navigation == HabitListNavigation.shareHabit) ...[
+        //   CategoryImpactField(),
+        //   const SizedBox(height: 8)
+        // ],
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           IconPickerWidget(),
           const SizedBox(width: 16),
